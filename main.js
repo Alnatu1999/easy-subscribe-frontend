@@ -3,19 +3,16 @@
 const API_BASE = window.location.hostname === 'localhost' 
   ? 'http://localhost:5001'  // Changed from 5000 to 5001 to match server
   : 'https://easy-subscribe-backend.onrender.com'; // Updated with actual backend URL
-
 // DOM Elements
 const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
 const desktopNav = document.querySelector('.desktop-nav');
 const menuToggle = document.querySelector('.menu-toggle');
 const sidebar = document.querySelector('.sidebar');
-
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
   initializeApp();
   checkServerConnection();
 });
-
 // Check server connection
 async function checkServerConnection() {
   try {
@@ -37,7 +34,6 @@ async function checkServerConnection() {
     }
   }
 }
-
 function initializeApp() {
   setupMobileMenu();
   setupSidebarToggle();
@@ -53,11 +49,11 @@ function initializeApp() {
   loadWalletBalance();
   setupNotificationBell();
   setupProfileManagement();
-  setupWalletTransfer();
   setupPasswordReset();
   setupModals();
+  setupTransactionsPage();
+  setupNotificationsPage();
 }
-
 // Mobile Menu Toggle
 function setupMobileMenu() {
   if (mobileMenuBtn && desktopNav) {
@@ -66,7 +62,6 @@ function setupMobileMenu() {
     });
   }
 }
-
 // Sidebar Toggle for Dashboard
 function setupSidebarToggle() {
   if (menuToggle && sidebar) {
@@ -75,7 +70,6 @@ function setupSidebarToggle() {
     });
   }
 }
-
 // Form Handlers
 function setupFormHandlers() {
   // Login Form
@@ -137,14 +131,7 @@ function setupFormHandlers() {
   if (tvForm) {
     tvForm.addEventListener('submit', (e) => handleServiceForm(e, 'tv'));
   }
-  
-  // Wallet Transfer Form
-  const walletTransferForm = document.getElementById('walletTransferForm');
-  if (walletTransferForm) {
-    walletTransferForm.addEventListener('submit', handleWalletTransfer);
-  }
 }
-
 // Password Visibility Toggle
 function setupPasswordToggles() {
   const toggleButtons = document.querySelectorAll('.toggle-password');
@@ -165,7 +152,6 @@ function setupPasswordToggles() {
     });
   });
 }
-
 // Quick Amount Buttons for Airtime
 function setupQuickAmountButtons() {
   const amountButtons = document.querySelectorAll('.amount-btn');
@@ -179,7 +165,6 @@ function setupQuickAmountButtons() {
     });
   }
 }
-
 // Plan Selection for Data
 function setupPlanSelection() {
   const planOptions = document.querySelectorAll('.plan-option input[type="radio"]');
@@ -198,7 +183,6 @@ function setupPlanSelection() {
     });
   });
 }
-
 // Provider Selection for TV
 function setupProviderSelection() {
   const tvProvider = document.getElementById('tv');
@@ -228,7 +212,6 @@ function setupProviderSelection() {
     });
   }
 }
-
 // FAQ Toggle
 function setupFAQToggle() {
   const faqQuestions = document.querySelectorAll('.faq-question');
@@ -244,7 +227,6 @@ function setupFAQToggle() {
     });
   });
 }
-
 // Service Navigation
 function setupServiceNavigation() {
   const viewAllButtons = document.querySelectorAll('.view-all');
@@ -257,7 +239,6 @@ function setupServiceNavigation() {
     });
   });
 }
-
 // Notification Bell
 function setupNotificationBell() {
   const notificationBell = document.querySelector('.notification-bell');
@@ -267,7 +248,6 @@ function setupNotificationBell() {
     });
   }
 }
-
 // Profile Management
 function setupProfileManagement() {
   const editProfileBtn = document.querySelector('.edit-profile-btn');
@@ -277,20 +257,6 @@ function setupProfileManagement() {
     });
   }
 }
-
-// Wallet Transfer
-function setupWalletTransfer() {
-  const transferBtn = document.querySelector('.transfer-btn');
-  if (transferBtn) {
-    transferBtn.addEventListener('click', () => {
-      const transferModal = document.getElementById('walletTransferModal');
-      if (transferModal) {
-        transferModal.style.display = 'block';
-      }
-    });
-  }
-}
-
 // Password Reset
 function setupPasswordReset() {
   const forgotPasswordLink = document.querySelector('.forgot-password');
@@ -301,7 +267,6 @@ function setupPasswordReset() {
     });
   }
 }
-
 // Modals Setup
 function setupModals() {
   // Close modal when clicking on close button
@@ -322,7 +287,38 @@ function setupModals() {
     }
   });
 }
-
+// Transactions Page Setup
+function setupTransactionsPage() {
+  if (!document.querySelector('.transactions-page')) return;
+  
+  loadTransactions();
+  
+  // Setup filter buttons
+  const filterButtons = document.querySelectorAll('.filter-btn');
+  filterButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      // Remove active class from all buttons
+      filterButtons.forEach(btn => btn.classList.remove('active'));
+      // Add active class to clicked button
+      button.classList.add('active');
+      
+      // Reload transactions with filter
+      loadTransactions(button.dataset.type);
+    });
+  });
+}
+// Notifications Page Setup
+function setupNotificationsPage() {
+  if (!document.querySelector('.notifications-page')) return;
+  
+  loadNotificationsList();
+  
+  // Setup mark all as read button
+  const markAllReadBtn = document.getElementById('markAllRead');
+  if (markAllReadBtn) {
+    markAllReadBtn.addEventListener('click', markAllNotificationsAsRead);
+  }
+}
 // Authentication Check
 function checkAuthentication() {
   const token = localStorage.getItem('accessToken');
@@ -337,7 +333,6 @@ function checkAuthentication() {
     window.location.href = 'login.html';
   }
 }
-
 // Load User Data
 function loadUserData() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -357,7 +352,6 @@ function loadUserData() {
     }
   });
 }
-
 // Load Wallet Balance
 async function loadWalletBalance() {
   const token = localStorage.getItem('accessToken');
@@ -398,7 +392,6 @@ async function loadWalletBalance() {
     });
   }
 }
-
 // Load Notifications
 async function loadNotifications() {
   const token = localStorage.getItem('accessToken');
@@ -436,7 +429,205 @@ async function loadNotifications() {
     console.error('Error loading notifications:', error);
   }
 }
-
+// Load Notifications List
+async function loadNotificationsList() {
+  const token = localStorage.getItem('accessToken');
+  if (!token) return;
+  
+  const notificationsContainer = document.getElementById('notificationsList');
+  if (!notificationsContainer) return;
+  
+  try {
+    const response = await fetch(`${API_BASE}/api/notifications`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        // Clear existing notifications
+        notificationsContainer.innerHTML = '';
+        
+        if (data.data.notifications.length === 0) {
+          notificationsContainer.innerHTML = '<div class="no-notifications">No notifications found</div>';
+          return;
+        }
+        
+        // Add notifications to the list
+        data.data.notifications.forEach(notification => {
+          const notificationElement = document.createElement('div');
+          notificationElement.className = `notification-item ${notification.isRead ? 'read' : 'unread'}`;
+          notificationElement.innerHTML = `
+            <div class="notification-header">
+              <h3>${notification.title}</h3>
+              <span class="notification-date">${formatDate(notification.createdAt)}</span>
+            </div>
+            <p>${notification.message}</p>
+            ${!notification.isRead ? `<button class="btn btn-sm mark-read" data-id="${notification._id}">Mark as Read</button>` : ''}
+          `;
+          
+          notificationsContainer.appendChild(notificationElement);
+        });
+        
+        // Add event listeners to mark as read buttons
+        const markReadButtons = notificationsContainer.querySelectorAll('.mark-read');
+        markReadButtons.forEach(button => {
+          button.addEventListener('click', () => {
+            markNotificationAsRead(button.dataset.id);
+          });
+        });
+      }
+    } else if (response.status === 401) {
+      // Token expired, try to refresh
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        // Retry after refresh
+        loadNotificationsList();
+      } else {
+        // If refresh fails, redirect to login
+        window.location.href = 'login.html';
+      }
+    }
+  } catch (error) {
+    console.error('Error loading notifications list:', error);
+    notificationsContainer.innerHTML = '<div class="error">Failed to load notifications</div>';
+  }
+}
+// Mark Notification as Read
+async function markNotificationAsRead(notificationId) {
+  const token = localStorage.getItem('accessToken');
+  if (!token) return;
+  
+  try {
+    const response = await fetch(`${API_BASE}/api/notifications/${notificationId}/read`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (response.ok) {
+      // Reload notifications list
+      loadNotificationsList();
+      // Update notification badge
+      loadNotifications();
+    } else if (response.status === 401) {
+      // Token expired, try to refresh
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        // Retry after refresh
+        markNotificationAsRead(notificationId);
+      } else {
+        // If refresh fails, redirect to login
+        window.location.href = 'login.html';
+      }
+    }
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    showAlert('Failed to mark notification as read');
+  }
+}
+// Mark All Notifications as Read
+async function markAllNotificationsAsRead() {
+  const token = localStorage.getItem('accessToken');
+  if (!token) return;
+  
+  try {
+    const response = await fetch(`${API_BASE}/api/notifications/read-all`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (response.ok) {
+      // Reload notifications list
+      loadNotificationsList();
+      // Update notification badge
+      loadNotifications();
+      showAlert('All notifications marked as read', 'success');
+    } else if (response.status === 401) {
+      // Token expired, try to refresh
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        // Retry after refresh
+        markAllNotificationsAsRead();
+      } else {
+        // If refresh fails, redirect to login
+        window.location.href = 'login.html';
+      }
+    }
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error);
+    showAlert('Failed to mark notifications as read');
+  }
+}
+// Load Transactions
+async function loadTransactions(type = '') {
+  const token = localStorage.getItem('accessToken');
+  if (!token) return;
+  
+  const transactionsContainer = document.getElementById('transactionsList');
+  if (!transactionsContainer) return;
+  
+  try {
+    let url = `${API_BASE}/api/transactions`;
+    if (type) {
+      url += `?type=${type}`;
+    }
+    
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        // Clear existing transactions
+        transactionsContainer.innerHTML = '';
+        
+        if (data.data.transactions.length === 0) {
+          transactionsContainer.innerHTML = '<div class="no-transactions">No transactions found</div>';
+          return;
+        }
+        
+        // Add transactions to the list
+        data.data.transactions.forEach(transaction => {
+          const transactionElement = document.createElement('div');
+          transactionElement.className = `transaction-item ${transaction.status}`;
+          transactionElement.innerHTML = `
+            <div class="transaction-info">
+              <div class="transaction-type">${transaction.type}</div>
+              <div class="transaction-reference">${transaction.reference}</div>
+              <div class="transaction-date">${formatDate(transaction.createdAt)}</div>
+            </div>
+            <div class="transaction-amount">₦${Number(transaction.amount).toLocaleString()}</div>
+            <div class="transaction-status ${transaction.status}">${transaction.status}</div>
+          `;
+          
+          transactionsContainer.appendChild(transactionElement);
+        });
+      }
+    } else if (response.status === 401) {
+      // Token expired, try to refresh
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        // Retry after refresh
+        loadTransactions(type);
+      } else {
+        // If refresh fails, redirect to login
+        window.location.href = 'login.html';
+      }
+    }
+  } catch (error) {
+    console.error('Error loading transactions:', error);
+    transactionsContainer.innerHTML = '<div class="error">Failed to load transactions</div>';
+  }
+}
 // Refresh Token
 async function refreshToken() {
   const refreshToken = localStorage.getItem('refreshToken');
@@ -468,7 +659,6 @@ async function refreshToken() {
     return false;
   }
 }
-
 // Show Alert Function
 function showAlert(message, type = 'error') {
   const alertContainer = document.getElementById('alert-container');
@@ -495,7 +685,6 @@ function showAlert(message, type = 'error') {
     alertContainer.innerHTML = '';
   }, 5000);
 }
-
 // Validate Signup Form
 function validateSignupForm() {
   let isValid = true;
@@ -561,7 +750,6 @@ function validateSignupForm() {
   
   return isValid;
 }
-
 // Signup Handler - FIXED FIELD REFERENCES
 async function handleSignup(e) {
   e.preventDefault();
@@ -640,7 +828,6 @@ async function handleSignup(e) {
     }
   }
 }
-
 // Validate Login Form
 function validateLoginForm() {
   let isValid = true;
@@ -668,7 +855,6 @@ function validateLoginForm() {
   
   return isValid;
 }
-
 // Login Handler
 async function handleLogin(e) {
   e.preventDefault();
@@ -741,7 +927,6 @@ async function handleLogin(e) {
     }
   }
 }
-
 // Forgot Password Handler
 async function handleForgotPassword(e) {
   e.preventDefault();
@@ -793,7 +978,6 @@ async function handleForgotPassword(e) {
     }
   }
 }
-
 // Reset Password Handler
 async function handleResetPassword(e) {
   e.preventDefault();
@@ -853,7 +1037,6 @@ async function handleResetPassword(e) {
     }
   }
 }
-
 // Update Profile Handler
 async function handleUpdateProfile(e) {
   e.preventDefault();
@@ -918,7 +1101,6 @@ async function handleUpdateProfile(e) {
     }
   }
 }
-
 // Change Password Handler
 async function handleChangePassword(e) {
   e.preventDefault();
@@ -987,72 +1169,6 @@ async function handleChangePassword(e) {
     }
   }
 }
-
-// Wallet Transfer Handler
-async function handleWalletTransfer(e) {
-  e.preventDefault();
-  
-  const token = localStorage.getItem('accessToken');
-  if (!token) {
-    showAlert('Please login to transfer funds');
-    return;
-  }
-  
-  const recipientEmail = document.getElementById('recipientEmail').value;
-  const amount = document.getElementById('transferAmount').value;
-  
-  try {
-    // Show loading state
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Transferring...';
-    
-    // API call
-    const response = await fetch(`${API_BASE}/api/wallet/transfer`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ recipientEmail, amount })
-    });
-    
-    const data = await response.json();
-    
-    if (response.ok && data.success) {
-      showAlert(data.message, 'success');
-      // Close modal
-      const modal = document.getElementById('walletTransferModal');
-      if (modal) {
-        modal.style.display = 'none';
-      }
-      // Reload wallet balance
-      loadWalletBalance();
-    } else {
-      // Show error message
-      showAlert(data.message || 'Failed to transfer funds. Please try again.');
-    }
-    
-  } catch (error) {
-    console.error('Wallet transfer error:', error);
-    
-    // More specific error message for network issues
-    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-      showAlert('Unable to connect to the server. Please check your internet connection.');
-    } else {
-      showAlert('Failed to transfer funds. Please check your connection and try again.');
-    }
-  } finally {
-    // Reset button state
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Transfer';
-    }
-  }
-}
-
 // Service Form Handler (Airtime, Data, Electricity, TV) - UPDATED TO REMOVE PAYSTACK
 async function handleServiceForm(e, serviceType) {
   e.preventDefault();
@@ -1158,7 +1274,6 @@ async function handleServiceForm(e, serviceType) {
     }
   }
 }
-
 // Password Strength Meter
 function setupPasswordStrength() {
   const passwordInput = document.getElementById('password');
@@ -1196,17 +1311,14 @@ function setupPasswordStrength() {
     });
   }
 }
-
 // Initialize password strength meter if on signup page
 if (document.getElementById('signupForm')) {
   setupPasswordStrength();
 }
-
 // Load notifications if on dashboard
 if (document.querySelector('.notification-badge')) {
   loadNotifications();
 }
-
 // Utility function to format currency
 function formatCurrency(amount) {
   return new Intl.NumberFormat('en-NG', {
@@ -1215,13 +1327,11 @@ function formatCurrency(amount) {
     minimumFractionDigits: 2
   }).format(amount);
 }
-
 // Utility function to format date
 function formatDate(dateString) {
   const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
   return new Date(dateString).toLocaleDateString('en-NG', options);
 }
-
 // Logout function
 function logout() {
   localStorage.removeItem('accessToken');
@@ -1229,7 +1339,6 @@ function logout() {
   localStorage.removeItem('user');
   window.location.href = 'index.html';
 }
-
 // Add logout event listener to logout button
 const logoutBtn = document.querySelector('.logout-btn');
 if (logoutBtn) {
@@ -1238,7 +1347,6 @@ if (logoutBtn) {
     logout();
   });
 }
-
 // Download statement function
 async function downloadStatement() {
   const token = localStorage.getItem('accessToken');
@@ -1297,13 +1405,11 @@ async function downloadStatement() {
     }
   }
 }
-
 // Add event listener to download statement button
 const downloadStatementBtn = document.querySelector('.wallet-buttons .btn.secondary');
 if (downloadStatementBtn) {
   downloadStatementBtn.addEventListener('click', downloadStatement);
 }
-
 // Referral program function
 function startReferring() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -1314,7 +1420,6 @@ function startReferring() {
     showAlert('Please login to access the referral program');
   }
 }
-
 // Add event listener to referral button
 const referralBtn = document.querySelector('.promo-section .btn');
 if (referralBtn) {

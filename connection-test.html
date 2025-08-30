@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connection Test - EasySubscribe</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="container mt-5">
+    <div class="form-card">
+      <h2>Backend Connection Test</h2>
+      <div id="test-results">
+        <p>Testing connection to backend server...</p>
+      </div>
+      <button id="test-connection-btn" class="btn primary mt-3">Test Connection</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const API_BASE = window.location.hostname === 'localhost' 
+        ? 'http://localhost:5000' 
+        : window.location.origin.replace(/\/$/, '');
+      
+      const testResults = document.getElementById('test-results');
+      const testBtn = document.getElementById('test-connection-btn');
+      
+      testBtn.addEventListener('click', async function() {
+        testResults.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Testing connection...</p>';
+        
+        try {
+          const response = await fetch(`${API_BASE}/health`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            signal: AbortSignal.timeout(5000)
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            testResults.innerHTML = `
+              <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <span>Connection successful! Server is running.</span>
+              </div>
+              <div class="mt-3">
+                <p><strong>Response:</strong></p>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+              </div>
+            `;
+          } else {
+            testResults.innerHTML = `
+              <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Server responded with status: ${response.status}</span>
+              </div>
+            `;
+          }
+        } catch (error) {
+          testResults.innerHTML = `
+            <div class="alert alert-error">
+              <i class="fas fa-exclamation-circle"></i>
+              <span>Connection failed: ${error.message}</span>
+            </div>
+            <div class="mt-3">
+              <p><strong>Possible solutions:</strong></p>
+              <ol>
+                <li>Make sure the backend server is running on port 5000</li>
+                <li>Check if there are any CORS issues</li>
+                <li>Verify your internet connection</li>
+                <li>Check if any firewall is blocking the connection</li>
+              </ol>
+            </div>
+          `;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

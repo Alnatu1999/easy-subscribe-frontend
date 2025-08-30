@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TV Subscription - EasySubscribe</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">
+        <h1>EasySubscribe</h1>
+      </div>
+      <nav class="desktop-nav">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="airtime.html">Airtime</a>
+        <a href="data.html">Data</a>
+        <a href="electricity.html">Electricity</a>
+        <a href="tv.html" class="active">TV</a>
+      </nav>
+      <div class="mobile-menu-btn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+  
+  <main class="service-page">
+    <div class="container">
+      <div class="service-header">
+        <div class="service-icon tv-icon"></div>
+        <div>
+          <h2>TV Subscription</h2>
+          <p>Renew your TV subscriptions instantly</p>
+        </div>
+      </div>
+      
+      <div class="service-container">
+        <div class="service-form-container">
+          <div class="form-card">
+            <h3>Pay TV Subscription</h3>
+            <form id="tvForm">
+              <div class="form-group">
+                <label for="tv">Select Provider</label>
+                <div class="input-with-icon">
+                  <i class="fas fa-tv"></i>
+                  <select id="tv" required>
+                    <option value="">-- Choose Provider --</option>
+                    <option value="dstv">DSTV</option>
+                    <option value="gotv">GOtv</option>
+                    <option value="startimes">StarTimes</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="smartcard">Smart Card / IUC Number</label>
+                <div class="input-with-icon">
+                  <i class="fas fa-id-card"></i>
+                  <input type="text" id="smartcard" placeholder="Enter smart card number" required>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label>Subscription Plan</label>
+                <div class="tv-plans" id="dstv-plans">
+                  <div class="plan-option">
+                    <input type="radio" id="dstv1" name="plan" value="dstv1" required>
+                    <label for="dstv1">
+                      <div class="plan-details">
+                        <span class="plan-name">DStv Premium</span>
+                        <span class="plan-price">₦24,000</span>
+                        <span class="plan-channels">215+ channels</span>
+                      </div>
+                    </label>
+                  </div>
+                  <div class="plan-option">
+                    <input type="radio" id="dstv2" name="plan" value="dstv2" required>
+                    <label for="dstv2">
+                      <div class="plan-details">
+                        <span class="plan-name">DStv Compact Plus</span>
+                        <span class="plan-price">₦15,700</span>
+                        <span class="plan-channels">175+ channels</span>
+                      </div>
+                    </label>
+                  </div>
+                  <div class="plan-option">
+                    <input type="radio" id="dstv3" name="plan" value="dstv3" required>
+                    <label for="dstv3">
+                      <div class="plan-details">
+                        <span class="plan-name">DStv Compact</span>
+                        <span class="plan-price">₦10,500</span>
+                        <span class="plan-channels">140+ channels</span>
+                      </div>
+                    </label>
+                  </div>
+                  <div class="plan-option">
+                    <input type="radio" id="dstv4" name="plan" value="dstv4" required>
+                    <label for="dstv4">
+                      <div class="plan-details">
+                        <span class="plan-name">DStv Family</span>
+                        <span class="plan-price">₦6,800</span>
+                        <span class="plan-channels">110+ channels</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+                
+                <div class="tv-plans" id="gotv-plans" style="display: none;">
+                  <div class="plan-option">
+                    <input type="radio" id="gotv1" name="plan" value="gotv1" required>
+                    <label for="gotv1">
+                      <div class="plan-details">
+                        <span class="plan-name">GOtv Max</span>
+                        <span class="plan-price">₦5,500</span>
+                        <span class="plan-channels">85+ channels</span>
+                      </div>
+                    </label>
+                  </div>
+                  <div class="plan-option">
+                    <input type="radio" id="gotv2" name="plan" value="gotv2" required>
+                    <label for="gotv2">
+                      <div class="plan-details">
+                        <span class="plan-name">GOtv Jolli</span>
+                        <span class="plan-price">₦3,280</span>
+                        <span class="plan-channels">70+ channels</span>
+                      </div>
+                    </label>
+                  </div>
+                  <div class="plan-option">
+                    <input type="radio" id="gotv3" name="plan" value="gotv3" required>
+                    <label for="gotv3">
+                      <div class="plan-details">
+                        <span class="plan-name">GOtv Jinja</span>
+                        <span class="plan-price">₦2,460</span>
+                        <span class="plan-channels">55+ channels</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+                
+                <div class="tv-plans" id="startimes-plans" style="display: none;">
+                  <div class="plan-option">
+                    <input type="radio" id="startimes1" name="plan" value="startimes1" required>
+                    <label for="startimes1">
+                      <div class="plan-details">
+                        <span class="plan-name">StarTimes Nova</span>
+                        <span class="plan-price">₦4,200</span>
+                        <span class="plan-channels">100+ channels</span>
+                      </div>
+                    </label>
+                  </div>
+                  <div class="plan-option">
+                    <input type="radio" id="startimes2" name="plan" value="startimes2" required>
+                    <label for="startimes2">
+                      <div class="plan-details">
+                        <span class="plan-name">StarTimes Basic</span>
+                        <span class="plan-price">₦2,600</span>
+                        <span class="plan-channels">70+ channels</span>
+                      </div>
+                    </label>
+                  </div>
+                  <div class="plan-option">
+                    <input type="radio" id="startimes3" name="plan" value="startimes3" required>
+                    <label for="startimes3">
+                      <div class="plan-details">
+                        <span class="plan-name">StarTimes Classic</span>
+                        <span class="plan-price">₦1,900</span>
+                        <span class="plan-channels">50+ channels</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <div class="input-with-icon">
+                  <i class="fas fa-phone"></i>
+                  <input type="tel" id="phone" placeholder="Enter phone number for notification" required>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="email">Email Address</label>
+                <div class="input-with-icon">
+                  <i class="fas fa-envelope"></i>
+                  <input type="email" id="email" placeholder="Enter email for receipt">
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <div class="payment-method">
+                  <label>Payment Method</label>
+                  <div class="payment-options">
+                    <div class="payment-option">
+                      <input type="radio" id="wallet" name="payment" value="wallet" checked>
+                      <label for="wallet">Wallet Balance</label>
+                    </div>
+                    <div class="payment-option">
+                      <input type="radio" id="card" name="payment" value="card">
+                      <label for="card">Debit/Credit Card</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <button type="submit" class="btn primary full-width">Proceed to Pay</button>
+            </form>
+          </div>
+          
+          <div class="recent-transactions">
+            <h4>Recent Transactions</h4>
+            <div class="transaction-list" id="recentTransactions">
+              <!-- Transactions will be loaded here via JavaScript -->
+              <div class="transaction-item">
+                <div class="transaction-icon dstv"></div>
+                <div class="transaction-details">
+                  <p class="transaction-title">DSTV Compact</p>
+                  <p class="transaction-info">Smart Card: 1234567890 • Today, 7:30 AM</p>
+                </div>
+                <div class="transaction-amount">₦10,500</div>
+              </div>
+              <div class="transaction-item">
+                <div class="transaction-icon gotv"></div>
+                <div class="transaction-details">
+                  <p class="transaction-title">GOtv Max</p>
+                  <p class="transaction-info">IUC: 987654321 • May 15, 6:45 PM</p>
+                </div>
+                <div class="transaction-amount">₦5,500</div>
+              </div>
+              <div class="transaction-item">
+                <div class="transaction-icon startimes"></div>
+                <div class="transaction-details">
+                  <p class="transaction-title">StarTimes Nova</p>
+                  <p class="transaction-info">Smart Card: 456789123 • May 5, 2:15 PM</p>
+                </div>
+                <div class="transaction-amount">₦4,200</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="service-info">
+          <div class="info-card">
+            <h3>Why Renew TV Subscription With Us?</h3>
+            <ul class="benefits-list">
+              <li><i class="fas fa-check-circle"></i> Instant activation</li>
+              <li><i class="fas fa-check-circle"></i> No convenience fees</li>
+              <li><i class="fas fa-check-circle"></i> Automatic renewal reminders</li>
+              <li><i class="fas fa-check-circle"></i> Subscription history tracking</li>
+              <li><i class="fas fa-check-circle"></i> 24/7 customer support</li>
+            </ul>
+            
+            <div class="faq-section">
+              <h4>Frequently Asked Questions</h4>
+              <div class="faq-item">
+                <div class="faq-question">
+                  <p>How long does it take for my subscription to activate?</p>
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                  <p>TV subscriptions are activated instantly upon successful payment. You'll receive a confirmation message.</p>
+                </div>
+              </div>
+              <div class="faq-item">
+                <div class="faq-question">
+                  <p>What happens if I enter the wrong smart card number?</p>
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                  <p>Always double-check your smart card number before payment. If you make a mistake, contact our support team immediately for assistance.</p>
+                </div>
+              </div>
+              <div class="faq-item">
+                <div class="faq-question">
+                  <p>Can I pay for someone else's TV subscription?</p>
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                  <p>Yes, simply enter the correct smart card/IUC number and your contact details for notifications and receipts.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <h2>EasySubscribe</h2>
+          <p>Your one-stop solution for bill payments</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-column">
+            <h4>Company</h4>
+            <a href="#">About Us</a>
+            <a href="#">Careers</a>
+            <a href="#">Contact</a>
+          </div>
+          <div class="footer-column">
+            <h4>Services</h4>
+            <a href="airtime.html">Airtime</a>
+            <a href="data.html">Data</a>
+            <a href="electricity.html">Electricity</a>
+            <a href="tv.html">TV Subscription</a>
+          </div>
+          <div class="footer-column">
+            <h4>Legal</h4>
+            <a href="#">Terms of Service</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">FAQ</a>
+          </div>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>&copy; 2025 EasySubscribe. All Rights Reserved.</p>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Load main.js for all functionality -->
+  <script src="main.js"></script>
+  
+  <!-- Page-specific JavaScript -->
+  <script>
+    // Load recent TV transactions when page loads
+    document.addEventListener('DOMContentLoaded', async function() {
+      // Load recent transactions
+      await loadRecentTransactions();
+    });
+    
+    // Load recent TV transactions
+    async function loadRecentTransactions() {
+      const token = localStorage.getItem('accessToken');
+      if (!token) return;
+      
+      try {
+        const response = await fetch(`${API_BASE}/api/transactions?type=tv&limit=3`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data.transactions.length > 0) {
+            const transactionsList = document.getElementById('recentTransactions');
+            transactionsList.innerHTML = '';
+            
+            data.data.transactions.forEach(transaction => {
+              const transactionItem = document.createElement('div');
+              transactionItem.className = 'transaction-item';
+              
+              // Get provider icon class
+              let providerIcon = 'tv';
+              if (transaction.metadata.provider) {
+                providerIcon = transaction.metadata.provider.toLowerCase();
+              }
+              
+              // Format date
+              const date = new Date(transaction.createdAt);
+              const formattedDate = date.toLocaleDateString('en-NG', { 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+              
+              transactionItem.innerHTML = `
+                <div class="transaction-icon ${providerIcon}"></div>
+                <div class="transaction-details">
+                  <p class="transaction-title">${transaction.metadata.provider || 'TV'} Subscription</p>
+                  <p class="transaction-info">Smart Card: ${transaction.metadata.smartcard || 'N/A'} • ${formattedDate}</p>
+                </div>
+                <div class="transaction-amount">₦${transaction.amount.toLocaleString()}</div>
+              `;
+              
+              transactionsList.appendChild(transactionItem);
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading recent transactions:', error);
+      }
+    }
+  </script>
+</body>
+</html>

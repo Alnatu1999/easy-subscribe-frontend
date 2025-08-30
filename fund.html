@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fund Wallet - EasySubscribe</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Fund Wallet Page Specific Styles */
+    .fund-page {
+      padding: 2rem 0 4rem;
+      min-height: calc(100vh - 200px);
+    }
+    
+    .fund-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    .fund-header {
+      grid-column: 1 / -1;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .fund-header h2 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+    
+    .fund-header p {
+      font-size: 1.1rem;
+      color: var(--gray);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    
+    .fund-form-container {
+      background: var(--white);
+      border-radius: 15px;
+      padding: 2rem;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .form-card {
+      margin-bottom: 2rem;
+    }
+    
+    .form-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .form-card h3 i {
+      color: var(--primary);
+    }
+    
+    .amount-options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .amount-option {
+      background: var(--light);
+      border: 1px solid var(--light-gray);
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .amount-option:hover {
+      background: rgba(30, 144, 255, 0.05);
+      border-color: var(--primary);
+    }
+    
+    .amount-option.selected {
+      background: rgba(30, 144, 255, 0.1);
+      border-color: var(--primary);
+      color: var(--primary);
+      font-weight: 500;
+    }
+    
+    .amount-option .amount {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+    
+    .amount-option .bonus {
+      font-size: 0.8rem;
+      color: var(--success);
+    }
+    
+    .custom-amount {
+      margin-bottom: 1.5rem;
+    }
+    
+    .custom-amount label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--dark);
+    }
+    
+    .custom-amount .input-with-icon {
+      position: relative;
+    }
+    
+    .custom-amount .input-with-icon i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+    }
+    
+    .custom-amount input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 45px;
+      border: 1px solid var(--light-gray);
+      border-radius: 5px;
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+    
+    .custom-amount input:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
+    }
+    
+    .payment-methods {
+      margin-bottom: 2rem;
+    }
+    
+    .payment-methods h4 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      color: var(--dark);
+    }
+    
+    .payment-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    
+    .payment-option {
+      position: relative;
+    }
+    
+    .payment-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+    }
+    
+    .payment-option label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 1.5rem;
+      background: var(--light);
+      border: 1px solid var(--light-gray);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .payment-option input[type="radio"]:checked + label {
+      background: rgba(30, 144, 255, 0.1);
+      border-color: var(--primary);
+    }
+    
+    .payment-option .payment-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.5rem;
+      color: var(--white);
+    }
+    
+    .payment-option .payment-icon.card {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .payment-option .payment-icon.bank {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    
+    .payment-option .payment-icon.ussd {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    
+    .payment-option .payment-icon.voucher {
+      background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+    }
+    
+    .payment-option .payment-name {
+      font-weight: 500;
+      color: var(--dark);
+    }
+    
+    .payment-option .payment-desc {
+      font-size: 0.8rem;
+      color: var(--gray);
+      text-align: center;
+    }
+    
+    .fund-button {
+      width: 100%;
+      padding: 1rem;
+      background: var(--primary);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .fund-button:hover {
+      background: var(--primary-dark);
+    }
+    
+    .fund-info-container {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+    
+    .info-card {
+      background: var(--white);
+      border-radius: 15px;
+      padding: 2rem;
+      box-shadow: var(--shadow);
+    }
+    
+    .info-card h3 {
+      font-size: 1.3rem;
+      margin-bottom: 1.5rem;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .info-card h3 i {
+      color: var(--primary);
+    }
+    
+    .benefits-list {
+      list-style: none;
+    }
+    
+    .benefits-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+    
+    .benefits-list li i {
+      color: var(--success);
+      margin-top: 0.2rem;
+    }
+    
+    .security-features {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+    
+    .security-feature {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--light);
+      border-radius: 10px;
+    }
+    
+    .security-feature i {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(30, 144, 255, 0.1);
+      color: var(--primary);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .security-feature p {
+      margin: 0;
+      font-weight: 500;
+    }
+    
+    .recent-funding {
+      margin-top: 1rem;
+    }
+    
+    .recent-funding h4 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      color: var(--dark);
+    }
+    
+    .funding-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .funding-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background: var(--light);
+      border-radius: 8px;
+    }
+    
+    .funding-details {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .funding-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1rem;
+      color: var(--white);
+    }
+    
+    .funding-icon.card {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .funding-icon.bank {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    
+    .funding-info p {
+      margin: 0;
+    }
+    
+    .funding-info .funding-method {
+      font-weight: 500;
+    }
+    
+    .funding-info .funding-date {
+      font-size: 0.8rem;
+      color: var(--gray);
+    }
+    
+    .funding-amount {
+      font-weight: 600;
+      color: var(--success);
+    }
+    
+    .promo-banner {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
+      border-radius: 15px;
+      padding: 1.5rem;
+      color: var(--white);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .promo-content h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      color: var(--white);
+    }
+    
+    .promo-content p {
+      margin: 0;
+      opacity: 0.9;
+    }
+    
+    .promo-icon {
+      font-size: 3rem;
+      opacity: 0.8;
+    }
+    
+    /* Error message styling */
+    .error-message {
+      background-color: #ffebee;
+      color: #d32f2f;
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      border-left: 4px solid #d32f2f;
+    }
+    
+    .error-message:before {
+      content: '\f06a';
+      font-family: 'Font Awesome 5 Free';
+      font-weight: 900;
+      margin-right: 10px;
+    }
+    
+    /* Loading state for buttons */
+    .btn.loading {
+      position: relative;
+      color: transparent;
+    }
+    
+    .btn.loading:after {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: auto;
+      border: 2px solid transparent;
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spinner 0.8s linear infinite;
+    }
+    
+    @keyframes spinner {
+      to { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 992px) {
+      .fund-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .payment-options {
+        grid-template-columns: 1fr;
+      }
+      
+      .security-features {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 576px) {
+      .fund-header h2 {
+        font-size: 2rem;
+      }
+      
+      .amount-options {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .promo-banner {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">
+        <h1>EasySubscribe</h1>
+      </div>
+      <nav class="desktop-nav">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="airtime.html">Airtime</a>
+        <a href="data.html">Data</a>
+        <a href="electricity.html">Electricity</a>
+        <a href="tv.html">TV</a>
+      </nav>
+      <div class="mobile-menu-btn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+  <main class="fund-page">
+    <div class="fund-container">
+      <div class="fund-header">
+        <h2>Fund Your Wallet</h2>
+        <p>Add money to your wallet to enjoy seamless bill payments and exclusive benefits</p>
+      </div>
+      
+      <div class="fund-form-container">
+        <!-- Error message display -->
+        <div id="fund-error" class="error-message" style="display: none;"></div>
+        
+        <form id="fundWalletForm">
+          <div class="form-card">
+            <h3><i class="fas fa-wallet"></i> Select Amount</h3>
+            
+            <div class="amount-options">
+              <div class="amount-option" data-amount="1000">
+                <div class="amount">₦1,000</div>
+                <div class="bonus">+₦50 Bonus</div>
+              </div>
+              <div class="amount-option" data-amount="5000">
+                <div class="amount">₦5,000</div>
+                <div class="bonus">+₦300 Bonus</div>
+              </div>
+              <div class="amount-option" data-amount="10000">
+                <div class="amount">₦10,000</div>
+                <div class="bonus">+₦800 Bonus</div>
+              </div>
+              <div class="amount-option" data-amount="20000">
+                <div class="amount">₦20,000</div>
+                <div class="bonus">+₦2,000 Bonus</div>
+              </div>
+              <div class="amount-option" data-amount="50000">
+                <div class="amount">₦50,000</div>
+                <div class="bonus">+₦5,000 Bonus</div>
+              </div>
+              <div class="amount-option" data-amount="100000">
+                <div class="amount">₦100,000</div>
+                <div class="bonus">+₦12,000 Bonus</div>
+              </div>
+            </div>
+            
+            <div class="custom-amount">
+              <label for="customAmount">Or Enter Custom Amount</label>
+              <div class="input-with-icon">
+                <i class="fas fa-money-bill-wave"></i>
+                <input type="number" id="customAmount" name="amount" placeholder="Enter amount (₦)" min="100">
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-card">
+            <h3><i class="fas fa-credit-card"></i> Payment Method</h3>
+            
+            <div class="payment-methods">
+              <h4>Select how you want to fund your wallet</h4>
+              
+              <div class="payment-options">
+                <div class="payment-option">
+                  <input type="radio" id="card" name="paymentMethod" value="paystack" checked>
+                  <label for="card">
+                    <div class="payment-icon card">
+                      <i class="fas fa-credit-card"></i>
+                    </div>
+                    <div class="payment-name">Debit/Credit Card</div>
+                    <div class="payment-desc">Pay with your ATM card</div>
+                  </label>
+                </div>
+                
+                <div class="payment-option">
+                  <input type="radio" id="bank" name="paymentMethod" value="bank">
+                  <label for="bank">
+                    <div class="payment-icon bank">
+                      <i class="fas fa-university"></i>
+                    </div>
+                    <div class="payment-name">Bank Transfer</div>
+                    <div class="payment-desc">Transfer from your bank account</div>
+                  </label>
+                </div>
+                
+                <div class="payment-option">
+                  <input type="radio" id="ussd" name="paymentMethod" value="ussd">
+                  <label for="ussd">
+                    <div class="payment-icon ussd">
+                      <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <div class="payment-name">USSD</div>
+                    <div class="payment-desc">Dial USSD code to pay</div>
+                  </label>
+                </div>
+                
+                <div class="payment-option">
+                  <input type="radio" id="voucher" name="paymentMethod" value="voucher">
+                  <label for="voucher">
+                    <div class="payment-icon voucher">
+                      <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <div class="payment-name">Voucher</div>
+                    <div class="payment-desc">Redeem a voucher code</div>
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <button type="submit" class="fund-button" id="fundWalletBtn">Fund Wallet</button>
+          </div>
+        </form>
+      </div>
+      
+      <div class="fund-info-container">
+        <div class="info-card">
+          <h3><i class="fas fa-gift"></i> Funding Benefits</h3>
+          
+          <ul class="benefits-list">
+            <li>
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Instant Funding</strong>
+                <p>Wallet is credited immediately after payment confirmation</p>
+              </div>
+            </li>
+            <li>
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Bonus on Every Funding</strong>
+                <p>Get bonus credits when you fund your wallet</p>
+              </div>
+            </li>
+            <li>
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>No Transaction Fees</strong>
+                <p>Enjoy zero fees when funding your wallet</p>
+              </div>
+            </li>
+            <li>
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Seamless Payments</strong>
+                <p>Pay bills in one click without entering card details</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+        
+        <div class="info-card">
+          <h3><i class="fas fa-shield-alt"></i> Security & Privacy</h3>
+          
+          <div class="security-features">
+            <div class="security-feature">
+              <i class="fas fa-lock"></i>
+              <p>Bank-Level Encryption</p>
+            </div>
+            <div class="security-feature">
+              <i class="fas fa-user-shield"></i>
+              <p>Secure Authentication</p>
+            </div>
+            <div class="security-feature">
+              <i class="fas fa-fingerprint"></i>
+              <p>Biometric Login</p>
+            </div>
+            <div class="security-feature">
+              <i class="fas fa-history"></i>
+              <p>Transaction History</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="info-card">
+          <h3><i class="fas fa-history"></i> Recent Funding</h3>
+          
+          <div class="recent-funding">
+            <div class="funding-list">
+              <div class="funding-item">
+                <div class="funding-details">
+                  <div class="funding-icon card"></div>
+                  <div class="funding-info">
+                    <p class="funding-method">Debit Card</p>
+                    <p class="funding-date">May 15, 2023</p>
+                  </div>
+                </div>
+                <div class="funding-amount">₦5,000</div>
+              </div>
+              
+              <div class="funding-item">
+                <div class="funding-details">
+                  <div class="funding-icon bank"></div>
+                  <div class="funding-info">
+                    <p class="funding-method">Bank Transfer</p>
+                    <p class="funding-date">May 10, 2023</p>
+                  </div>
+                </div>
+                <div class="funding-amount">₦20,000</div>
+              </div>
+              
+              <div class="funding-item">
+                <div class="funding-details">
+                  <div class="funding-icon card"></div>
+                  <div class="funding-info">
+                    <p class="funding-method">Debit Card</p>
+                    <p class="funding-date">May 5, 2023</p>
+                  </div>
+                </div>
+                <div class="funding-amount">₦10,000</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="promo-banner">
+          <div class="promo-content">
+            <h3>Double Bonus Weekend!</h3>
+            <p>Fund your wallet this weekend and get 2x bonus on all amounts</p>
+          </div>
+          <div class="promo-icon">
+            <i class="fas fa-coins"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <h2>EasySubscribe</h2>
+          <p>Your one-stop solution for bill payments</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-column">
+            <h4>Company</h4>
+            <a href="#">About Us</a>
+            <a href="#">Careers</a>
+            <a href="#">Contact</a>
+          </div>
+          <div class="footer-column">
+            <h4>Services</h4>
+            <a href="airtime.html">Airtime</a>
+            <a href="data.html">Data</a>
+            <a href="electricity.html">Electricity</a>
+            <a href="tv.html">TV Subscription</a>
+          </div>
+          <div class="footer-column">
+            <h4>Legal</h4>
+            <a href="#">Terms of Service</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">FAQ</a>
+          </div>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>&copy; 2025 EasySubscribe. All Rights Reserved.</p>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Reference the main.js file -->
+  <script src="main.js"></script>
+  
+  <script>
+    // Mobile menu toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+      const desktopNav = document.querySelector('.desktop-nav');
+      
+      if (mobileMenuBtn && desktopNav) {
+        mobileMenuBtn.addEventListener('click', function() {
+          desktopNav.classList.toggle('active');
+        });
+      }
+      
+      // Amount selection
+      const amountOptions = document.querySelectorAll('.amount-option');
+      const customAmountInput = document.getElementById('customAmount');
+      
+      amountOptions.forEach(option => {
+        option.addEventListener('click', function() {
+          // Remove selected class from all options
+          amountOptions.forEach(opt => opt.classList.remove('selected'));
+          
+          // Add selected class to clicked option
+          this.classList.add('selected');
+          
+          // Set the selected amount
+          const amount = this.dataset.amount;
+          customAmountInput.value = amount;
+        });
+      });
+      
+      // Custom amount input
+      customAmountInput.addEventListener('input', function() {
+        // Remove selected class from all options
+        amountOptions.forEach(opt => opt.classList.remove('selected'));
+      });
+    });
+  </script>
+</body>
+</html>

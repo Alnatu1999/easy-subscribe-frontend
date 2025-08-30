@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Electricity Bill Payment - EasySubscribe</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Additional styles for error message and loading state */
+    .error-message {
+      background-color: #ffebee;
+      color: #d32f2f;
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      border-left: 4px solid #d32f2f;
+    }
+    
+    .error-message:before {
+      content: '\f06a';
+      font-family: 'Font Awesome 5 Free';
+      font-weight: 900;
+      margin-right: 10px;
+    }
+    
+    .btn.loading {
+      position: relative;
+      color: transparent;
+    }
+    
+    .btn.loading:after {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: auto;
+      border: 2px solid transparent;
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spinner 0.8s linear infinite;
+    }
+    
+    @keyframes spinner {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Token display styling */
+    .token-display {
+      background-color: #e8f5e9;
+      border: 1px solid #4caf50;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 20px;
+      text-align: center;
+    }
+    
+    .token-display h4 {
+      color: #2e7d32;
+      margin-bottom: 10px;
+    }
+    
+    .token-code {
+      font-family: monospace;
+      font-size: 24px;
+      font-weight: bold;
+      color: #1b5e20;
+      letter-spacing: 2px;
+      margin: 15px 0;
+    }
+    
+    .token-info {
+      color: #388e3c;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">
+        <h1>EasySubscribe</h1>
+      </div>
+      <nav class="desktop-nav">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="airtime.html">Airtime</a>
+        <a href="data.html">Data</a>
+        <a href="electricity.html" class="active">Electricity</a>
+        <a href="tv.html">TV</a>
+      </nav>
+      <div class="mobile-menu-btn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+  <main class="service-page">
+    <div class="container">
+      <div class="service-header">
+        <div class="service-icon electricity-icon"></div>
+        <div>
+          <h2>Electricity Bill Payment</h2>
+          <p>Pay your electricity bills conveniently</p>
+        </div>
+      </div>
+      <div class="service-container">
+        <div class="service-form-container">
+          <div class="form-card">
+            <h3>Pay Electricity Bill</h3>
+            
+            <!-- Error message display -->
+            <div id="electricity-error" class="error-message" style="display: none;"></div>
+            
+            <!-- Token display (hidden by default) -->
+            <div id="token-display" class="token-display" style="display: none;">
+              <h4><i class="fas fa-check-circle"></i> Payment Successful!</h4>
+              <p>Your electricity token is:</p>
+              <div class="token-code" id="token-code"></div>
+              <p class="token-info">Token has also been sent to your email and phone number</p>
+            </div>
+            
+            <form id="electricityForm">
+              <div class="form-group">
+                <label for="disco">Select Distribution Company (Disco)</label>
+                <div class="input-with-icon">
+                  <i class="fas fa-bolt"></i>
+                  <select id="disco" name="disco" required>
+                    <option value="">-- Choose Disco --</option>
+                    <option value="ikeja">Ikeja Electric</option>
+                    <option value="eko">Eko Electric</option>
+                    <option value="abuja">Abuja Disco</option>
+                    <option value="ibadan">Ibadan Disco</option>
+                    <option value="kano">Kano Disco</option>
+                    <option value="portharcourt">Port Harcourt Disco</option>
+                    <option value="jos">Jos Disco</option>
+                    <option value="enugu">Enugu Disco</option>
+                    <option value="kaduna">Kaduna Disco</option>
+                    <option value="benin">Benin Disco</option>
+                    <option value="aba">Aba Disco</option>
+                    <option value="yola">Yola Disco</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="meter">Meter Number</label>
+                <div class="input-with-icon">
+                  <i class="fas fa-calculator"></i>
+                  <input type="text" id="meter" name="meter" placeholder="Enter meter number" required>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="meterType">Meter Type</label>
+                <div class="meter-types">
+                  <div class="meter-type-option">
+                    <input type="radio" id="prepaid" name="meterType" value="prepaid" required>
+                    <label for="prepaid">
+                      <i class="fas fa-plug"></i>
+                      <span>Prepaid Meter</span>
+                    </label>
+                  </div>
+                  <div class="meter-type-option">
+                    <input type="radio" id="postpaid" name="meterType" value="postpaid" required>
+                    <label for="postpaid">
+                      <i class="fas fa-file-invoice"></i>
+                      <span>Postpaid Meter</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="amount">Amount (₦)</label>
+                <div class="input-with-icon">
+                  <i class="fas fa-money-bill-wave"></i>
+                  <input type="number" id="amount" name="amount" placeholder="1000" min="1000" max="100000" required>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <div class="input-with-icon">
+                  <i class="fas fa-phone"></i>
+                  <input type="tel" id="phone" name="phone" placeholder="Enter phone number for notification" required>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="email">Email Address</label>
+                <div class="input-with-icon">
+                  <i class="fas fa-envelope"></i>
+                  <input type="email" id="email" name="email" placeholder="Enter email for receipt">
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <div class="payment-method">
+                  <label>Payment Method</label>
+                  <div class="payment-options">
+                    <div class="payment-option">
+                      <input type="radio" id="wallet" name="paymentMethod" value="wallet" checked>
+                      <label for="wallet">Wallet Balance</label>
+                    </div>
+                    <div class="payment-option">
+                      <input type="radio" id="paystack" name="paymentMethod" value="paystack">
+                      <label for="paystack">Debit/Credit Card</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <button type="submit" class="btn primary full-width" id="electricity-btn">Proceed to Pay</button>
+            </form>
+          </div>
+          
+          <div class="recent-transactions">
+            <h4>Recent Transactions</h4>
+            <div class="transaction-list">
+              <div class="transaction-item">
+                <div class="transaction-icon ikeja"></div>
+                <div class="transaction-details">
+                  <p class="transaction-title">Ikeja Electric</p>
+                  <p class="transaction-info">Meter: 123456789 • Today, 8:45 AM</p>
+                </div>
+                <div class="transaction-amount">₦5,000</div>
+              </div>
+              <div class="transaction-item">
+                <div class="transaction-icon eko"></div>
+                <div class="transaction-details">
+                  <p class="transaction-title">Eko Electric</p>
+                  <p class="transaction-info">Meter: 987654321 • May 16, 3:20 PM</p>
+                </div>
+                <div class="transaction-amount">₦10,000</div>
+              </div>
+              <div class="transaction-item">
+                <div class="transaction-icon abuja"></div>
+                <div class="transaction-details">
+                  <p class="transaction-title">Abuja Disco</p>
+                  <p class="transaction-info">Meter: 456789123 • May 10, 11:15 AM</p>
+                </div>
+                <div class="transaction-amount">₦7,500</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="service-info">
+          <div class="info-card">
+            <h3>Why Pay Electricity Bills With Us?</h3>
+            <ul class="benefits-list">
+              <li><i class="fas fa-check-circle"></i> Instant token generation for prepaid meters</li>
+              <li><i class="fas fa-check-circle"></i> Quick confirmation for postpaid payments</li>
+              <li><i class="fas fa-check-circle"></i> No convenience fees</li>
+              <li><i class="fas fa-check-circle"></i> Payment history and receipts</li>
+              <li><i class="fas fa-check-circle"></i> 24/7 customer support</li>
+            </ul>
+            
+            <div class="faq-section">
+              <h4>Frequently Asked Questions</h4>
+              <div class="faq-item">
+                <div class="faq-question">
+                  <p>How long does it take to get my token?</p>
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                  <p>Tokens are generated instantly upon successful payment. You'll receive the token via SMS and email.</p>
+                </div>
+              </div>
+              <div class="faq-item">
+                <div class="faq-question">
+                  <p>What happens if I enter the wrong meter number?</p>
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                  <p>Always double-check your meter number before payment. If you make a mistake, contact our support team immediately for assistance.</p>
+                </div>
+              </div>
+              <div class="faq-item">
+                <div class="faq-question">
+                  <p>Can I pay for someone else's electricity bill?</p>
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                  <p>Yes, simply enter the correct meter number and your contact details for notifications and receipts.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <h2>EasySubscribe</h2>
+          <p>Your one-stop solution for bill payments</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-column">
+            <h4>Company</h4>
+            <a href="#">About Us</a>
+            <a href="#">Careers</a>
+            <a href="#">Contact</a>
+          </div>
+          <div class="footer-column">
+            <h4>Services</h4>
+            <a href="airtime.html">Airtime</a>
+            <a href="data.html">Data</a>
+            <a href="electricity.html">Electricity</a>
+            <a href="tv.html">TV Subscription</a>
+          </div>
+          <div class="footer-column">
+            <h4>Legal</h4>
+            <a href="#">Terms of Service</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">FAQ</a>
+          </div>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>&copy; 2025 EasySubscribe. All Rights Reserved.</p>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Reference the main.js file -->
+  <script src="main.js"></script>
+  
+  <script>
+    // Mobile menu toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+      const desktopNav = document.querySelector('.desktop-nav');
+      
+      if (mobileMenuBtn && desktopNav) {
+        mobileMenuBtn.addEventListener('click', function() {
+          desktopNav.classList.toggle('active');
+        });
+      }
+      
+      // FAQ toggle
+      document.querySelectorAll('.faq-question').forEach(question => {
+        question.addEventListener('click', function() {
+          const answer = this.nextElementSibling;
+          const icon = this.querySelector('i');
+          
+          answer.classList.toggle('active');
+          icon.classList.toggle('fa-chevron-down');
+          icon.classList.toggle('fa-chevron-up');
+        });
+      });
+    });
+  </script>
+</body>
+</html>

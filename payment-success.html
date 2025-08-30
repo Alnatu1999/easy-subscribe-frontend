@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Successful - EasySubscribe</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Payment Success Page Specific Styles */
+    .payment-success-container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 0;
+      background: linear-gradient(135deg, #f4f6f9 0%, #e9ecf8 100%);
+    }
+    
+    .success-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 600px;
+      overflow: hidden;
+    }
+    
+    .success-header {
+      background: linear-gradient(135deg, #1e90ff 0%, #4a6fa5 100%);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+    
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 1.5rem;
+    }
+    
+    .success-icon i {
+      font-size: 2.5rem;
+      color: white;
+    }
+    
+    .success-header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .success-header p {
+      opacity: 0.9;
+      margin: 0;
+    }
+    
+    .receipt {
+      padding: 2rem;
+    }
+    
+    .transaction-id {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .transaction-id h2 {
+      font-size: 1.2rem;
+      color: var(--gray);
+      margin-bottom: 0.5rem;
+    }
+    
+    .transaction-id .id-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--dark);
+      font-family: monospace;
+    }
+    
+    .receipt-details {
+      background: var(--light);
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.8rem 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .receipt-row:last-child {
+      border-bottom: none;
+    }
+    
+    .receipt-row.total {
+      font-weight: 600;
+      font-size: 1.2rem;
+      color: var(--primary);
+    }
+    
+    .receipt-label {
+      color: var(--gray);
+    }
+    
+    .receipt-value {
+      font-weight: 500;
+    }
+    
+    .payment-info {
+      background: white;
+      border: 1px solid var(--light-gray);
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .payment-info h3 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: var(--dark);
+    }
+    
+    .payment-method {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .payment-method-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--light);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .payment-method-details p {
+      margin: 0;
+    }
+    
+    .payment-method-details .method-name {
+      font-weight: 500;
+    }
+    
+    .payment-method-details .method-details {
+      font-size: 0.9rem;
+      color: var(--gray);
+    }
+    
+    .token-info {
+      background: rgba(30, 144, 255, 0.1);
+      border-left: 4px solid var(--primary);
+      padding: 1rem;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 2rem;
+    }
+    
+    .token-info h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      color: var(--primary);
+    }
+    
+    .token-code {
+      font-family: monospace;
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    
+    .token-instructions {
+      font-size: 0.9rem;
+      color: var(--gray);
+    }
+    
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .action-buttons .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    
+    .action-buttons .btn i {
+      font-size: 1.2rem;
+    }
+    
+    .notification-message {
+      background: rgba(76, 175, 80, 0.1);
+      border-left: 4px solid var(--success);
+      padding: 1rem;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 1.5rem;
+    }
+    
+    .notification-message p {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .notification-message i {
+      color: var(--success);
+    }
+    
+    .error-message {
+      background-color: #ffebee;
+      color: #d32f2f;
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      border-left: 4px solid #d32f2f;
+    }
+    
+    .error-message:before {
+      content: '\f06a';
+      font-family: 'Font Awesome 5 Free';
+      font-weight: 900;
+      margin-right: 10px;
+    }
+    
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 200px;
+    }
+    
+    .loading i {
+      font-size: 2rem;
+      color: var(--primary);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 576px) {
+      .success-card {
+        margin: 0 1rem;
+      }
+      
+      .receipt {
+        padding: 1.5rem;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="payment-success-container">
+    <div class="success-card">
+      <div class="success-header">
+        <div class="success-icon">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <h1>Payment Successful</h1>
+        <p>Your transaction has been completed successfully</p>
+      </div>
+      
+      <div class="receipt">
+        <!-- Loading state -->
+        <div id="loading-state" class="loading">
+          <i class="fas fa-spinner"></i>
+        </div>
+        
+        <!-- Error message (hidden by default) -->
+        <div id="error-message" class="error-message" style="display: none;"></div>
+        
+        <!-- Content (hidden by default until loaded) -->
+        <div id="success-content" style="display: none;">
+          <div class="transaction-id">
+            <h2>Transaction ID</h2>
+            <div class="id-value" id="transaction-reference">Loading...</div>
+          </div>
+          
+          <div class="notification-message">
+            <p><i class="fas fa-info-circle"></i> A receipt has been sent to your email address</p>
+          </div>
+          
+          <div class="receipt-details">
+            <div class="receipt-row">
+              <span class="receipt-label">Service Type</span>
+              <span class="receipt-value" id="service-type">Loading...</span>
+            </div>
+            <div class="receipt-row">
+              <span class="receipt-label">Provider</span>
+              <span class="receipt-value" id="provider">Loading...</span>
+            </div>
+            <div class="receipt-row">
+              <span class="receipt-label">Account/Meter Number</span>
+              <span class="receipt-value" id="account-number">Loading...</span>
+            </div>
+            <div class="receipt-row">
+              <span class="receipt-label">Date & Time</span>
+              <span class="receipt-value" id="transaction-date">Loading...</span>
+            </div>
+            <div class="receipt-row">
+              <span class="receipt-label">Payment Method</span>
+              <span class="receipt-value" id="payment-method">Loading...</span>
+            </div>
+            <div class="receipt-row total">
+              <span class="receipt-label">Amount Paid</span>
+              <span class="receipt-value" id="amount">Loading...</span>
+            </div>
+          </div>
+          
+          <div class="payment-info">
+            <h3>Payment Information</h3>
+            <div class="payment-method">
+              <div class="payment-method-icon">
+                <i class="fas fa-credit-card" id="payment-icon"></i>
+              </div>
+              <div class="payment-method-details">
+                <p class="method-name" id="payment-method-name">Loading...</p>
+                <p class="method-details" id="payment-details">Loading...</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="token-info" id="token-section" style="display: none;">
+            <h3><i class="fas fa-key"></i> Electricity Token</h3>
+            <div class="token-code" id="token-code">Loading...</div>
+            <p class="token-instructions">Enter this token on your prepaid meter to load your electricity units</p>
+          </div>
+          
+          <div class="action-buttons">
+            <button class="btn primary" id="download-receipt">
+              <i class="fas fa-download"></i> Download Receipt
+            </button>
+            <a href="dashboard.html" class="btn secondary">
+              <i class="fas fa-home"></i> Back to Dashboard
+            </a>
+            <a href="index.html" class="btn secondary">
+              <i class="fas fa-plus-circle"></i> Make Another Payment
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Reference the main.js file -->
+  <script src="main.js"></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get transaction reference from URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const reference = urlParams.get('reference');
+      const trxref = urlParams.get('trxref');
+      
+      // Use either reference or trxref parameter
+      const transactionReference = reference || trxref;
+      
+      if (!transactionReference) {
+        showError('No transaction reference found. Please check your payment confirmation email.');
+        return;
+      }
+      
+      // Fetch transaction details from the backend
+      fetchTransactionDetails(transactionReference);
+      
+      // Download receipt functionality
+      document.getElementById('download-receipt').addEventListener('click', function() {
+        // In a real application, this would generate and download a PDF receipt
+        alert('Receipt download functionality would be implemented here');
+      });
+    });
+    
+    // Fetch transaction details from the backend
+    function fetchTransactionDetails(reference) {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        showError('Authentication required. Please login again.');
+        return;
+      }
+      
+      fetch(`${API_BASE}/api/transactions/${reference}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch transaction details');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.transaction) {
+          displayTransactionDetails(data.transaction);
+        } else {
+          showError('Transaction not found. Please check your payment confirmation email.');
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching transaction details:', error);
+        showError('Failed to load transaction details. Please try again later.');
+      });
+    }
+    
+    // Display transaction details on the page
+    function displayTransactionDetails(transaction) {
+      // Hide loading state
+      document.getElementById('loading-state').style.display = 'none';
+      
+      // Show content
+      document.getElementById('success-content').style.display = 'block';
+      
+      // Format date
+      const date = new Date(transaction.createdAt);
+      const formattedDate = date.toLocaleDateString('en-NG', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      // Update the receipt with transaction details
+      document.getElementById('transaction-reference').textContent = transaction.reference;
+      document.getElementById('service-type').textContent = getServiceTypeLabel(transaction.type);
+      document.getElementById('transaction-date').textContent = formattedDate;
+      document.getElementById('amount').textContent = `₦${transaction.amount.toLocaleString()}`;
+      
+      // Update payment method
+      const paymentMethodElement = document.getElementById('payment-method');
+      const paymentMethodIcon = document.getElementById('payment-icon');
+      const paymentMethodName = document.getElementById('payment-method-name');
+      const paymentDetails = document.getElementById('payment-details');
+      
+      if (transaction.metadata && transaction.metadata.paymentMethod === 'wallet') {
+        paymentMethodElement.textContent = 'Wallet Balance';
+        paymentMethodIcon.className = 'fas fa-wallet';
+        paymentMethodName.textContent = 'Wallet Balance';
+        paymentDetails.textContent = 'Transaction completed successfully';
+      } else {
+        paymentMethodElement.textContent = 'Debit/Credit Card';
+        paymentMethodIcon.className = 'fas fa-credit-card';
+        paymentMethodName.textContent = 'Debit/Credit Card';
+        paymentDetails.textContent = 'Transaction completed successfully';
+      }
+      
+      // Update service-specific details
+      updateServiceSpecificDetails(transaction);
+    }
+    
+    // Update service-specific details based on transaction type
+    function updateServiceSpecificDetails(transaction) {
+      const providerElement = document.getElementById('provider');
+      const accountNumberElement = document.getElementById('account-number');
+      const tokenSection = document.getElementById('token-section');
+      const tokenCode = document.getElementById('token-code');
+      
+      // Reset visibility
+      tokenSection.style.display = 'none';
+      
+      switch (transaction.type) {
+        case 'airtime':
+          providerElement.textContent = transaction.metadata.network || 'N/A';
+          accountNumberElement.textContent = transaction.metadata.phone || 'N/A';
+          break;
+          
+        case 'data':
+          providerElement.textContent = transaction.metadata.network || 'N/A';
+          accountNumberElement.textContent = transaction.metadata.phone || 'N/A';
+          break;
+          
+        case 'electricity':
+          providerElement.textContent = transaction.metadata.disco || 'N/A';
+          accountNumberElement.textContent = transaction.metadata.meter || 'N/A';
+          
+          // Show token section if available
+          if (transaction.metadata && transaction.metadata.token) {
+            tokenSection.style.display = 'block';
+            tokenCode.textContent = transaction.metadata.token;
+          }
+          break;
+          
+        case 'tv':
+          providerElement.textContent = transaction.metadata.provider || 'N/A';
+          accountNumberElement.textContent = transaction.metadata.smartcard || 'N/A';
+          break;
+          
+        case 'wallet-funding':
+          providerElement.textContent = 'EasySubscribe';
+          accountNumberElement.textContent = 'Wallet Funding';
+          break;
+          
+        default:
+          providerElement.textContent = 'N/A';
+          accountNumberElement.textContent = 'N/A';
+      }
+    }
+    
+    // Get human-readable service type label
+    function getServiceTypeLabel(type) {
+      switch (type) {
+        case 'airtime': return 'Airtime Purchase';
+        case 'data': return 'Data Purchase';
+        case 'electricity': return 'Electricity Bill Payment';
+        case 'tv': return 'TV Subscription';
+        case 'wallet-funding': return 'Wallet Funding';
+        default: return 'Payment';
+      }
+    }
+    
+    // Show error message
+    function showError(message) {
+      document.getElementById('loading-state').style.display = 'none';
+      document.getElementById('error-message').textContent = message;
+      document.getElementById('error-message').style.display = 'block';
+    }
+  </script>
+</body>
+</html>

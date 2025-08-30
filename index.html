@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EasySubscribe - Home</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">
+        <h1>EasySubscribe</h1>
+      </div>
+      <nav class="desktop-nav">
+        <a href="index.html" class="active">Home</a>
+        <!-- Login/Signup links will be shown if user is not authenticated -->
+        <a href="login.html" id="nav-login">Login</a>
+        <a href="signup.html" id="nav-signup">Sign Up</a>
+        <!-- Dashboard link will be shown if user is authenticated -->
+        <a href="dashboard.html" id="nav-dashboard" style="display: none;">Dashboard</a>
+        <!-- Logout button will be shown if user is authenticated -->
+        <a href="#" id="nav-logout" class="logout-btn" style="display: none;">Logout</a>
+      </nav>
+      <div class="mobile-menu-btn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="hero-content">
+          <h2>Pay Bills Easily & Securely</h2>
+          <p>Buy Airtime, Data, and pay utilities with one click.</p>
+          <div class="cta-buttons">
+            <!-- Show Get Started button if user is not authenticated, otherwise show Dashboard button -->
+            <a href="signup.html" class="btn primary" id="hero-get-started">Get Started</a>
+            <a href="dashboard.html" class="btn primary" id="hero-dashboard" style="display: none;">Go to Dashboard</a>
+            <a href="#services" class="btn secondary">Learn More</a>
+          </div>
+        </div>
+        <div class="hero-image">
+          <!-- Placeholder for hero image -->
+          <div class="image-placeholder"></div>
+        </div>
+      </div>
+    </section>
+    <section class="services" id="services">
+      <div class="container">
+        <h3>Our Services</h3>
+        <div class="services-grid">
+          <div class="service-card">
+            <div class="service-icon airtime-icon"></div>
+            <h4>Airtime Top-up</h4>
+            <p>Instant recharge for all networks</p>
+          </div>
+          <div class="service-card">
+            <div class="service-icon data-icon"></div>
+            <h4>Data Bundles</h4>
+            <p>Affordable data plans for everyone</p>
+          </div>
+          <div class="service-card">
+            <div class="service-icon electricity-icon"></div>
+            <h4>Electricity & Utilities</h4>
+            <p>Pay bills without leaving home</p>
+          </div>
+          <div class="service-card">
+            <div class="service-icon tv-icon"></div>
+            <h4>TV Subscription</h4>
+            <p>Renew your TV subscriptions instantly</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="features">
+      <div class="container">
+        <h3>Why Choose EasySubscribe</h3>
+        <div class="features-grid">
+          <div class="feature">
+            <h4>Secure Payments</h4>
+            <p>Bank-level security for all transactions</p>
+          </div>
+          <div class="feature">
+            <h4>Fast & Reliable</h4>
+            <p>Instant delivery with 99.9% uptime</p>
+          </div>
+          <div class="feature">
+            <h4>24/7 Support</h4>
+            <p>Our team is always ready to help</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <h2>EasySubscribe</h2>
+          <p>Your one-stop solution for bill payments</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-column">
+            <h4>Company</h4>
+            <a href="#">About Us</a>
+            <a href="#">Careers</a>
+            <a href="#">Contact</a>
+          </div>
+          <div class="footer-column">
+            <h4>Services</h4>
+            <a href="airtime.html">Airtime</a>
+            <a href="data.html">Data</a>
+            <a href="electricity.html">Electricity</a>
+            <a href="tv.html">TV Subscription</a>
+          </div>
+          <div class="footer-column">
+            <h4>Legal</h4>
+            <a href="#">Terms of Service</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">FAQ</a>
+          </div>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>&copy; 2025 EasySubscribe. All Rights Reserved.</p>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Reference the main.js file -->
+  <script src="main.js"></script>
+  
+  <script>
+    // Mobile menu toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+      const desktopNav = document.querySelector('.desktop-nav');
+      
+      if (mobileMenuBtn && desktopNav) {
+        mobileMenuBtn.addEventListener('click', function() {
+          desktopNav.classList.toggle('active');
+        });
+      }
+      
+      // Check authentication status and update UI
+      checkAuthenticationAndUpdateUI();
+      
+      // Add event listener to logout button
+      const logoutBtn = document.getElementById('nav-logout');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          logout();
+        });
+      }
+    });
+    
+    // Function to check authentication status and update UI
+    function checkAuthenticationAndUpdateUI() {
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      // Elements to show/hide based on authentication status
+      const navLogin = document.getElementById('nav-login');
+      const navSignup = document.getElementById('nav-signup');
+      const navDashboard = document.getElementById('nav-dashboard');
+      const navLogout = document.getElementById('nav-logout');
+      const heroGetStarted = document.getElementById('hero-get-started');
+      const heroDashboard = document.getElementById('hero-dashboard');
+      
+      if (token) {
+        // User is authenticated
+        if (navLogin) navLogin.style.display = 'none';
+        if (navSignup) navSignup.style.display = 'none';
+        if (navDashboard) navDashboard.style.display = 'block';
+        if (navLogout) navLogout.style.display = 'block';
+        if (heroGetStarted) heroGetStarted.style.display = 'none';
+        if (heroDashboard) heroDashboard.style.display = 'inline-block';
+        
+        // Update welcome message if user name is available
+        if (user.name) {
+          const heroContent = document.querySelector('.hero-content h2');
+          if (heroContent) {
+            heroContent.textContent = `Welcome back, ${user.name}!`;
+          }
+        }
+      } else {
+        // User is not authenticated
+        if (navLogin) navLogin.style.display = 'block';
+        if (navSignup) navSignup.style.display = 'block';
+        if (navDashboard) navDashboard.style.display = 'none';
+        if (navLogout) navLogout.style.display = 'none';
+        if (heroGetStarted) heroGetStarted.style.display = 'inline-block';
+        if (heroDashboard) heroDashboard.style.display = 'none';
+      }
+    }
+    
+    // Logout function
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

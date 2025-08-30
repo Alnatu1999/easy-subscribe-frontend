@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Airtime Recharge - EasySubscribe</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Additional styles for error message and loading state */
+    .error-message {
+      background-color: #ffebee;
+      color: #d32f2f;
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      border-left: 4px solid #d32f2f;
+    }
+    
+    .error-message:before {
+      content: '\f06a';
+      font-family: 'Font Awesome 5 Free';
+      font-weight: 900;
+      margin-right: 10px;
+    }
+    
+    .btn.loading {
+      position: relative;
+      color: transparent;
+    }
+    
+    .btn.loading:after {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: auto;
+      border: 2px solid transparent;
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spinner 0.8s linear infinite;
+    }
+    
+    @keyframes spinner {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Success message styling */
+    .success-message {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      border-left: 4px solid #4caf50;
+    }
+    
+    .success-message:before {
+      content: '\f00c';
+      font-family: 'Font Awesome 5 Free';
+      font-weight: 900;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">
+        <h1>EasySubscribe</h1>
+      </div>
+      <nav class="desktop-nav">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="airtime.html" class="active">Airtime</a>
+        <a href="data.html">Data</a>
+        <a href="electricity.html">Electricity</a>
+        <a href="tv.html">TV</a>
+      </nav>
+      <div class="mobile-menu-btn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+  <main class="service-page">
+    <div class="container">
+      <div class="service-header">
+        <div class="service-icon airtime-icon"></div>
+        <div>
+          <h2>Airtime Recharge</h2>
+          <p>Instant top-up for all networks</p>
+        </div>
+      </div>
+      <div class="service-container">
+        <div class="service-form-container">
+          <div class="form-card">
+            <h3>Buy Airtime</h3>
+            
+            <!-- Error message display -->
+            <div id="airtime-error" class="error-message" style="display: none;"></div>
+            
+            <!-- Success message display -->
+            <div id="airtime-success" class="success-message" style="display: none;"></div>
+            
+            <form id="airtimeForm">
+              <div class="form-group">
+                <label for="network">Select Network</label>
+                <div class="input-with-icon">
+                  <i class="fas fa-signal"></i>
+                  <select id="network" name="network" required>
+                    <option value="">-- Choose Network --</option>
+                    <option value="mtn">MTN</option>
+                    <option value="glo">Glo</option>
+                    <option value="airtel">Airtel</option>
+                    <option value="9mobile">9mobile</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <div class="input-with-icon">
+                  <i class="fas fa-phone"></i>
+                  <input type="tel" id="phone" name="phone" placeholder="Enter phone number" required>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="amount">Amount (₦)</label>
+                <div class="input-with-icon">
+                  <i class="fas fa-money-bill-wave"></i>
+                  <input type="number" id="amount" name="amount" placeholder="100" min="50" max="50000" required>
+                </div>
+              </div>
+              
+              <div class="quick-amounts">
+                <p>Quick Select:</p>
+                <div class="amount-buttons">
+                  <button type="button" class="amount-btn">100</button>
+                  <button type="button" class="amount-btn">200</button>
+                  <button type="button" class="amount-btn">500</button>
+                  <button type="button" class="amount-btn">1000</button>
+                  <button type="button" class="amount-btn">2000</button>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <div class="payment-method">
+                  <label>Payment Method</label>
+                  <div class="payment-options">
+                    <div class="payment-option">
+                      <input type="radio" id="wallet" name="paymentMethod" value="wallet" checked>
+                      <label for="wallet">Wallet Balance</label>
+                    </div>
+                    <div class="payment-option">
+                      <input type="radio" id="paystack" name="paymentMethod" value="paystack">
+                      <label for="paystack">Debit/Credit Card</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <button type="submit" class="btn primary full-width" id="airtime-btn">Proceed to Pay</button>
+            </form>
+          </div>
+          
+          <div class="recent-transactions">
+            <h4>Recent Transactions</h4>
+            <div class="transaction-list">
+              <div class="transaction-item">
+                <div class="transaction-icon mtn"></div>
+                <div class="transaction-details">
+                  <p class="transaction-title">MTN Airtime</p>
+                  <p class="transaction-info">08012345678 • Today, 10:30 AM</p>
+                </div>
+                <div class="transaction-amount">₦1,000</div>
+              </div>
+              <div class="transaction-item">
+                <div class="transaction-icon airtel"></div>
+                <div class="transaction-details">
+                  <p class="transaction-title">Airtel Airtime</p>
+                  <p class="transaction-info">08098765432 • Yesterday, 5:45 PM</p>
+                </div>
+                <div class="transaction-amount">₦500</div>
+              </div>
+              <div class="transaction-item">
+                <div class="transaction-icon glo"></div>
+                <div class="transaction-details">
+                  <p class="transaction-title">Glo Airtime</p>
+                  <p class="transaction-info">07055556666 • May 15, 2:15 PM</p>
+                </div>
+                <div class="transaction-amount">₦2,000</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="service-info">
+          <div class="info-card">
+            <h3>Why Buy Airtime With Us?</h3>
+            <ul class="benefits-list">
+              <li><i class="fas fa-check-circle"></i> Instant delivery to all networks</li>
+              <li><i class="fas fa-check-circle"></i> No hidden charges or fees</li>
+              <li><i class="fas fa-check-circle"></i> Secure payment processing</li>
+              <li><i class="fas fa-check-circle"></i> 24/7 customer support</li>
+              <li><i class="fas fa-check-circle"></i> Earn rewards on every purchase</li>
+            </ul>
+            
+            <div class="faq-section">
+              <h4>Frequently Asked Questions</h4>
+              <div class="faq-item">
+                <div class="faq-question">
+                  <p>How long does it take for airtime to be delivered?</p>
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                  <p>Airtime is delivered instantly to your phone number. In rare cases of network delays, it may take up to 5 minutes.</p>
+                </div>
+              </div>
+              <div class="faq-item">
+                <div class="faq-question">
+                  <p>Can I buy airtime for someone else?</p>
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                  <p>Yes, simply enter the recipient's phone number when making the purchase.</p>
+                </div>
+              </div>
+              <div class="faq-item">
+                <div class="faq-question">
+                  <p>What payment methods do you accept?</p>
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                  <p>We accept wallet balance, debit/credit cards, and bank transfers.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <h2>EasySubscribe</h2>
+          <p>Your one-stop solution for bill payments</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-column">
+            <h4>Company</h4>
+            <a href="#">About Us</a>
+            <a href="#">Careers</a>
+            <a href="#">Contact</a>
+          </div>
+          <div class="footer-column">
+            <h4>Services</h4>
+            <a href="airtime.html">Airtime</a>
+            <a href="data.html">Data</a>
+            <a href="electricity.html">Electricity</a>
+            <a href="tv.html">TV Subscription</a>
+          </div>
+          <div class="footer-column">
+            <h4>Legal</h4>
+            <a href="#">Terms of Service</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">FAQ</a>
+          </div>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>&copy; 2025 EasySubscribe. All Rights Reserved.</p>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Reference the main.js file -->
+  <script src="main.js"></script>
+  
+  <script>
+    // Mobile menu toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+      const desktopNav = document.querySelector('.desktop-nav');
+      
+      if (mobileMenuBtn && desktopNav) {
+        mobileMenuBtn.addEventListener('click', function() {
+          desktopNav.classList.toggle('active');
+        });
+      }
+      
+      // Quick amount buttons
+      document.querySelectorAll('.amount-btn').forEach(button => {
+        button.addEventListener('click', function() {
+          document.getElementById('amount').value = this.textContent;
+        });
+      });
+      
+      // FAQ toggle
+      document.querySelectorAll('.faq-question').forEach(question => {
+        question.addEventListener('click', function() {
+          const answer = this.nextElementSibling;
+          const icon = this.querySelector('i');
+          
+          answer.classList.toggle('active');
+          icon.classList.toggle('fa-chevron-down');
+          icon.classList.toggle('fa-chevron-up');
+        });
+      });
+    });
+  </script>
+</body>
+</html>

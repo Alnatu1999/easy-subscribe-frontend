@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - EasySubscribe</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Additional styles for loading state and error messages */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .error-message {
+      background-color: #ffebee;
+      color: #d32f2f;
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      border-left: 4px solid #d32f2f;
+    }
+    
+    .error-message:before {
+      content: '\f06a';
+      font-family: 'Font Awesome 5 Free';
+      font-weight: 900;
+      margin-right: 10px;
+    }
+    
+    .success-message {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      border-left: 4px solid #4caf50;
+    }
+    
+    .success-message:before {
+      content: '\f00c';
+      font-family: 'Font Awesome 5 Free';
+      font-weight: 900;
+      margin-right: 10px;
+    }
+    
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+    }
+    
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    
+    .skeleton-text {
+      height: 1rem;
+      margin-bottom: 0.5rem;
+      border-radius: 4px;
+    }
+    
+    .skeleton-balance {
+      height: 2.5rem;
+      width: 60%;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+    }
+    
+    .status {
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    
+    .status.success {
+      background-color: rgba(76, 175, 80, 0.1);
+      color: #2e7d32;
+    }
+    
+    .status.pending {
+      background-color: rgba(255, 152, 0, 0.1);
+      color: #e65100;
+    }
+    
+    .status.failed {
+      background-color: rgba(244, 67, 54, 0.1);
+      color: #c62828;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <h1>EasySubscribe</h1>
+        </div>
+        <div class="user-profile">
+          <div class="user-avatar">
+            <i class="fas fa-user-circle"></i>
+          </div>
+          <div class="user-info">
+            <p class="user-name" id="user-name">Loading...</p>
+            <p class="user-email" id="user-email">Loading...</p>
+          </div>
+        </div>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <ul>
+          <li class="active">
+            <a href="dashboard.html">
+              <i class="fas fa-home"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li>
+            <a href="fund.html">
+              <i class="fas fa-wallet"></i>
+              <span>Fund Wallet</span>
+            </a>
+          </li>
+          <li>
+            <a href="airtime.html">
+              <i class="fas fa-mobile-alt"></i>
+              <span>Airtime</span>
+            </a>
+          </li>
+          <li>
+            <a href="data.html">
+              <i class="fas fa-wifi"></i>
+              <span>Data</span>
+            </a>
+          </li>
+          <li>
+            <a href="electricity.html">
+              <i class="fas fa-bolt"></i>
+              <span>Electricity</span>
+            </a>
+          </li>
+          <li>
+            <a href="tv.html">
+              <i class="fas fa-tv"></i>
+              <span>TV Subscription</span>
+            </a>
+          </li>
+          <li>
+            <a href="transactions.html">
+              <i class="fas fa-history"></i>
+              <span>Transaction History</span>
+            </a>
+          </li>
+          <li id="admin-nav-item" style="display: none;">
+            <a href="admin.html">
+              <i class="fas fa-user-shield"></i>
+              <span>Admin Panel</span>
+            </a>
+          </li>
+          <li>
+            <a href="#">
+              <i class="fas fa-cog"></i>
+              <span>Settings</span>
+            </a>
+          </li>
+          <li>
+            <a href="#">
+              <i class="fas fa-question-circle"></i>
+              <span>Help & Support</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <a href="#" class="logout-btn" id="logout-btn">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </a>
+      </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-left">
+          <button class="menu-toggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <h2>Dashboard</h2>
+        </div>
+        
+        <div class="header-right">
+          <div class="notification-bell">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge" id="notification-count">0</span>
+          </div>
+          <div class="search-bar">
+            <input type="text" placeholder="Search...">
+            <i class="fas fa-search"></i>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Dashboard Content -->
+      <div class="dashboard-content">
+        <!-- Error/Success Messages -->
+        <div id="dashboard-error" class="error-message" style="display: none;"></div>
+        <div id="dashboard-success" class="success-message" style="display: none;"></div>
+        
+        <!-- Wallet Section -->
+        <section class="wallet-section">
+          <div class="wallet-card">
+            <div class="wallet-header">
+              <h3>Wallet Balance</h3>
+              <div class="wallet-actions">
+                <button class="btn-icon" id="refresh-balance">
+                  <i class="fas fa-sync-alt"></i>
+                </button>
+              </div>
+            </div>
+            <div class="wallet-balance">
+              <p class="balance-amount" id="wallet-balance">
+                <span class="skeleton skeleton-balance"></span>
+              </p>
+              <p class="balance-label">Available Balance</p>
+            </div>
+            <div class="wallet-buttons">
+              <a href="fund.html" class="btn primary">
+                <i class="fas fa-plus-circle"></i>
+                Fund Wallet
+              </a>
+              <button class="btn secondary" id="download-statement">
+                <i class="fas fa-download"></i>
+                Statement
+              </button>
+            </div>
+          </div>
+          
+          <div class="quick-stats">
+            <div class="stat-card">
+              <div class="stat-icon airtime-icon"></div>
+              <div class="stat-details">
+                <p class="stat-value" id="airtime-count">0</p>
+                <p class="stat-label">Airtime Purchases</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon data-icon"></div>
+              <div class="stat-details">
+                <p class="stat-value" id="data-count">0</p>
+                <p class="stat-label">Data Purchases</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon electricity-icon"></div>
+              <div class="stat-details">
+                <p class="stat-value" id="electricity-count">0</p>
+                <p class="stat-label">Bill Payments</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon tv-icon"></div>
+              <div class="stat-details">
+                <p class="stat-value" id="tv-count">0</p>
+                <p class="stat-label">TV Subscriptions</p>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Services Section -->
+        <section class="services-section">
+          <div class="section-header">
+            <h3>Our Services</h3>
+            <a href="#" class="view-all">View All</a>
+          </div>
+          
+          <div class="services-grid">
+            <a href="airtime.html" class="service-card">
+              <div class="service-icon airtime-icon"></div>
+              <h4>Airtime Recharge</h4>
+              <p>Buy airtime instantly for all networks</p>
+              <div class="service-arrow">
+                <i class="fas fa-arrow-right"></i>
+              </div>
+            </a>
+            
+            <a href="data.html" class="service-card">
+              <div class="service-icon data-icon"></div>
+              <h4>Data Bundle</h4>
+              <p>Purchase affordable internet data plans</p>
+              <div class="service-arrow">
+                <i class="fas fa-arrow-right"></i>
+              </div>
+            </a>
+            
+            <a href="electricity.html" class="service-card">
+              <div class="service-icon electricity-icon"></div>
+              <h4>Electricity Bill</h4>
+              <p>Pay your electricity bills easily</p>
+              <div class="service-arrow">
+                <i class="fas fa-arrow-right"></i>
+              </div>
+            </a>
+            
+            <a href="tv.html" class="service-card">
+              <div class="service-icon tv-icon"></div>
+              <h4>TV Subscription</h4>
+              <p>Renew your DSTV, GOtv, or Startimes</p>
+              <div class="service-arrow">
+                <i class="fas fa-arrow-right"></i>
+              </div>
+            </a>
+          </div>
+        </section>
+        
+        <!-- Recent Transactions -->
+        <section class="transactions-section">
+          <div class="section-header">
+            <h3>Recent Transactions</h3>
+            <a href="transactions.html" class="view-all">View All</a>
+          </div>
+          
+          <div class="transactions-table">
+            <div class="table-header">
+              <div class="table-cell">Transaction</div>
+              <div class="table-cell">Date</div>
+              <div class="table-cell">Status</div>
+              <div class="table-cell">Amount</div>
+            </div>
+            
+            <div id="transactions-container">
+              <!-- Transactions will be loaded here -->
+              <div class="table-row loading-row">
+                <div class="table-cell">
+                  <div class="skeleton skeleton-text"></div>
+                </div>
+                <div class="table-cell">
+                  <div class="skeleton skeleton-text"></div>
+                </div>
+                <div class="table-cell">
+                  <div class="skeleton skeleton-text"></div>
+                </div>
+                <div class="table-cell">
+                  <div class="skeleton skeleton-text"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Promotional Banner -->
+        <section class="promo-section">
+          <div class="promo-card">
+            <div class="promo-content">
+              <h3>Refer a Friend & Earn!</h3>
+              <p>Invite your friends to EasySubscribe and earn ₦500 for each successful referral.</p>
+              <button class="btn primary" id="referral-btn">Start Referring</button>
+            </div>
+            <div class="promo-image">
+              <i class="fas fa-gift"></i>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  
+  <!-- Reference the main.js file -->
+  <script src="main.js"></script>
+  
+  <script>
+    // Mobile menu toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuToggle = document.querySelector('.menu-toggle');
+      const sidebar = document.querySelector('.sidebar');
+      
+      if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', function() {
+          sidebar.classList.toggle('active');
+        });
+      }
+      
+      // Check authentication
+      checkAuthentication();
+      
+      // Load user data
+      loadUserData();
+      
+      // Load wallet balance
+      loadWalletBalance();
+      
+      // Load recent transactions
+      loadRecentTransactions();
+      
+      // Load transaction statistics
+      loadTransactionStats();
+      
+      // Check if user is admin
+      checkAdminAccess();
+      
+      // Event listeners
+      document.getElementById('refresh-balance').addEventListener('click', function() {
+        loadWalletBalance();
+      });
+      
+      document.getElementById('download-statement').addEventListener('click', function() {
+        alert('Download Statement functionality would be implemented here');
+      });
+      
+      document.getElementById('logout-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        logout();
+      });
+      
+      document.getElementById('referral-btn').addEventListener('click', function() {
+        alert('Referral program functionality would be implemented here');
+      });
+    });
+    
+    // Check if user is authenticated
+    function checkAuthentication() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = 'login.html';
+      }
+    }
+    
+    // Load user data
+    function loadUserData() {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      if (user.name) {
+        document.getElementById('user-name').textContent = user.name;
+      }
+      
+      if (user.email) {
+        document.getElementById('user-email').textContent = user.email;
+      }
+    }
+    
+    // Load wallet balance
+    function loadWalletBalance() {
+      const token = localStorage.getItem('token');
+      const balanceElement = document.getElementById('wallet-balance');
+      const refreshButton = document.getElementById('refresh-balance');
+      
+      if (!token) return;
+      
+      // Show loading state
+      balanceElement.innerHTML = '<span class="skeleton skeleton-balance"></span>';
+      
+      fetch(`${API_BASE}/api/wallet/balance`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch wallet balance');
+        }
+        return response.json();
+      })
+      .then(data => {
+        balanceElement.textContent = `₦${data.balance.toLocaleString()}`;
+      })
+      .catch(error => {
+        console.error('Error loading wallet balance:', error);
+        balanceElement.textContent = '₦0.00';
+      });
+    }
+    
+    // Load recent transactions
+    function loadRecentTransactions() {
+      const token = localStorage.getItem('token');
+      const container = document.getElementById('transactions-container');
+      
+      if (!token) return;
+      
+      fetch(`${API_BASE}/api/transactions?limit=5`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch transactions');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.transactions && data.transactions.length > 0) {
+          container.innerHTML = '';
+          
+          data.transactions.forEach(transaction => {
+            const row = document.createElement('div');
+            row.className = 'table-row';
+            
+            // Format date
+            const date = new Date(transaction.createdAt);
+            const formattedDate = date.toLocaleDateString('en-NG', {
+                  day: 'numeric',
+                  month: 'short',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                });
+            
+            // Determine icon based on transaction type
+            let iconClass = '';
+            switch (transaction.type) {
+              case 'airtime': iconClass = 'mtn'; break;
+              case 'data': iconClass = 'glo'; break;
+              case 'electricity': iconClass = 'ikeja'; break;
+              case 'tv': iconClass = 'dstv'; break;
+              case 'wallet-funding': iconClass = 'wallet'; break;
+              default: iconClass = 'default';
+            }
+            
+            // Get transaction details
+            let details = '';
+            if (transaction.metadata && transaction.metadata.phone) {
+              details = transaction.metadata.phone;
+            } else if (transaction.metadata && transaction.metadata.meter) {
+              details = `Meter: ${transaction.metadata.meter}`;
+            } else if (transaction.metadata && transaction.metadata.smartcard) {
+              details = `Smart Card: ${transaction.metadata.smartcard}`;
+            }
+            
+            row.innerHTML = `
+              <div class="table-cell">
+                <div class="transaction-info">
+                  <div class="transaction-icon ${iconClass}"></div>
+                  <div>
+                    <p class="transaction-title">${transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}</p>
+                    <p class="transaction-details">${details}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="table-cell">${formattedDate}</div>
+              <div class="table-cell"><span class="status ${transaction.status}">${transaction.status}</span></div>
+              <div class="table-cell">₦${transaction.amount.toLocaleString()}</div>
+            `;
+            
+            container.appendChild(row);
+          });
+        } else {
+          container.innerHTML = '<div class="table-row"><div class="table-cell" colspan="4" style="text-align: center;">No transactions found</div></div>';
+        }
+      })
+      .catch(error => {
+        console.error('Error loading transactions:', error);
+        container.innerHTML = '<div class="table-row"><div class="table-cell" colspan="4" style="text-align: center;">Failed to load transactions</div></div>';
+      });
+    }
+    
+    // Load transaction statistics
+    function loadTransactionStats() {
+      const token = localStorage.getItem('token');
+      
+      if (!token) return;
+      
+      fetch(`${API_BASE}/api/transactions`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch transactions');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.transactions) {
+          const stats = {
+            airtime: 0,
+            data: 0,
+            electricity: 0,
+            tv: 0
+          };
+          
+          data.transactions.forEach(transaction => {
+            if (stats.hasOwnProperty(transaction.type)) {
+              stats[transaction.type]++;
+            }
+          });
+          
+          document.getElementById('airtime-count').textContent = stats.airtime;
+          document.getElementById('data-count').textContent = stats.data;
+          document.getElementById('electricity-count').textContent = stats.electricity;
+          document.getElementById('tv-count').textContent = stats.tv;
+        }
+      })
+      .catch(error => {
+        console.error('Error loading transaction stats:', error);
+      });
+    }
+    
+    // Check if user is admin
+    function checkAdminAccess() {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      if (user.role === 'admin' || user.role === 'super-admin') {
+        document.getElementById('admin-nav-item').style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>

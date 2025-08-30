@@ -178,9 +178,15 @@
             </a>
           </li>
           <li>
-            <a href="#">
-              <i class="fas fa-cog"></i>
-              <span>Settings</span>
+            <a href="notifications.html">
+              <i class="fas fa-bell"></i>
+              <span>Notifications</span>
+            </a>
+          </li>
+          <li>
+            <a href="profile.html">
+              <i class="fas fa-user-cog"></i>
+              <span>Profile</span>
             </a>
           </li>
           <li>
@@ -212,7 +218,7 @@
         </div>
         
         <div class="header-right">
-          <div class="notification-bell">
+          <div class="notification-bell" id="notification-bell">
             <i class="fas fa-bell"></i>
             <span class="notification-badge" id="notification-count">0</span>
           </div>
@@ -241,7 +247,7 @@
               </div>
             </div>
             <div class="wallet-balance">
-              <p class="balance-amount" id="wallet-balance">
+              <p class="balance-amount wallet-balance" id="wallet-balance">
                 <span class="skeleton skeleton-balance"></span>
               </p>
               <p class="balance-label">Available Balance</p>
@@ -376,7 +382,7 @@
           <div class="promo-card">
             <div class="promo-content">
               <h3>Refer a Friend & Earn!</h3>
-              <p>Invite your friends to EasySubscribe and earn ₦500 for each successful referral.</p>
+              <p>Invite your friends to EasySubscribe and earn bonus credits for each successful referral.</p>
               <button class="btn primary" id="referral-btn">Start Referring</button>
             </div>
             <div class="promo-image">
@@ -392,6 +398,11 @@
   <script src="main.js"></script>
   
   <script>
+    // API Configuration
+    const API_BASE = window.location.hostname === 'localhost' 
+      ? 'http://localhost:5001'  // Changed from 5000 to 5001 to match server
+      : 'https://easy-subscribe-backend.onrender.com'; // Updated with actual backend URL
+    
     // Mobile menu toggle
     document.addEventListener('DOMContentLoaded', function() {
       const menuToggle = document.querySelector('.menu-toggle');
@@ -418,6 +429,9 @@
       // Load transaction statistics
       loadTransactionStats();
       
+      // Load notifications
+      loadNotifications();
+      
       // Check if user is admin
       checkAdminAccess();
       
@@ -426,9 +440,7 @@
         loadWalletBalance();
       });
       
-      document.getElementById('download-statement').addEventListener('click', function() {
-        alert('Download Statement functionality would be implemented here');
-      });
+      document.getElementById('download-statement').addEventListener('click', downloadStatement);
       
       document.getElementById('logout-btn').addEventListener('click', function(e) {
         e.preventDefault();
@@ -436,13 +448,18 @@
       });
       
       document.getElementById('referral-btn').addEventListener('click', function() {
-        alert('Referral program functionality would be implemented here');
+        startReferring();
+      });
+      
+      // Notification bell click
+      document.getElementById('notification-bell').addEventListener('click', function() {
+        window.location.href = 'notifications.html';
       });
     });
     
     // Check if user is authenticated
     function checkAuthentication() {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       if (!token) {
         window.location.href = 'login.html';
       }
@@ -463,7 +480,7 @@
     
     // Load wallet balance
     function loadWalletBalance() {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       const balanceElement = document.getElementById('wallet-balance');
       const refreshButton = document.getElementById('refresh-balance');
       
@@ -479,12 +496,27 @@
       })
       .then(response => {
         if (!response.ok) {
+          if (response.status === 401) {
+            // Token expired, try to refresh
+            return refreshToken().then(success => {
+              if (success) {
+                return loadWalletBalance();
+              } else {
+                // If refresh fails, redirect to login
+                window.location.href = 'login.html';
+              }
+            });
+          }
           throw new Error('Failed to fetch wallet balance');
         }
         return response.json();
       })
       .then(data => {
-        balanceElement.textContent = `₦${data.balance.toLocaleString()}`;
+        if (data && data.success) {
+          balanceElement.textContent = `₦${Number(data.data.balance).toLocaleString()}`;
+        } else {
+          balanceElement.textContent = '₦0.00';
+        }
       })
       .catch(error => {
         console.error('Error loading wallet balance:', error);
@@ -494,7 +526,7 @@
     
     // Load recent transactions
     function loadRecentTransactions() {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       const container = document.getElementById('transactions-container');
       
       if (!token) return;
@@ -506,15 +538,26 @@
       })
       .then(response => {
         if (!response.ok) {
+          if (response.status === 401) {
+            // Token expired, try to refresh
+            return refreshToken().then(success => {
+              if (success) {
+                return loadRecentTransactions();
+              } else {
+                // If refresh fails, redirect to login
+                window.location.href = 'login.html';
+              }
+            });
+          }
           throw new Error('Failed to fetch transactions');
         }
         return response.json();
       })
       .then(data => {
-        if (data.transactions && data.transactions.length > 0) {
+        if (data && data.success && data.data && data.data.transactions.length > 0) {
           container.innerHTML = '';
           
-          data.transactions.forEach(transaction => {
+          data.data.transactions.forEach(transaction => {
             const row = document.createElement('div');
             row.className = 'table-row';
             
@@ -534,7 +577,7 @@
               case 'data': iconClass = 'glo'; break;
               case 'electricity': iconClass = 'ikeja'; break;
               case 'tv': iconClass = 'dstv'; break;
-              case 'wallet-funding': iconClass = 'wallet'; break;
+              case 'transfer': iconClass = 'wallet'; break;
               default: iconClass = 'default';
             }
             
@@ -546,6 +589,8 @@
               details = `Meter: ${transaction.metadata.meter}`;
             } else if (transaction.metadata && transaction.metadata.smartcard) {
               details = `Smart Card: ${transaction.metadata.smartcard}`;
+            } else if (transaction.metadata && transaction.metadata.recipientEmail) {
+              details = `To: ${transaction.metadata.recipientEmail}`;
             }
             
             row.innerHTML = `
@@ -560,7 +605,7 @@
               </div>
               <div class="table-cell">${formattedDate}</div>
               <div class="table-cell"><span class="status ${transaction.status}">${transaction.status}</span></div>
-              <div class="table-cell">₦${transaction.amount.toLocaleString()}</div>
+              <div class="table-cell">₦${Number(transaction.amount).toLocaleString()}</div>
             `;
             
             container.appendChild(row);
@@ -577,7 +622,7 @@
     
     // Load transaction statistics
     function loadTransactionStats() {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       
       if (!token) return;
       
@@ -588,12 +633,23 @@
       })
       .then(response => {
         if (!response.ok) {
+          if (response.status === 401) {
+            // Token expired, try to refresh
+            return refreshToken().then(success => {
+              if (success) {
+                return loadTransactionStats();
+              } else {
+                // If refresh fails, redirect to login
+                window.location.href = 'login.html';
+              }
+            });
+          }
           throw new Error('Failed to fetch transactions');
         }
         return response.json();
       })
       .then(data => {
-        if (data.transactions) {
+        if (data && data.success && data.data && data.data.transactions) {
           const stats = {
             airtime: 0,
             data: 0,
@@ -601,7 +657,7 @@
             tv: 0
           };
           
-          data.transactions.forEach(transaction => {
+          data.data.transactions.forEach(transaction => {
             if (stats.hasOwnProperty(transaction.type)) {
               stats[transaction.type]++;
             }
@@ -618,6 +674,48 @@
       });
     }
     
+    // Load notifications
+    function loadNotifications() {
+      const token = localStorage.getItem('accessToken');
+      
+      if (!token) return;
+      
+      fetch(`${API_BASE}/api/notifications?unreadOnly=true`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Token expired, try to refresh
+            return refreshToken().then(success => {
+              if (success) {
+                return loadNotifications();
+              } else {
+                // If refresh fails, redirect to login
+                window.location.href = 'login.html';
+              }
+            });
+          }
+          throw new Error('Failed to fetch notifications');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data && data.success && data.data) {
+          const notificationBadge = document.getElementById('notification-count');
+          if (notificationBadge) {
+            notificationBadge.textContent = data.data.unreadCount;
+            notificationBadge.style.display = data.data.unreadCount > 0 ? 'block' : 'none';
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error loading notifications:', error);
+      });
+    }
+    
     // Check if user is admin
     function checkAdminAccess() {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -625,6 +723,142 @@
       if (user.role === 'admin' || user.role === 'super-admin') {
         document.getElementById('admin-nav-item').style.display = 'block';
       }
+    }
+    
+    // Download statement function
+    function downloadStatement() {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        showAlert('Please login to download your statement');
+        return;
+      }
+      
+      fetch(`${API_BASE}/api/wallet/transactions`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Token expired, try to refresh
+            return refreshToken().then(success => {
+              if (success) {
+                return downloadStatement();
+              } else {
+                // If refresh fails, redirect to login
+                window.location.href = 'login.html';
+              }
+            });
+          }
+          throw new Error('Failed to fetch transactions');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data && data.success) {
+          // Create CSV content
+          let csvContent = "Reference,Type,Amount,Status,Date\n";
+          
+          data.data.transactions.forEach(transaction => {
+            csvContent += `${transaction.reference},${transaction.type},${transaction.amount},${transaction.status},${new Date(transaction.createdAt).toLocaleString()}\n`;
+          });
+          
+          // Create download link
+          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.setAttribute("href", url);
+          link.setAttribute("download", `wallet-statement-${new Date().toISOString().split('T')[0]}.csv`);
+          link.style.visibility = 'hidden';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      })
+      .catch(error => {
+        console.error('Error downloading statement:', error);
+        showAlert('Failed to download statement. Please try again.');
+      });
+    }
+    
+    // Referral program function
+    function startReferring() {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (user.email) {
+        // In a real app, this would open a referral modal or navigate to a referral page
+        showAlert(`Your referral code is: ${user.email}\nShare this code with friends to earn rewards!`, 'success');
+      } else {
+        showAlert('Please login to access the referral program');
+      }
+    }
+    
+    // Show alert function
+    function showAlert(message, type = 'error') {
+      const alertContainer = document.getElementById('dashboard-error');
+      const successContainer = document.getElementById('dashboard-success');
+      
+      // Hide both containers first
+      alertContainer.style.display = 'none';
+      successContainer.style.display = 'none';
+      
+      if (type === 'error') {
+        alertContainer.textContent = message;
+        alertContainer.style.display = 'flex';
+      } else {
+        successContainer.textContent = message;
+        successContainer.style.display = 'flex';
+      }
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        alertContainer.style.display = 'none';
+        successContainer.style.display = 'none';
+      }, 5000);
+    }
+    
+    // Refresh token function
+    function refreshToken() {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        logout();
+        return Promise.resolve(false);
+      }
+      
+      return fetch(`${API_BASE}/api/auth/refresh-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to refresh token');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data && data.success) {
+          localStorage.setItem('accessToken', data.data.accessToken);
+          return Promise.resolve(true);
+        } else {
+          // Refresh token failed, logout user
+          logout();
+          return Promise.resolve(false);
+        }
+      })
+      .catch(error => {
+        console.error('Error refreshing token:', error);
+        logout();
+        return Promise.resolve(false);
+      });
+    }
+    
+    // Logout function
+    function logout() {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      window.location.href = 'index.html';
     }
   </script>
 </body>

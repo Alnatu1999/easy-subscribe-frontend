@@ -1,8 +1,8 @@
 // main.js - Main JavaScript file for EasySubscribe website
-// API Configuration - FIXED PORT NUMBER
+// API Configuration - UPDATED FOR PRODUCTION
 const API_BASE = window.location.hostname === 'localhost' 
   ? 'http://localhost:5001'  // Changed from 5000 to 5001 to match server
-  : window.location.origin.replace(/\/$/, '');
+  : 'https://easy-subscribe-backend.onrender.com'; // Updated with actual backend URL
 
 // DOM Elements
 const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
@@ -33,7 +33,7 @@ async function checkServerConnection() {
     console.error('Cannot connect to server:', error.message);
     // Show a user-friendly message if on a page that requires server connection
     if (document.querySelector('.auth-page') || document.querySelector('.dashboard-page')) {
-      showAlert('Unable to connect to the server. Please make sure the server is running on port 5001.', 'error');
+      showAlert('Unable to connect to the server. Please make sure the server is running.', 'error');
     }
   }
 }
@@ -136,12 +136,6 @@ function setupFormHandlers() {
   const tvForm = document.getElementById('tvForm');
   if (tvForm) {
     tvForm.addEventListener('submit', (e) => handleServiceForm(e, 'tv'));
-  }
-  
-  // Fund Wallet Form
-  const fundWalletForm = document.getElementById('fundWalletForm');
-  if (fundWalletForm) {
-    fundWalletForm.addEventListener('submit', handleFundWallet);
   }
   
   // Wallet Transfer Form
@@ -320,7 +314,7 @@ function setupModals() {
       }
     });
   });
-
+  
   // Close modal when clicking outside of it
   window.addEventListener('click', (e) => {
     if (e.target.classList.contains('modal')) {
@@ -633,7 +627,7 @@ async function handleSignup(e) {
     
     // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-      showAlert('Unable to connect to the server. Please check your internet connection and make sure the server is running on port 5001.');
+      showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert('Signup failed. Please check your connection and try again.');
     }
@@ -734,7 +728,7 @@ async function handleLogin(e) {
     
     // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-      showAlert('Unable to connect to the server. Please check your internet connection and make sure the server is running on port 5001.');
+      showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert('Login failed. Please check your connection and try again.');
     }
@@ -786,7 +780,7 @@ async function handleForgotPassword(e) {
     
     // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-      showAlert('Unable to connect to the server. Please check your internet connection and make sure the server is running on port 5001.');
+      showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert('Failed to process request. Please check your connection and try again.');
     }
@@ -846,7 +840,7 @@ async function handleResetPassword(e) {
     
     // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-      showAlert('Unable to connect to the server. Please check your internet connection and make sure the server is running on port 5001.');
+      showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert('Failed to reset password. Please check your connection and try again.');
     }
@@ -911,7 +905,7 @@ async function handleUpdateProfile(e) {
     
     // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-      showAlert('Unable to connect to the server. Please check your internet connection and make sure the server is running on port 5001.');
+      showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert('Failed to update profile. Please check your connection and try again.');
     }
@@ -980,7 +974,7 @@ async function handleChangePassword(e) {
     
     // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-      showAlert('Unable to connect to the server. Please check your internet connection and make sure the server is running on port 5001.');
+      showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert('Failed to change password. Please check your connection and try again.');
     }
@@ -990,64 +984,6 @@ async function handleChangePassword(e) {
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Change Password';
-    }
-  }
-}
-
-// Fund Wallet Handler
-async function handleFundWallet(e) {
-  e.preventDefault();
-  
-  const token = localStorage.getItem('accessToken');
-  if (!token) {
-    showAlert('Please login to fund your wallet');
-    return;
-  }
-  
-  const amount = document.getElementById('fundAmount').value;
-  
-  try {
-    // Show loading state
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Processing...';
-    
-    // API call
-    const response = await fetch(`${API_BASE}/api/wallet/fund`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ amount, paymentMethod: 'paystack' })
-    });
-    
-    const data = await response.json();
-    
-    if (response.ok && data.success) {
-      // Redirect to Paystack payment page
-      window.location.href = data.data.authorization_url;
-    } else {
-      // Show error message
-      showAlert(data.message || 'Failed to initialize wallet funding. Please try again.');
-    }
-    
-  } catch (error) {
-    console.error('Wallet funding error:', error);
-    
-    // More specific error message for network issues
-    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-      showAlert('Unable to connect to the server. Please check your internet connection and make sure the server is running on port 5001.');
-    } else {
-      showAlert('Failed to initialize wallet funding. Please check your connection and try again.');
-    }
-  } finally {
-    // Reset button state
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Fund Wallet';
     }
   }
 }
@@ -1103,7 +1039,7 @@ async function handleWalletTransfer(e) {
     
     // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-      showAlert('Unable to connect to the server. Please check your internet connection and make sure the server is running on port 5001.');
+      showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert('Failed to transfer funds. Please check your connection and try again.');
     }
@@ -1117,7 +1053,7 @@ async function handleWalletTransfer(e) {
   }
 }
 
-// Service Form Handler (Airtime, Data, Electricity, TV)
+// Service Form Handler (Airtime, Data, Electricity, TV) - UPDATED TO REMOVE PAYSTACK
 async function handleServiceForm(e, serviceType) {
   e.preventDefault();
   
@@ -1135,8 +1071,7 @@ async function handleServiceForm(e, serviceType) {
       formData = {
         network: document.getElementById('network').value,
         phone: document.getElementById('phone').value,
-        amount: document.getElementById('amount').value,
-        paymentMethod: document.querySelector('input[name="payment"]:checked').value
+        amount: document.getElementById('amount').value
       };
       break;
       
@@ -1144,8 +1079,7 @@ async function handleServiceForm(e, serviceType) {
       formData = {
         network: document.getElementById('network').value,
         phone: document.getElementById('phone').value,
-        plan: document.querySelector('input[name="plan"]:checked').value,
-        paymentMethod: document.querySelector('input[name="payment"]:checked').value
+        plan: document.querySelector('input[name="plan"]:checked').value
       };
       break;
       
@@ -1156,8 +1090,7 @@ async function handleServiceForm(e, serviceType) {
         meterType: document.querySelector('input[name="meterType"]:checked').value,
         amount: document.getElementById('amount').value,
         phone: document.getElementById('phone').value,
-        email: document.getElementById('email').value,
-        paymentMethod: document.querySelector('input[name="payment"]:checked').value
+        email: document.getElementById('email').value
       };
       break;
       
@@ -1167,8 +1100,7 @@ async function handleServiceForm(e, serviceType) {
         smartcard: document.getElementById('smartcard').value,
         plan: document.querySelector('input[name="plan"]:checked').value,
         phone: document.getElementById('phone').value,
-        email: document.getElementById('email').value,
-        paymentMethod: document.querySelector('input[name="payment"]:checked').value
+        email: document.getElementById('email').value
       };
       break;
   }
@@ -1193,21 +1125,16 @@ async function handleServiceForm(e, serviceType) {
     const data = await response.json();
     
     if (response.ok && data.success) {
-      // If payment method is paystack, redirect to payment page
-      if (data.data.authorization_url) {
-        window.location.href = data.data.authorization_url;
+      // For electricity, show token if available
+      if (serviceType === 'electricity' && data.data.token) {
+        showAlert(`${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} payment successful! Token: ${data.data.token}`, 'success');
       } else {
-        // For electricity, show token if available
-        if (serviceType === 'electricity' && data.data.token) {
-          showAlert(`${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} payment successful! Token: ${data.data.token}`, 'success');
-        } else {
-          showAlert(`${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} purchase successful!`, 'success');
-        }
-        // Redirect to dashboard
-        setTimeout(() => {
-          window.location.href = 'dashboard.html';
-        }, 2000);
+        showAlert(`${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} purchase successful!`, 'success');
       }
+      // Redirect to dashboard
+      setTimeout(() => {
+        window.location.href = 'dashboard.html';
+      }, 2000);
     } else {
       // Show error message
       showAlert(data.message || `${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} purchase failed. Please try again.`);
@@ -1218,7 +1145,7 @@ async function handleServiceForm(e, serviceType) {
     
     // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-      showAlert('Unable to connect to the server. Please check your internet connection and make sure the server is running on port 5001.');
+      showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert(`${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} purchase failed. Please check your connection and try again.`);
     }
@@ -1227,7 +1154,7 @@ async function handleServiceForm(e, serviceType) {
     const submitBtn = e.target.querySelector('button[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Proceed to Pay';
+      submitBtn.textContent = originalText || 'Submit';
     }
   }
 }
@@ -1312,20 +1239,6 @@ if (logoutBtn) {
   });
 }
 
-// Fund wallet function
-function fundWallet() {
-  const fundWalletModal = document.getElementById('fundWalletModal');
-  if (fundWalletModal) {
-    fundWalletModal.style.display = 'block';
-  }
-}
-
-// Add event listener to fund wallet button
-const fundWalletBtn = document.querySelector('.wallet-buttons .btn.primary');
-if (fundWalletBtn) {
-  fundWalletBtn.addEventListener('click', fundWallet);
-}
-
 // Download statement function
 async function downloadStatement() {
   const token = localStorage.getItem('accessToken');
@@ -1378,7 +1291,7 @@ async function downloadStatement() {
     
     // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-      showAlert('Unable to connect to the server. Please check your internet connection and make sure the server is running on port 5001.');
+      showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert('Failed to download statement. Please try again.');
     }

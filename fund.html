@@ -68,180 +68,119 @@
       color: var(--primary);
     }
     
-    .amount-options {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-    
-    .amount-option {
-      background: var(--light);
-      border: 1px solid var(--light-gray);
-      border-radius: 10px;
-      padding: 1rem;
-      text-align: center;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    
-    .amount-option:hover {
-      background: rgba(30, 144, 255, 0.05);
-      border-color: var(--primary);
-    }
-    
-    .amount-option.selected {
+    .info-message {
       background: rgba(30, 144, 255, 0.1);
-      border-color: var(--primary);
-      color: var(--primary);
-      font-weight: 500;
-    }
-    
-    .amount-option .amount {
-      font-size: 1.2rem;
-      font-weight: 600;
-      margin-bottom: 0.3rem;
-    }
-    
-    .amount-option .bonus {
-      font-size: 0.8rem;
-      color: var(--success);
-    }
-    
-    .custom-amount {
+      border-left: 4px solid var(--primary);
+      padding: 1rem;
+      border-radius: 4px;
       margin-bottom: 1.5rem;
     }
     
-    .custom-amount label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
+    .info-message p {
+      margin: 0;
       color: var(--dark);
     }
     
-    .custom-amount .input-with-icon {
-      position: relative;
+    .info-message p strong {
+      color: var(--primary);
     }
     
-    .custom-amount .input-with-icon i {
-      position: absolute;
-      left: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--gray);
-    }
-    
-    .custom-amount input {
-      width: 100%;
-      padding: 0.75rem 1rem 0.75rem 45px;
-      border: 1px solid var(--light-gray);
-      border-radius: 5px;
-      font-size: 1rem;
-      transition: var(--transition);
-    }
-    
-    .custom-amount input:focus {
-      border-color: var(--primary);
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
-    }
-    
-    .payment-methods {
+    .funding-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
       margin-bottom: 2rem;
     }
     
-    .payment-methods h4 {
-      font-size: 1.1rem;
-      margin-bottom: 1rem;
-      color: var(--dark);
-    }
-    
-    .payment-options {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1rem;
-    }
-    
-    .payment-option {
-      position: relative;
-    }
-    
-    .payment-option input[type="radio"] {
-      position: absolute;
-      opacity: 0;
-    }
-    
-    .payment-option label {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.8rem;
-      padding: 1.5rem;
+    .funding-option {
       background: var(--light);
       border: 1px solid var(--light-gray);
       border-radius: 10px;
-      cursor: pointer;
+      padding: 1.5rem;
+      text-align: center;
       transition: var(--transition);
+      cursor: pointer;
     }
     
-    .payment-option input[type="radio"]:checked + label {
-      background: rgba(30, 144, 255, 0.1);
+    .funding-option:hover {
+      background: rgba(30, 144, 255, 0.05);
       border-color: var(--primary);
+      transform: translateY(-5px);
     }
     
-    .payment-option .payment-icon {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 1.5rem;
-      color: var(--white);
+    .funding-option i {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
     }
     
-    .payment-option .payment-icon.card {
-      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    }
-    
-    .payment-option .payment-icon.bank {
-      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    }
-    
-    .payment-option .payment-icon.ussd {
-      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-    }
-    
-    .payment-option .payment-icon.voucher {
-      background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
-    }
-    
-    .payment-option .payment-name {
-      font-weight: 500;
+    .funding-option h4 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
       color: var(--dark);
     }
     
-    .payment-option .payment-desc {
-      font-size: 0.8rem;
+    .funding-option p {
+      font-size: 0.9rem;
       color: var(--gray);
-      text-align: center;
+      margin: 0;
     }
     
-    .fund-button {
-      width: 100%;
+    .contact-admin {
+      background: var(--white);
+      border: 1px solid var(--light-gray);
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .contact-admin h4 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .contact-admin h4 i {
+      color: var(--primary);
+    }
+    
+    .contact-methods {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .contact-method {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
       padding: 1rem;
-      background: var(--primary);
-      color: var(--white);
-      border: none;
+      background: var(--light);
       border-radius: 8px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      cursor: pointer;
       transition: var(--transition);
     }
     
-    .fund-button:hover {
-      background: var(--primary-dark);
+    .contact-method:hover {
+      background: rgba(30, 144, 255, 0.05);
+    }
+    
+    .contact-method i {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(30, 144, 255, 0.1);
+      color: var(--primary);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .contact-method p {
+      margin: 0;
+      font-weight: 500;
     }
     
     .fund-info-container {
@@ -359,11 +298,11 @@
       color: var(--white);
     }
     
-    .funding-icon.card {
+    .funding-icon.admin {
       background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     }
     
-    .funding-icon.bank {
+    .funding-icon.transfer {
       background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
     }
     
@@ -411,49 +350,25 @@
       opacity: 0.8;
     }
     
-    /* Error message styling */
-    .error-message {
-      background-color: #ffebee;
-      color: #d32f2f;
-      padding: 12px 16px;
-      border-radius: 4px;
-      margin-bottom: 20px;
-      display: flex;
+    /* Alert container */
+    .alert-container {
+      margin-bottom: 1.5rem;
+    }
+    
+    /* Back to dashboard button */
+    .back-btn {
+      display: inline-flex;
       align-items: center;
-      border-left: 4px solid #d32f2f;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--primary);
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
     }
     
-    .error-message:before {
-      content: '\f06a';
-      font-family: 'Font Awesome 5 Free';
-      font-weight: 900;
-      margin-right: 10px;
-    }
-    
-    /* Loading state for buttons */
-    .btn.loading {
-      position: relative;
-      color: transparent;
-    }
-    
-    .btn.loading:after {
-      content: "";
-      position: absolute;
-      width: 16px;
-      height: 16px;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      margin: auto;
-      border: 2px solid transparent;
-      border-top-color: #ffffff;
-      border-radius: 50%;
-      animation: spinner 0.8s linear infinite;
-    }
-    
-    @keyframes spinner {
-      to { transform: rotate(360deg); }
+    .back-btn:hover {
+      color: var(--primary-dark);
     }
     
     @media (max-width: 992px) {
@@ -461,7 +376,7 @@
         grid-template-columns: 1fr;
       }
       
-      .payment-options {
+      .funding-options {
         grid-template-columns: 1fr;
       }
       
@@ -473,10 +388,6 @@
     @media (max-width: 576px) {
       .fund-header h2 {
         font-size: 2rem;
-      }
-      
-      .amount-options {
-        grid-template-columns: repeat(2, 1fr);
       }
       
       .promo-banner {
@@ -508,6 +419,7 @@
       </div>
     </div>
   </header>
+  
   <main class="fund-page">
     <div class="fund-container">
       <div class="fund-header">
@@ -516,138 +428,89 @@
       </div>
       
       <div class="fund-form-container">
-        <!-- Error message display -->
-        <div id="fund-error" class="error-message" style="display: none;"></div>
+        <!-- Alert container for messages -->
+        <div id="alert-container" class="alert-container"></div>
         
-        <form id="fundWalletForm">
-          <div class="form-card">
-            <h3><i class="fas fa-wallet"></i> Select Amount</h3>
-            
-            <div class="amount-options">
-              <div class="amount-option" data-amount="1000">
-                <div class="amount">₦1,000</div>
-                <div class="bonus">+₦50 Bonus</div>
-              </div>
-              <div class="amount-option" data-amount="5000">
-                <div class="amount">₦5,000</div>
-                <div class="bonus">+₦300 Bonus</div>
-              </div>
-              <div class="amount-option" data-amount="10000">
-                <div class="amount">₦10,000</div>
-                <div class="bonus">+₦800 Bonus</div>
-              </div>
-              <div class="amount-option" data-amount="20000">
-                <div class="amount">₦20,000</div>
-                <div class="bonus">+₦2,000 Bonus</div>
-              </div>
-              <div class="amount-option" data-amount="50000">
-                <div class="amount">₦50,000</div>
-                <div class="bonus">+₦5,000 Bonus</div>
-              </div>
-              <div class="amount-option" data-amount="100000">
-                <div class="amount">₦100,000</div>
-                <div class="bonus">+₦12,000 Bonus</div>
-              </div>
-            </div>
-            
-            <div class="custom-amount">
-              <label for="customAmount">Or Enter Custom Amount</label>
-              <div class="input-with-icon">
-                <i class="fas fa-money-bill-wave"></i>
-                <input type="number" id="customAmount" name="amount" placeholder="Enter amount (₦)" min="100">
-              </div>
-            </div>
+        <!-- Back to dashboard button -->
+        <a href="dashboard.html" class="back-btn">
+          <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        
+        <div class="form-card">
+          <h3><i class="fas fa-info-circle"></i> Wallet Funding</h3>
+          
+          <div class="info-message">
+            <p><strong>Important Notice:</strong> Direct wallet funding through our platform is temporarily unavailable. Please use one of the alternative options below to fund your wallet.</p>
           </div>
           
-          <div class="form-card">
-            <h3><i class="fas fa-credit-card"></i> Payment Method</h3>
-            
-            <div class="payment-methods">
-              <h4>Select how you want to fund your wallet</h4>
-              
-              <div class="payment-options">
-                <div class="payment-option">
-                  <input type="radio" id="card" name="paymentMethod" value="paystack" checked>
-                  <label for="card">
-                    <div class="payment-icon card">
-                      <i class="fas fa-credit-card"></i>
-                    </div>
-                    <div class="payment-name">Debit/Credit Card</div>
-                    <div class="payment-desc">Pay with your ATM card</div>
-                  </label>
-                </div>
-                
-                <div class="payment-option">
-                  <input type="radio" id="bank" name="paymentMethod" value="bank">
-                  <label for="bank">
-                    <div class="payment-icon bank">
-                      <i class="fas fa-university"></i>
-                    </div>
-                    <div class="payment-name">Bank Transfer</div>
-                    <div class="payment-desc">Transfer from your bank account</div>
-                  </label>
-                </div>
-                
-                <div class="payment-option">
-                  <input type="radio" id="ussd" name="paymentMethod" value="ussd">
-                  <label for="ussd">
-                    <div class="payment-icon ussd">
-                      <i class="fas fa-mobile-alt"></i>
-                    </div>
-                    <div class="payment-name">USSD</div>
-                    <div class="payment-desc">Dial USSD code to pay</div>
-                  </label>
-                </div>
-                
-                <div class="payment-option">
-                  <input type="radio" id="voucher" name="paymentMethod" value="voucher">
-                  <label for="voucher">
-                    <div class="payment-icon voucher">
-                      <i class="fas fa-ticket-alt"></i>
-                    </div>
-                    <div class="payment-name">Voucher</div>
-                    <div class="payment-desc">Redeem a voucher code</div>
-                  </label>
-                </div>
-              </div>
+          <div class="funding-options">
+            <div class="funding-option">
+              <i class="fas fa-user-tie"></i>
+              <h4>Contact Admin</h4>
+              <p>Request wallet funding directly from our admin team</p>
             </div>
             
-            <button type="submit" class="fund-button" id="fundWalletBtn">Fund Wallet</button>
+            <div class="funding-option">
+              <i class="fas fa-exchange-alt"></i>
+              <h4>Wallet Transfer</h4>
+              <p>Receive funds from another EasySubscribe user</p>
+            </div>
           </div>
-        </form>
+        </div>
+        
+        <div class="contact-admin">
+          <h4><i class="fas fa-headset"></i> Contact Administrator</h4>
+          
+          <div class="contact-methods">
+            <div class="contact-method">
+              <i class="fas fa-phone"></i>
+              <p>Call: +234 800 123 4567</p>
+            </div>
+            
+            <div class="contact-method">
+              <i class="fas fa-envelope"></i>
+              <p>Email: support@easysubscribe.com</p>
+            </div>
+            
+            <div class="contact-method">
+              <i class="fab fa-whatsapp"></i>
+              <p>WhatsApp: +234 800 123 4567</p>
+            </div>
+          </div>
+        </div>
       </div>
       
       <div class="fund-info-container">
         <div class="info-card">
-          <h3><i class="fas fa-gift"></i> Funding Benefits</h3>
+          <h3><i class="fas fa-gift"></i> Wallet Benefits</h3>
           
           <ul class="benefits-list">
             <li>
               <i class="fas fa-check-circle"></i>
               <div>
-                <strong>Instant Funding</strong>
-                <p>Wallet is credited immediately after payment confirmation</p>
-              </div>
-            </li>
-            <li>
-              <i class="fas fa-check-circle"></i>
-              <div>
-                <strong>Bonus on Every Funding</strong>
-                <p>Get bonus credits when you fund your wallet</p>
-              </div>
-            </li>
-            <li>
-              <i class="fas fa-check-circle"></i>
-              <div>
-                <strong>No Transaction Fees</strong>
-                <p>Enjoy zero fees when funding your wallet</p>
-              </div>
-            </li>
-            <li>
-              <i class="fas fa-check-circle"></i>
-              <div>
                 <strong>Seamless Payments</strong>
                 <p>Pay bills in one click without entering card details</p>
+              </div>
+            </li>
+            <li>
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Budget Management</strong>
+                <p>Control your spending with a dedicated wallet balance</p>
+              </div>
+            </li>
+            <li>
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Transaction History</strong>
+                <p>Track all your payments in one place</p>
+              </div>
+            </li>
+            <li>
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Exclusive Offers</strong>
+                <p>Get access to special promotions and discounts</p>
               </div>
             </li>
           </ul>
@@ -683,9 +546,9 @@
             <div class="funding-list">
               <div class="funding-item">
                 <div class="funding-details">
-                  <div class="funding-icon card"></div>
+                  <div class="funding-icon admin"></div>
                   <div class="funding-info">
-                    <p class="funding-method">Debit Card</p>
+                    <p class="funding-method">Admin Funding</p>
                     <p class="funding-date">May 15, 2023</p>
                   </div>
                 </div>
@@ -694,20 +557,20 @@
               
               <div class="funding-item">
                 <div class="funding-details">
-                  <div class="funding-icon bank"></div>
+                  <div class="funding-icon transfer"></div>
                   <div class="funding-info">
-                    <p class="funding-method">Bank Transfer</p>
+                    <p class="funding-method">Wallet Transfer</p>
                     <p class="funding-date">May 10, 2023</p>
                   </div>
                 </div>
-                <div class="funding-amount">₦20,000</div>
+                <div class="funding-amount">₦2,000</div>
               </div>
               
               <div class="funding-item">
                 <div class="funding-details">
-                  <div class="funding-icon card"></div>
+                  <div class="funding-icon admin"></div>
                   <div class="funding-info">
-                    <p class="funding-method">Debit Card</p>
+                    <p class="funding-method">Admin Funding</p>
                     <p class="funding-date">May 5, 2023</p>
                   </div>
                 </div>
@@ -719,16 +582,17 @@
         
         <div class="promo-banner">
           <div class="promo-content">
-            <h3>Double Bonus Weekend!</h3>
-            <p>Fund your wallet this weekend and get 2x bonus on all amounts</p>
+            <h3>Referral Bonus</h3>
+            <p>Refer a friend and get bonus credits added to your wallet</p>
           </div>
           <div class="promo-icon">
-            <i class="fas fa-coins"></i>
+            <i class="fas fa-user-friends"></i>
           </div>
         </div>
       </div>
     </div>
   </main>
+  
   <footer>
     <div class="container">
       <div class="footer-content">
@@ -778,30 +642,6 @@
           desktopNav.classList.toggle('active');
         });
       }
-      
-      // Amount selection
-      const amountOptions = document.querySelectorAll('.amount-option');
-      const customAmountInput = document.getElementById('customAmount');
-      
-      amountOptions.forEach(option => {
-        option.addEventListener('click', function() {
-          // Remove selected class from all options
-          amountOptions.forEach(opt => opt.classList.remove('selected'));
-          
-          // Add selected class to clicked option
-          this.classList.add('selected');
-          
-          // Set the selected amount
-          const amount = this.dataset.amount;
-          customAmountInput.value = amount;
-        });
-      });
-      
-      // Custom amount input
-      customAmountInput.addEventListener('input', function() {
-        // Remove selected class from all options
-        amountOptions.forEach(opt => opt.classList.remove('selected'));
-      });
     });
   </script>
 </body>

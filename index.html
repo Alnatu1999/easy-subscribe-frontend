@@ -33,12 +33,13 @@
       </div>
     </div>
   </header>
+  
   <main>
     <section class="hero">
       <div class="container">
         <div class="hero-content">
-          <h2>Pay Bills Easily & Securely</h2>
-          <p>Buy Airtime, Data, and pay utilities with one click.</p>
+          <h2 id="hero-title">Pay Bills Easily & Securely</h2>
+          <p id="hero-subtitle">Buy Airtime, Data, and pay utilities with one click.</p>
           <div class="cta-buttons">
             <!-- Show Get Started button if user is not authenticated, otherwise show Dashboard button -->
             <a href="signup.html" class="btn primary" id="hero-get-started">Get Started</a>
@@ -48,50 +49,77 @@
         </div>
         <div class="hero-image">
           <!-- Placeholder for hero image -->
-          <div class="image-placeholder"></div>
+          <div class="image-placeholder">
+            <i class="fas fa-mobile-alt fa-5x"></i>
+          </div>
         </div>
       </div>
     </section>
+    
     <section class="services" id="services">
       <div class="container">
         <h3>Our Services</h3>
         <div class="services-grid">
           <div class="service-card">
-            <div class="service-icon airtime-icon"></div>
+            <div class="service-icon airtime-icon">
+              <i class="fas fa-phone-alt"></i>
+            </div>
             <h4>Airtime Top-up</h4>
             <p>Instant recharge for all networks</p>
+            <div class="service-arrow">
+              <i class="fas fa-arrow-right"></i>
+            </div>
           </div>
           <div class="service-card">
-            <div class="service-icon data-icon"></div>
+            <div class="service-icon data-icon">
+              <i class="fas fa-wifi"></i>
+            </div>
             <h4>Data Bundles</h4>
             <p>Affordable data plans for everyone</p>
+            <div class="service-arrow">
+              <i class="fas fa-arrow-right"></i>
+            </div>
           </div>
           <div class="service-card">
-            <div class="service-icon electricity-icon"></div>
+            <div class="service-icon electricity-icon">
+              <i class="fas fa-bolt"></i>
+            </div>
             <h4>Electricity & Utilities</h4>
             <p>Pay bills without leaving home</p>
+            <div class="service-arrow">
+              <i class="fas fa-arrow-right"></i>
+            </div>
           </div>
           <div class="service-card">
-            <div class="service-icon tv-icon"></div>
+            <div class="service-icon tv-icon">
+              <i class="fas fa-tv"></i>
+            </div>
             <h4>TV Subscription</h4>
             <p>Renew your TV subscriptions instantly</p>
+            <div class="service-arrow">
+              <i class="fas fa-arrow-right"></i>
+            </div>
           </div>
         </div>
       </div>
     </section>
+    
     <section class="features">
       <div class="container">
         <h3>Why Choose EasySubscribe</h3>
         <div class="features-grid">
           <div class="feature">
+            <i class="fas fa-shield-alt fa-2x text-primary mb-3"></i>
             <h4>Secure Payments</h4>
             <p>Bank-level security for all transactions</p>
           </div>
           <div class="feature">
+            <i class="fas fa-bolt fa-2x text-primary mb-3"></i>
             <h4>Fast & Reliable</h4>
             <p>Instant delivery with 99.9% uptime</p>
           </div>
           <div class="feature">
+            <i class="fas fa-headset fa-2x text-primary mb-3"></i>
             <h4>24/7 Support</h4>
             <p>Our team is always ready to help</p>
           </div>
@@ -99,6 +127,7 @@
       </div>
     </section>
   </main>
+  
   <footer>
     <div class="container">
       <div class="footer-content">
@@ -160,11 +189,46 @@
           logout();
         });
       }
+      
+      // Add click event listeners to service cards
+      const serviceCards = document.querySelectorAll('.service-card');
+      serviceCards.forEach(card => {
+        card.addEventListener('click', function() {
+          const serviceTitle = this.querySelector('h4').textContent;
+          let servicePage;
+          
+          switch(serviceTitle) {
+            case 'Airtime Top-up':
+              servicePage = 'airtime.html';
+              break;
+            case 'Data Bundles':
+              servicePage = 'data.html';
+              break;
+            case 'Electricity & Utilities':
+              servicePage = 'electricity.html';
+              break;
+            case 'TV Subscription':
+              servicePage = 'tv.html';
+              break;
+            default:
+              servicePage = 'dashboard.html';
+          }
+          
+          // Check if user is authenticated
+          const token = localStorage.getItem('accessToken');
+          if (token) {
+            window.location.href = servicePage;
+          } else {
+            // Redirect to login with a return URL
+            window.location.href = `login.html?redirect=${encodeURIComponent(servicePage)}`;
+          }
+        });
+      });
     });
     
     // Function to check authentication status and update UI
     function checkAuthenticationAndUpdateUI() {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       
       // Elements to show/hide based on authentication status
@@ -174,6 +238,8 @@
       const navLogout = document.getElementById('nav-logout');
       const heroGetStarted = document.getElementById('hero-get-started');
       const heroDashboard = document.getElementById('hero-dashboard');
+      const heroTitle = document.getElementById('hero-title');
+      const heroSubtitle = document.getElementById('hero-subtitle');
       
       if (token) {
         // User is authenticated
@@ -185,11 +251,9 @@
         if (heroDashboard) heroDashboard.style.display = 'inline-block';
         
         // Update welcome message if user name is available
-        if (user.name) {
-          const heroContent = document.querySelector('.hero-content h2');
-          if (heroContent) {
-            heroContent.textContent = `Welcome back, ${user.name}!`;
-          }
+        if (user.name && heroTitle) {
+          heroTitle.textContent = `Welcome back, ${user.name}!`;
+          heroSubtitle.textContent = 'Manage your bills and subscriptions from your dashboard.';
         }
       } else {
         // User is not authenticated
@@ -199,12 +263,17 @@
         if (navLogout) navLogout.style.display = 'none';
         if (heroGetStarted) heroGetStarted.style.display = 'inline-block';
         if (heroDashboard) heroDashboard.style.display = 'none';
+        
+        // Reset hero message
+        if (heroTitle) heroTitle.textContent = 'Pay Bills Easily & Securely';
+        if (heroSubtitle) heroSubtitle.textContent = 'Buy Airtime, Data, and pay utilities with one click.';
       }
     }
     
     // Logout function
     function logout() {
-      localStorage.removeItem('token');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
       window.location.href = 'index.html';
     }

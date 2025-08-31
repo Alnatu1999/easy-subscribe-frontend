@@ -66,15 +66,16 @@
                   <i class="fas fa-id-card"></i>
                   <input type="text" id="smartcard" placeholder="Enter smart card number" required>
                 </div>
+                <div class="error-message" id="smartcard-error"></div>
               </div>
               
               <div class="form-group">
                 <label>Subscription Plan</label>
-                <div class="tv-plans" id="dstv-plans">
+                <div class="tv-plans" id="dstv-plans" style="display: none;">
                   <!-- Plans will be loaded dynamically from VTU.ng API -->
                   <div class="loading-plans">
                     <i class="fas fa-spinner fa-spin"></i>
-                    <p>Loading plans...</p>
+                    <p>Select a provider to view plans</p>
                   </div>
                 </div>
                 
@@ -82,7 +83,7 @@
                   <!-- Plans will be loaded dynamically from VTU.ng API -->
                   <div class="loading-plans">
                     <i class="fas fa-spinner fa-spin"></i>
-                    <p>Loading plans...</p>
+                    <p>Select a provider to view plans</p>
                   </div>
                 </div>
                 
@@ -90,7 +91,7 @@
                   <!-- Plans will be loaded dynamically from VTU.ng API -->
                   <div class="loading-plans">
                     <i class="fas fa-spinner fa-spin"></i>
-                    <p>Loading plans...</p>
+                    <p>Select a provider to view plans</p>
                   </div>
                 </div>
               </div>
@@ -101,6 +102,7 @@
                   <i class="fas fa-phone"></i>
                   <input type="tel" id="phone" placeholder="Enter phone number for notification" required>
                 </div>
+                <div class="error-message" id="phone-error"></div>
               </div>
               
               <div class="form-group">
@@ -109,6 +111,7 @@
                   <i class="fas fa-envelope"></i>
                   <input type="email" id="email" placeholder="Enter email for receipt">
                 </div>
+                <div class="error-message" id="email-error"></div>
               </div>
               
               <div class="form-group">
@@ -127,7 +130,7 @@
                 </div>
               </div>
               
-              <button type="submit" class="btn primary full-width">Proceed to Pay</button>
+              <button type="submit" class="btn primary full-width">Subscribe Now</button>
             </form>
           </div>
         </div>
@@ -170,6 +173,15 @@
                 </div>
                 <div class="faq-answer">
                   <p>Yes, simply enter the correct smart card/IUC number and your contact details for notifications and receipts.</p>
+                </div>
+              </div>
+              <div class="faq-item">
+                <div class="faq-question">
+                  <p>What is the format for smart card numbers?</p>
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                  <p>DStv: 10-11 digits, GOtv: 10 digits, StarTimes: 10-12 digits. Our system will validate your entry.</p>
                 </div>
               </div>
             </div>
@@ -219,43 +231,24 @@
   
   <!-- Page-specific JavaScript -->
   <script>
-    // TV form submission handler
+    // API Configuration
+    const API_BASE = window.location.hostname === 'localhost' 
+      ? 'http://localhost:5001'
+      : 'https://easy-subscribe-backend.onrender.com';
+    
+    // TV form submission handler - UPDATED to align with backend
     document.addEventListener('DOMContentLoaded', function() {
       const tvForm = document.getElementById('tvForm');
       if (tvForm) {
-        tvForm.addEventListener('submit', function(e) {
-          e.preventDefault();
-          
-          // Get form data
-          const provider = document.getElementById('tv').value;
-          const smartcard = document.getElementById('smartcard').value;
-          const plan = document.querySelector('input[name="plan"]:checked')?.value;
-          const phone = document.getElementById('phone').value;
-          const email = document.getElementById('email').value;
-          const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value;
-          
-          // Validate form
-          if (!provider || !smartcard || !plan || !phone) {
-            showAlert('Please fill in all required fields', 'error');
-            return;
-          }
-          
-          // Store form data in sessionStorage
-          const tvData = {
-            provider,
-            smartcard,
-            plan,
-            phone,
-            email,
-            paymentMethod
-          };
-          
-          sessionStorage.setItem('tvData', JSON.stringify(tvData));
-          
-          // Redirect to confirmation page
-          window.location.href = 'tvconfirm.html';
-        });
+        // Remove any existing event listeners
+        tvForm.removeEventListener('submit', handleTvFormSubmit);
+        
+        // Add the updated event listener
+        tvForm.addEventListener('submit', handleTvFormSubmit);
       }
+      
+      // Setup smartcard validation
+      setupSmartcardValidation();
       
       // Load TV plans when provider changes
       const tvProvider = document.getElementById('tv');
@@ -273,19 +266,240 @@
             
             // Load plans for the selected provider
             loadTvPlans(provider);
+            
+            // Validate smartcard if it has a value
+            validateSmartcardOnInput();
           }
         });
       }
     });
     
-    // Load TV plans from API
+    // Updated TV form submission handler
+    function handleTvFormSubmit(e) {
+      e.preventDefault();
+      
+      // Get form data
+      const provider = document.getElementById('tv').value;
+      const smartcard = document.getElementById('smartcard').value.trim();
+      const plan = document.querySelector('input[name="plan"]:checked')?.value;
+      const phone = document.getElementById('phone').value.trim();
+      const email = document.getElementById('email').value.trim();
+      
+      // Clear previous errors
+      document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+      
+      // Validate form
+      let isValid = true;
+      
+      // Validate provider
+      if (!provider) {
+        document.getElementById('tv-error')?.textContent || 
+        (document.querySelector('.form-group')?.insertAdjacentHTML('beforeend', '<div class="error-message" id="tv-error">Please select a provider</div>'));
+        isValid = false;
+      }
+      
+      // Validate smartcard
+      if (!smartcard) {
+        document.getElementById('smartcard-error').textContent = 'Smartcard number is required';
+        isValid = false;
+      } else if (provider) {
+        const validation = validateSmartcardFormat(smartcard, provider);
+        if (!validation.valid) {
+          document.getElementById('smartcard-error').textContent = validation.message;
+          isValid = false;
+        }
+      }
+      
+      // Validate plan
+      if (!plan) {
+        document.querySelector('.tv-plans:visible')?.insertAdjacentHTML('afterend', 
+          '<div class="error-message">Please select a subscription plan</div>');
+        isValid = false;
+      }
+      
+      // Validate phone
+      const phoneRegex = /^(0|234)(7|8|9)[01]\d{8}$/;
+      if (!phone) {
+        document.getElementById('phone-error').textContent = 'Phone number is required';
+        isValid = false;
+      } else if (!phoneRegex.test(phone)) {
+        document.getElementById('phone-error').textContent = 'Please enter a valid Nigerian phone number';
+        isValid = false;
+      }
+      
+      // Validate email (if provided)
+      if (email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          document.getElementById('email-error').textContent = 'Please enter a valid email address';
+          isValid = false;
+        }
+      }
+      
+      if (!isValid) {
+        return;
+      }
+      
+      // Submit form using the main.js handleServiceForm function
+      handleServiceForm(e, 'tv');
+    }
+    
+    // Setup smartcard validation
+    function setupSmartcardValidation() {
+      const smartcardInput = document.getElementById('smartcard');
+      const tvProvider = document.getElementById('tv');
+      
+      if (smartcardInput && tvProvider) {
+        // Validate on input
+        smartcardInput.addEventListener('input', validateSmartcardOnInput);
+        
+        // Validate on blur (when user leaves the field)
+        smartcardInput.addEventListener('blur', validateSmartcardOnBlur);
+      }
+    }
+    
+    // Validate smartcard format on input
+    function validateSmartcardOnInput() {
+      const smartcardInput = document.getElementById('smartcard');
+      const tvProvider = document.getElementById('tv');
+      const smartcardError = document.getElementById('smartcard-error');
+      
+      if (!smartcardInput || !tvProvider) return;
+      
+      const smartcard = smartcardInput.value.trim();
+      const provider = tvProvider.value;
+      
+      // Clear previous validation message
+      if (smartcardError) {
+        smartcardError.textContent = '';
+      }
+      
+      // Only validate if both fields have values
+      if (smartcard && provider) {
+        const validation = validateSmartcardFormat(smartcard, provider);
+        
+        if (!validation.valid) {
+          // Show validation error
+          if (smartcardError) {
+            smartcardError.textContent = validation.message;
+          }
+          
+          // Add visual indication of error
+          smartcardInput.classList.add('input-error');
+          smartcardInput.classList.remove('input-success');
+        } else {
+          // Show validation success
+          if (smartcardError) {
+            smartcardError.textContent = '';
+          }
+          
+          // Add visual indication of success
+          smartcardInput.classList.add('input-success');
+          smartcardInput.classList.remove('input-error');
+        }
+      }
+    }
+    
+    // Validate smartcard format on blur
+    function validateSmartcardOnBlur() {
+      const smartcardInput = document.getElementById('smartcard');
+      const tvProvider = document.getElementById('tv');
+      const smartcardError = document.getElementById('smartcard-error');
+      
+      if (!smartcardInput || !tvProvider) return;
+      
+      const smartcard = smartcardInput.value.trim();
+      const provider = tvProvider.value;
+      
+      // Only validate if smartcard has a value
+      if (smartcard) {
+        if (!provider) {
+          if (smartcardError) {
+            smartcardError.textContent = 'Please select a TV provider first';
+          }
+          smartcardInput.classList.add('input-error');
+          smartcardInput.classList.remove('input-success');
+          return;
+        }
+        
+        const validation = validateSmartcardFormat(smartcard, provider);
+        
+        if (!validation.valid) {
+          // Show validation error
+          if (smartcardError) {
+            smartcardError.textContent = validation.message;
+          }
+          
+          // Add visual indication of error
+          smartcardInput.classList.add('input-error');
+          smartcardInput.classList.remove('input-success');
+        } else {
+          // Show validation success
+          if (smartcardError) {
+            smartcardError.textContent = '';
+          }
+          
+          // Add visual indication of success
+          smartcardInput.classList.add('input-success');
+          smartcardInput.classList.remove('input-error');
+        }
+      }
+    }
+    
+    // Validate smartcard format based on provider
+    function validateSmartcardFormat(smartcard, provider) {
+      if (!smartcard || typeof smartcard !== 'string') {
+        return { valid: false, message: 'Smartcard number is required' };
+      }
+      
+      // Remove any spaces or dashes
+      const cleanCard = smartcard.replace(/[\s-]/g, '');
+      
+      // Provider-specific validation
+      switch (provider.toLowerCase()) {
+        case 'dstv':
+          if (!/^\d{10,11}$/.test(cleanCard)) {
+            return { valid: false, message: 'DStv smartcard must be 10-11 digits' };
+          }
+          break;
+        case 'gotv':
+          if (!/^\d{10}$/.test(cleanCard)) {
+            return { valid: false, message: 'GOtv smartcard must be 10 digits' };
+          }
+          break;
+        case 'startimes':
+          if (!/^\d{10,12}$/.test(cleanCard)) {
+            return { valid: false, message: 'StarTimes smartcard must be 10-12 digits' };
+          }
+          break;
+        default:
+          // Generic validation for unknown providers
+          if (!/^\d{8,15}$/.test(cleanCard)) {
+            return { valid: false, message: 'Invalid smartcard number format' };
+          }
+      }
+      
+      return { valid: true, message: 'Valid format' };
+    }
+    
+    // Load TV plans from API - UPDATED
     async function loadTvPlans(provider) {
       try {
+        const plansContainer = document.getElementById(`${provider}-plans`);
+        if (!plansContainer) return;
+        
+        // Show loading state
+        plansContainer.innerHTML = `
+          <div class="loading-plans">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading ${provider} plans...</p>
+          </div>
+        `;
+        
         const response = await fetch(`${API_BASE}/api/services/tv-variations?provider=${provider}`);
         const data = await response.json();
         
         if (data.success) {
-          const plansContainer = document.getElementById(`${provider}-plans`);
           plansContainer.innerHTML = '';
           
           if (data.data.length === 0) {
@@ -299,22 +513,64 @@
             planOption.innerHTML = `
               <input type="radio" id="plan-${plan.variation_id}" name="plan" value="${plan.variation_id}" required>
               <label for="plan-${plan.variation_id}">
-                <div class="plan-details">
-                  <span class="plan-name">${plan.package_bouquet}</span>
-                  <span class="plan-price">₦${Number(plan.price).toLocaleString()}</span>
-                </div>
+                <div class="plan-name">${plan.package_bouquet}</div>
+                <div class="plan-price">₦${Number(plan.price).toLocaleString()}</div>
               </label>
             `;
             plansContainer.appendChild(planOption);
           });
         } else {
           console.error('Failed to load TV plans:', data.message);
-          showAlert('Failed to load TV plans. Please try again.', 'error');
+          plansContainer.innerHTML = `
+            <div class="error-message">
+              <i class="fas fa-exclamation-circle"></i>
+              <p>Failed to load TV plans. Please try again later.</p>
+            </div>
+          `;
         }
       } catch (error) {
         console.error('Error loading TV plans:', error);
-        showAlert('Failed to load TV plans. Please check your connection.', 'error');
+        const plansContainer = document.getElementById(`${provider}-plans`);
+        if (plansContainer) {
+          plansContainer.innerHTML = `
+            <div class="error-message">
+              <i class="fas fa-exclamation-circle"></i>
+              <p>Failed to load TV plans. Please check your connection.</p>
+            </div>
+          `;
+        }
       }
+    }
+    
+    // Show alert function (duplicate from main.js for standalone functionality)
+    function showAlert(message, type = 'error') {
+      const alertContainer = document.getElementById('alert-container') || 
+                             document.querySelector('.form-card')?.insertAdjacentHTML('afterbegin', 
+                               '<div id="alert-container"></div>');
+      
+      if (!alertContainer) return;
+      
+      const alertContainerEl = document.getElementById('alert-container');
+      alertContainerEl.innerHTML = `
+        <div class="alert alert-${type}">
+          <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>
+          <span>${message}</span>
+          <button class="close-alert">&times;</button>
+        </div>
+      `;
+      
+      // Add event listener to close button
+      const closeBtn = alertContainerEl.querySelector('.close-alert');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          alertContainerEl.innerHTML = '';
+        });
+      }
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        alertContainerEl.innerHTML = '';
+      }, 5000);
     }
   </script>
 </body>

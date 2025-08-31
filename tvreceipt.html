@@ -9,6 +9,96 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Additional styles for receipt page */
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .status-badge.processing {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+    
+    .status-badge.successful {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    
+    .status-badge.failed {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    
+    .status-badge.pending {
+      background-color: #d1ecf1;
+      color: #0c5460;
+    }
+    
+    .receipt-status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      font-weight: 500;
+    }
+    
+    .receipt-status.success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    
+    .receipt-status.failed {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    
+    .receipt-status.processing {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+    
+    .receipt-status i {
+      margin-right: 10px;
+    }
+    
+    .alert {
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .alert-success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    
+    .alert-error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    
+    .alert i {
+      margin-right: 10px;
+    }
+    
+    .close-alert {
+      margin-left: auto;
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: inherit;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -45,8 +135,10 @@
       </div>
       
       <div class="receipt-container">
+        <div id="alert-container"></div>
+        
         <div class="receipt-card">
-          <div class="receipt-status" id="status-indicator">
+          <div class="receipt-status processing" id="status-indicator">
             <i class="fas fa-spinner fa-spin"></i>
             <p>Processing</p>
           </div>
@@ -60,6 +152,13 @@
             </div>
             
             <div class="detail-row">
+              <div class="detail-label">Transaction Status:</div>
+              <div class="detail-value" id="transaction-status">
+                <span class="status-badge processing">Processing</span>
+              </div>
+            </div>
+            
+            <div class="detail-row">
               <div class="detail-label">Date & Time:</div>
               <div class="detail-value" id="transaction-date">-</div>
             </div>
@@ -70,7 +169,7 @@
             </div>
             
             <div class="detail-row">
-              <div class="detail-label">Smart Card/IUC Number:</div>
+              < class="detail-label">Smart Card/IUC Number:</div>
               <div class="detail-value" id="receipt-smartcard">-</div>
             </div>
             
@@ -86,7 +185,7 @@
             
             <div class="detail-row">
               <div class="detail-label">Payment Method:</div>
-              <div class="detail-value" id="receipt-payment">-</div>
+              <div class="detail-value" id="receipt-payment">Wallet Balance</div>
             </div>
             
             <div class="detail-row">
@@ -143,6 +242,21 @@
               </div>
             </div>
           </div>
+          
+          <div class="customer-support">
+            <h4>Need Help?</h4>
+            <p>Contact our customer support team for assistance with your subscription.</p>
+            <div class="support-options">
+              <div class="support-option">
+                <i class="fas fa-phone"></i>
+                <span>0800-123-4567</span>
+              </div>
+              <div class="support-option">
+                <i class="fas fa-envelope"></i>
+                <span>support@easysubscribe.com</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -188,6 +302,11 @@
   
   <!-- Page-specific JavaScript -->
   <script>
+    // API Configuration
+    const API_BASE = window.location.hostname === 'localhost' 
+      ? 'http://localhost:5001'
+      : 'https://easy-subscribe-backend.onrender.com';
+    
     document.addEventListener('DOMContentLoaded', async function() {
       // Get transaction reference from sessionStorage
       const transactionRef = sessionStorage.getItem('tvTransactionRef');
@@ -198,67 +317,25 @@
         return;
       }
       
-      // Get TV data from sessionStorage
-      const tvData = JSON.parse(sessionStorage.getItem('tvData') || '{}');
+      // Load transaction details
+      await loadTransactionDetails(transactionRef);
       
-      // Populate receipt details
-      document.getElementById('transaction-id').textContent = transactionRef;
-      document.getElementById('receipt-provider').textContent = tvData.provider.toUpperCase();
-      document.getElementById('receipt-smartcard').textContent = tvData.smartcard;
-      document.getElementById('receipt-phone').textContent = tvData.phone;
-      document.getElementById('receipt-email').textContent = tvData.email || 'Not provided';
-      document.getElementById('receipt-payment').textContent = 
-        tvData.paymentMethod === 'wallet' ? 'Wallet Balance' : 'Debit/Credit Card';
-      
-      // Set current date and time
-      const now = new Date();
-      document.getElementById('transaction-date').textContent = now.toLocaleString('en-NG', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-      
-      // Get plan details
-      try {
-        const response = await fetch(`${API_BASE}/api/services/tv-variations?provider=${tvData.provider}`);
-        const data = await response.json();
-        
-        if (data.success) {
-          const plan = data.data.find(p => p.variation_id == tvData.plan);
-          if (plan) {
-            document.getElementById('receipt-plan').textContent = plan.package_bouquet;
-            document.getElementById('receipt-amount').textContent = `₦${Number(plan.price).toLocaleString()}`;
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching plan details:', error);
-      }
-      
-      // Check transaction status
-      checkTransactionStatus(transactionRef);
-      
-      // Print button
+      // Set up button event listeners
       document.getElementById('print-btn').addEventListener('click', function() {
         window.print();
       });
       
-      // Dashboard button
       document.getElementById('dashboard-btn').addEventListener('click', function() {
         // Clear sessionStorage
-        sessionStorage.removeItem('tvData');
         sessionStorage.removeItem('tvTransactionRef');
-        
-        // Redirect to dashboard
         window.location.href = 'dashboard.html';
       });
     });
     
-    // Check transaction status
-    async function checkTransactionStatus(transactionRef) {
+    // Load transaction details
+    async function loadTransactionDetails(reference) {
       try {
-        const response = await fetch(`${API_BASE}/api/transactions/${transactionRef}`, {
+        const response = await fetch(`${API_BASE}/api/transactions/${reference}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
           }
@@ -266,30 +343,40 @@
         
         if (response.ok) {
           const data = await response.json();
+          
           if (data.success) {
             const transaction = data.data.transaction;
             
-            // Update receipt status
-            const statusIndicator = document.getElementById('status-indicator');
-            const receiptStatus = document.getElementById('receipt-status');
+            // Update transaction ID
+            document.getElementById('transaction-id').textContent = transaction.reference;
             
-            if (transaction.status === 'successful') {
-              statusIndicator.innerHTML = `
-                <i class="fas fa-check-circle"></i>
-                <p>Successful</p>
-              `;
-              statusIndicator.className = 'receipt-status success';
-              receiptStatus.textContent = 'Your TV subscription was successful!';
-            } else if (transaction.status === 'failed') {
-              statusIndicator.innerHTML = `
-                <i class="fas fa-times-circle"></i>
-                <p>Failed</p>
-              `;
-              statusIndicator.className = 'receipt-status failed';
-              receiptStatus.textContent = 'Your TV subscription failed. Please try again.';
-            } else {
-              // Still processing, check again in 5 seconds
-              setTimeout(() => checkTransactionStatus(transactionRef), 5000);
+            // Update transaction date
+            document.getElementById('transaction-date').textContent = formatDate(transaction.createdAt);
+            
+            // Update provider
+            document.getElementById('receipt-provider').textContent = transaction.metadata.provider.toUpperCase();
+            
+            // Update smartcard
+            document.getElementById('receipt-smartcard').textContent = transaction.metadata.smartcard;
+            
+            // Update phone
+            document.getElementById('receipt-phone').textContent = transaction.metadata.phone || 'Not provided';
+            
+            // Update email
+            document.getElementById('receipt-email').textContent = transaction.metadata.email || 'Not provided';
+            
+            // Update amount
+            document.getElementById('receipt-amount').textContent = `₦${Number(transaction.amount).toLocaleString()}`;
+            
+            // Update transaction status
+            updateTransactionStatus(transaction.status);
+            
+            // Load plan details
+            await loadPlanDetails(transaction.metadata.provider, transaction.metadata.plan);
+            
+            // If transaction is still processing, check status periodically
+            if (transaction.status === 'processing' || transaction.status === 'pending') {
+              checkTransactionStatus(reference);
             }
           }
         } else if (response.status === 401) {
@@ -297,18 +384,196 @@
           const refreshSuccess = await refreshToken();
           if (refreshSuccess) {
             // Retry after refresh
-            checkTransactionStatus(transactionRef);
+            loadTransactionDetails(reference);
           } else {
             // If refresh fails, redirect to login
             window.location.href = 'login.html';
           }
         }
       } catch (error) {
-        console.error('Error checking transaction status:', error);
-        
-        // Try again in 5 seconds
-        setTimeout(() => checkTransactionStatus(transactionRef), 5000);
+        console.error('Error loading transaction details:', error);
+        showAlert('Failed to load transaction details. Please try again later.', 'error');
       }
+    }
+    
+    // Load plan details
+    async function loadPlanDetails(provider, planId) {
+      try {
+        const response = await fetch(`${API_BASE}/api/services/tv-variations?provider=${provider}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          const plan = data.data.find(p => p.variation_id == planId);
+          if (plan) {
+            document.getElementById('receipt-plan').textContent = plan.package_bouquet;
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching plan details:', error);
+      }
+    }
+    
+    // Update transaction status UI
+    function updateTransactionStatus(status) {
+      const statusIndicator = document.getElementById('status-indicator');
+      const transactionStatus = document.getElementById('transaction-status');
+      const receiptStatus = document.getElementById('receipt-status');
+      
+      // Update status indicator
+      if (status === 'successful') {
+        statusIndicator.innerHTML = `
+          <i class="fas fa-check-circle"></i>
+          <p>Successful</p>
+        `;
+        statusIndicator.className = 'receipt-status success';
+        
+        transactionStatus.innerHTML = `<span class="status-badge successful">Successful</span>`;
+        
+        receiptStatus.textContent = 'Your TV subscription was successful!';
+      } else if (status === 'failed') {
+        statusIndicator.innerHTML = `
+          <i class="fas fa-times-circle"></i>
+          <p>Failed</p>
+        `;
+        statusIndicator.className = 'receipt-status failed';
+        
+        transactionStatus.innerHTML = `<span class="status-badge failed">Failed</span>`;
+        
+        receiptStatus.textContent = 'Your TV subscription failed. Please try again.';
+      } else {
+        statusIndicator.innerHTML = `
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Processing</p>
+        `;
+        statusIndicator.className = 'receipt-status processing';
+        
+        transactionStatus.innerHTML = `<span class="status-badge processing">Processing</span>`;
+        
+        receiptStatus.textContent = 'Processing your subscription...';
+      }
+    }
+    
+    // Check transaction status periodically
+    async function checkTransactionStatus(reference) {
+      const maxAttempts = 10;
+      let attempts = 0;
+      
+      const checkStatus = async () => {
+        if (attempts >= maxAttempts) return;
+        
+        try {
+          const response = await fetch(`${API_BASE}/api/transactions/${reference}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            
+            if (data.success) {
+              const transaction = data.data.transaction;
+              
+              // Update status if changed
+              if (transaction.status !== 'processing' && transaction.status !== 'pending') {
+                updateTransactionStatus(transaction.status);
+                
+                // Show notification based on status
+                if (transaction.status === 'successful') {
+                  showAlert('Your TV subscription has been activated successfully!', 'success');
+                } else if (transaction.status === 'failed') {
+                  showAlert('Your TV subscription could not be processed. Please try again.', 'error');
+                }
+                
+                return; // Stop checking if status changed
+              }
+            }
+          }
+          
+          attempts++;
+          setTimeout(checkStatus, 5000); // Check again after 5 seconds
+        } catch (error) {
+          console.error('Error checking transaction status:', error);
+          attempts++;
+          setTimeout(checkStatus, 5000);
+        }
+      };
+      
+      // Start checking
+      checkStatus();
+    }
+    
+    // Utility function to format date
+    function formatDate(dateString) {
+      const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+      return new Date(dateString).toLocaleDateString('en-NG', options);
+    }
+    
+    // Show alert function
+    function showAlert(message, type = 'error') {
+      const alertContainer = document.getElementById('alert-container');
+      if (!alertContainer) return;
+      
+      alertContainer.innerHTML = `
+        <div class="alert alert-${type}">
+          <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>
+          <span>${message}</span>
+          <button class="close-alert">&times;</button>
+        </div>
+      `;
+      
+      // Add event listener to close button
+      const closeBtn = alertContainer.querySelector('.close-alert');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          alertContainer.innerHTML = '';
+        });
+      }
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        alertContainer.innerHTML = '';
+      }, 5000);
+    }
+    
+    // Refresh token function
+    async function refreshToken() {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        logout();
+        return false;
+      }
+      
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/refresh-token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+          localStorage.setItem('accessToken', data.data.accessToken);
+          return true;
+        } else {
+          // Refresh token failed, logout user
+          logout();
+          return false;
+        }
+      } catch (error) {
+        console.error('Error refreshing token:', error);
+        logout();
+        return false;
+      }
+    }
+    
+    // Logout function
+    function logout() {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      window.location.href = 'index.html';
     }
   </script>
 </body>

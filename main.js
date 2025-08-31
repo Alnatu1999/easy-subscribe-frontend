@@ -58,6 +58,8 @@ function initializeApp() {
   setupTransactionsPage();
   setupNotificationsPage();
   setupTvVariations(); // NEW: Setup TV variations
+  setupWalletFunding(); // NEW: Setup wallet funding
+  setupSmartcardValidation(); // NEW: Setup smartcard validation
 }
 
 // Mobile Menu Toggle
@@ -138,6 +140,18 @@ function setupFormHandlers() {
   const tvForm = document.getElementById('tvForm');
   if (tvForm) {
     tvForm.addEventListener('submit', (e) => handleServiceForm(e, 'tv'));
+  }
+  
+  // NEW: Wallet Funding Request Form
+  const fundRequestForm = document.getElementById('fundRequestForm');
+  if (fundRequestForm) {
+    fundRequestForm.addEventListener('submit', handleFundRequest);
+  }
+  
+  // NEW: Admin Fund Wallet Form
+  const adminFundWalletForm = document.getElementById('adminFundWalletForm');
+  if (adminFundWalletForm) {
+    adminFundWalletForm.addEventListener('submit', handleAdminFundWallet);
   }
 }
 
@@ -224,6 +238,9 @@ function setupProviderSelection() {
       
       // Load variations for the selected provider
       loadTvVariations();
+      
+      // Validate smartcard format when provider changes
+      validateSmartcardOnInput();
     });
   }
 }
@@ -270,6 +287,147 @@ async function loadTvVariations() {
   } catch (error) {
     console.error('Error loading TV variations:', error);
   }
+}
+
+// NEW: Setup Smartcard Validation
+function setupSmartcardValidation() {
+  const smartcardInput = document.getElementById('smartcard');
+  const tvProvider = document.getElementById('tv');
+  
+  if (smartcardInput && tvProvider) {
+    // Validate on input
+    smartcardInput.addEventListener('input', validateSmartcardOnInput);
+    
+    // Validate on blur (when user leaves the field)
+    smartcardInput.addEventListener('blur', validateSmartcardOnBlur);
+    
+    // Validate when provider changes
+    tvProvider.addEventListener('change', validateSmartcardOnInput);
+  }
+}
+
+// NEW: Validate smartcard format on input
+function validateSmartcardOnInput() {
+  const smartcardInput = document.getElementById('smartcard');
+  const tvProvider = document.getElementById('tv');
+  const smartcardError = document.getElementById('smartcard-error');
+  
+  if (!smartcardInput || !tvProvider) return;
+  
+  const smartcard = smartcardInput.value.trim();
+  const provider = tvProvider.value;
+  
+  // Clear previous validation message
+  if (smartcardError) {
+    smartcardError.textContent = '';
+  }
+  
+  // Only validate if both fields have values
+  if (smartcard && provider) {
+    const validation = validateSmartcardFormat(smartcard, provider);
+    
+    if (!validation.valid) {
+      // Show validation error
+      if (smartcardError) {
+        smartcardError.textContent = validation.message;
+      }
+      
+      // Add visual indication of error
+      smartcardInput.classList.add('input-error');
+      smartcardInput.classList.remove('input-success');
+    } else {
+      // Show validation success
+      if (smartcardError) {
+        smartcardError.textContent = '';
+      }
+      
+      // Add visual indication of success
+      smartcardInput.classList.add('input-success');
+      smartcardInput.classList.remove('input-error');
+    }
+  }
+}
+
+// NEW: Validate smartcard format on blur
+function validateSmartcardOnBlur() {
+  const smartcardInput = document.getElementById('smartcard');
+  const tvProvider = document.getElementById('tv');
+  const smartcardError = document.getElementById('smartcard-error');
+  
+  if (!smartcardInput || !tvProvider) return;
+  
+  const smartcard = smartcardInput.value.trim();
+  const provider = tvProvider.value;
+  
+  // Only validate if smartcard has a value
+  if (smartcard) {
+    if (!provider) {
+      if (smartcardError) {
+        smartcardError.textContent = 'Please select a TV provider first';
+      }
+      smartcardInput.classList.add('input-error');
+      smartcardInput.classList.remove('input-success');
+      return;
+    }
+    
+    const validation = validateSmartcardFormat(smartcard, provider);
+    
+    if (!validation.valid) {
+      // Show validation error
+      if (smartcardError) {
+        smartcardError.textContent = validation.message;
+      }
+      
+      // Add visual indication of error
+      smartcardInput.classList.add('input-error');
+      smartcardInput.classList.remove('input-success');
+    } else {
+      // Show validation success
+      if (smartcardError) {
+        smartcardError.textContent = '';
+      }
+      
+      // Add visual indication of success
+      smartcardInput.classList.add('input-success');
+      smartcardInput.classList.remove('input-error');
+    }
+  }
+}
+
+// NEW: Validate smartcard format based on provider
+function validateSmartcardFormat(smartcard, provider) {
+  if (!smartcard || typeof smartcard !== 'string') {
+    return { valid: false, message: 'Smartcard number is required' };
+  }
+  
+  // Remove any spaces or dashes
+  const cleanCard = smartcard.replace(/[\s-]/g, '');
+  
+  // Provider-specific validation
+  switch (provider.toLowerCase()) {
+    case 'dstv':
+      if (!/^\d{10,11}$/.test(cleanCard)) {
+        return { valid: false, message: 'DStv smartcard must be 10-11 digits' };
+      }
+      break;
+    case 'gotv':
+      if (!/^\d{10}$/.test(cleanCard)) {
+        return { valid: false, message: 'GOtv smartcard must be 10 digits' };
+      }
+      break;
+    case 'startimes':
+      if (!/^\d{10,12}$/.test(cleanCard)) {
+        return { valid: false, message: 'StarTimes smartcard must be 10-12 digits' };
+      }
+      break;
+    default:
+      // Generic validation for unknown providers
+      if (!/^\d{8,15}$/.test(cleanCard)) {
+        return { valid: false, message: 'Invalid smartcard number format' };
+      }
+  }
+  
+  return { valid: true, message: 'Valid format' };
 }
 
 // FAQ Toggle
@@ -384,6 +542,34 @@ function setupNotificationsPage() {
   const markAllReadBtn = document.getElementById('markAllRead');
   if (markAllReadBtn) {
     markAllReadBtn.addEventListener('click', markAllNotificationsAsRead);
+  }
+}
+
+// NEW: Wallet Funding Setup
+function setupWalletFunding() {
+  // Setup fund wallet button
+  const fundWalletBtn = document.getElementById('fundWalletBtn');
+  if (fundWalletBtn) {
+    fundWalletBtn.addEventListener('click', () => {
+      window.location.href = 'fund-wallet.html';
+    });
+  }
+  
+  // Setup fund requests page
+  if (document.querySelector('.fund-requests-page')) {
+    loadFundRequests();
+  }
+  
+  // Setup admin fund requests page
+  if (document.querySelector('.admin-fund-requests-page')) {
+    loadAdminFundRequests();
+    setupAdminFundRequestActions();
+  }
+  
+  // Setup admin fund wallet form
+  const adminFundWalletForm = document.getElementById('adminFundWalletForm');
+  if (adminFundWalletForm) {
+    setupUserSearch();
   }
 }
 
@@ -674,16 +860,32 @@ async function loadTransactions(type = '') {
         data.data.transactions.forEach(transaction => {
           const transactionElement = document.createElement('div');
           transactionElement.className = `transaction-item ${transaction.status}`;
-          transactionElement.innerHTML = `
+          
+          // Add funding-specific display
+          let transactionInfo = `
             <div class="transaction-info">
               <div class="transaction-type">${transaction.type}</div>
               <div class="transaction-reference">${transaction.reference}</div>
               <div class="transaction-date">${formatDate(transaction.createdAt)}</div>
             </div>
-            <div class="transaction-amount">₦${Number(transaction.amount).toLocaleString()}</div>
+            <div class="transaction-amount ${transaction.type === 'funding' ? 'positive' : ''}">₦${Number(transaction.amount).toLocaleString()}</div>
             <div class="transaction-status ${transaction.status}">${transaction.status}</div>
           `;
           
+          // Add payment method for funding transactions
+          if (transaction.type === 'funding' && transaction.metadata && transaction.metadata.paymentMethod) {
+            transactionInfo = `
+              <div class="transaction-info">
+                <div class="transaction-type">${transaction.type} (${transaction.metadata.paymentMethod})</div>
+                <div class="transaction-reference">${transaction.reference}</div>
+                <div class="transaction-date">${formatDate(transaction.createdAt)}</div>
+              </div>
+              <div class="transaction-amount positive">₦${Number(transaction.amount).toLocaleString()}</div>
+              <div class="transaction-status ${transaction.status}">${transaction.status}</div>
+            `;
+          }
+          
+          transactionElement.innerHTML = transactionInfo;
           transactionsContainer.appendChild(transactionElement);
         });
       }
@@ -701,6 +903,565 @@ async function loadTransactions(type = '') {
   } catch (error) {
     console.error('Error loading transactions:', error);
     transactionsContainer.innerHTML = '<div class="error">Failed to load transactions</div>';
+  }
+}
+
+// NEW: Load User Funding Requests
+async function loadFundRequests(status = '') {
+  const token = localStorage.getItem('accessToken');
+  if (!token) return;
+  
+  const fundRequestsContainer = document.getElementById('fundRequestsList');
+  if (!fundRequestsContainer) return;
+  
+  try {
+    let url = `${API_BASE}/api/user/fund-requests`;
+    if (status) {
+      url += `?status=${status}`;
+    }
+    
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        // Clear existing fund requests
+        fundRequestsContainer.innerHTML = '';
+        
+        if (data.data.transactions.length === 0) {
+          fundRequestsContainer.innerHTML = '<div class="no-fund-requests">No funding requests found</div>';
+          return;
+        }
+        
+        // Add fund requests to the list
+        data.data.transactions.forEach(transaction => {
+          const requestElement = document.createElement('div');
+          requestElement.className = `fund-request-item ${transaction.status}`;
+          requestElement.innerHTML = `
+            <div class="fund-request-info">
+              <div class="fund-request-amount">₦${Number(transaction.amount).toLocaleString()}</div>
+              <div class="fund-request-method">${transaction.metadata.paymentMethod}</div>
+              <div class="fund-request-reference">${transaction.reference}</div>
+              <div class="fund-request-date">${formatDate(transaction.createdAt)}</div>
+            </div>
+            <div class="fund-request-status ${transaction.status}">${transaction.status}</div>
+          `;
+          
+          fundRequestsContainer.appendChild(requestElement);
+        });
+      }
+    } else if (response.status === 401) {
+      // Token expired, try to refresh
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        // Retry after refresh
+        loadFundRequests(status);
+      } else {
+        // If refresh fails, redirect to login
+        window.location.href = 'login.html';
+      }
+    }
+  } catch (error) {
+    console.error('Error loading fund requests:', error);
+    fundRequestsContainer.innerHTML = '<div class="error">Failed to load funding requests</div>';
+  }
+}
+
+// NEW: Load Admin Funding Requests
+async function loadAdminFundRequests(status = '') {
+  const token = localStorage.getItem('accessToken');
+  if (!token) return;
+  
+  const adminFundRequestsContainer = document.getElementById('adminFundRequestsList');
+  if (!adminFundRequestsContainer) return;
+  
+  try {
+    let url = `${API_BASE}/api/admin/fund-requests`;
+    if (status) {
+      url += `?status=${status}`;
+    }
+    
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        // Clear existing fund requests
+        adminFundRequestsContainer.innerHTML = '';
+        
+        if (data.data.transactions.length === 0) {
+          adminFundRequestsContainer.innerHTML = '<div class="no-fund-requests">No funding requests found</div>';
+          return;
+        }
+        
+        // Add fund requests to the list
+        data.data.transactions.forEach(transaction => {
+          const requestElement = document.createElement('div');
+          requestElement.className = `admin-fund-request-item ${transaction.status}`;
+          
+          // Get user info
+          const userName = transaction.userId ? transaction.userId.name : 'Unknown';
+          const userEmail = transaction.userId ? transaction.userId.email : 'Unknown';
+          
+          requestElement.innerHTML = `
+            <div class="admin-fund-request-info">
+              <div class="admin-fund-request-user">${userName} (${userEmail})</div>
+              <div class="admin-fund-request-amount">₦${Number(transaction.amount).toLocaleString()}</div>
+              <div class="admin-fund-request-method">${transaction.metadata.paymentMethod}</div>
+              <div class="admin-fund-request-reference">${transaction.reference}</div>
+              <div class="admin-fund-request-date">${formatDate(transaction.createdAt)}</div>
+            </div>
+            <div class="admin-fund-request-actions">
+              <div class="admin-fund-request-status ${transaction.status}">${transaction.status}</div>
+              ${transaction.status === 'pending' ? `
+                <button class="btn btn-sm approve-btn" data-id="${transaction._id}">Approve</button>
+                <button class="btn btn-sm reject-btn" data-id="${transaction._id}">Reject</button>
+              ` : ''}
+            </div>
+          `;
+          
+          adminFundRequestsContainer.appendChild(requestElement);
+        });
+        
+        // Add event listeners to approve/reject buttons
+        const approveButtons = adminFundRequestsContainer.querySelectorAll('.approve-btn');
+        approveButtons.forEach(button => {
+          button.addEventListener('click', () => {
+            approveFundRequest(button.dataset.id);
+          });
+        });
+        
+        const rejectButtons = adminFundRequestsContainer.querySelectorAll('.reject-btn');
+        rejectButtons.forEach(button => {
+          button.addEventListener('click', () => {
+            rejectFundRequest(button.dataset.id);
+          });
+        });
+      }
+    } else if (response.status === 401) {
+      // Token expired, try to refresh
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        // Retry after refresh
+        loadAdminFundRequests(status);
+      } else {
+        // If refresh fails, redirect to login
+        window.location.href = 'login.html';
+      }
+    }
+  } catch (error) {
+    console.error('Error loading admin fund requests:', error);
+    adminFundRequestsContainer.innerHTML = '<div class="error">Failed to load funding requests</div>';
+  }
+}
+
+// NEW: Setup Admin Fund Request Actions
+function setupAdminFundRequestActions() {
+  // Setup filter buttons
+  const filterButtons = document.querySelectorAll('.admin-filter-btn');
+  filterButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      // Remove active class from all buttons
+      filterButtons.forEach(btn => btn.classList.remove('active'));
+      // Add active class to clicked button
+      button.classList.add('active');
+      
+      // Reload fund requests with filter
+      loadAdminFundRequests(button.dataset.status);
+    });
+  });
+}
+
+// NEW: Setup User Search for Admin Fund Wallet
+function setupUserSearch() {
+  const userSearch = document.getElementById('userSearch');
+  if (userSearch) {
+    let debounceTimeout;
+    
+    userSearch.addEventListener('input', (e) => {
+      clearTimeout(debounceTimeout);
+      
+      debounceTimeout = setTimeout(() => {
+        const searchTerm = e.target.value.trim();
+        if (searchTerm.length >= 3) {
+          searchUsers(searchTerm);
+        } else {
+          // Clear search results
+          const searchResults = document.getElementById('userSearchResults');
+          if (searchResults) {
+            searchResults.innerHTML = '';
+            searchResults.style.display = 'none';
+          }
+        }
+      }, 300);
+    });
+  }
+}
+
+// NEW: Search Users for Admin Fund Wallet
+async function searchUsers(searchTerm) {
+  const token = localStorage.getItem('accessToken');
+  if (!token) return;
+  
+  const searchResults = document.getElementById('userSearchResults');
+  if (!searchResults) return;
+  
+  try {
+    const response = await fetch(`${API_BASE}/api/admin/users?search=${searchTerm}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        // Clear previous results
+        searchResults.innerHTML = '';
+        
+        if (data.data.users.length === 0) {
+          searchResults.innerHTML = '<div class="no-users">No users found</div>';
+        } else {
+          // Add users to results
+          data.data.users.forEach(user => {
+            const userElement = document.createElement('div');
+            userElement.className = 'user-search-result';
+            userElement.innerHTML = `
+              <div class="user-info">
+                <div class="user-name">${user.name}</div>
+                <div class="user-email">${user.email}</div>
+                <div class="user-balance">Balance: ₦${Number(user.walletBalance).toLocaleString()}</div>
+              </div>
+              <button class="btn btn-sm select-user" data-id="${user._id}">Select</button>
+            `;
+            
+            searchResults.appendChild(userElement);
+          });
+          
+          // Add event listeners to select buttons
+          const selectButtons = searchResults.querySelectorAll('.select-user');
+          selectButtons.forEach(button => {
+            button.addEventListener('click', () => {
+              selectUserForFunding(button.dataset.id);
+            });
+          });
+        }
+        
+        searchResults.style.display = 'block';
+      }
+    } else if (response.status === 401) {
+      // Token expired, try to refresh
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        // Retry after refresh
+        searchUsers(searchTerm);
+      } else {
+        // If refresh fails, redirect to login
+        window.location.href = 'login.html';
+      }
+    }
+  } catch (error) {
+    console.error('Error searching users:', error);
+    searchResults.innerHTML = '<div class="error">Failed to search users</div>';
+    searchResults.style.display = 'block';
+  }
+}
+
+// NEW: Select User for Funding
+function selectUserForFunding(userId) {
+  const userIdInput = document.getElementById('userId');
+  const selectedUserInfo = document.getElementById('selectedUserInfo');
+  const userSearchResults = document.getElementById('userSearchResults');
+  
+  if (userIdInput) {
+    userIdInput.value = userId;
+  }
+  
+  // Hide search results
+  if (userSearchResults) {
+    userSearchResults.style.display = 'none';
+  }
+  
+  // Show selected user info
+  if (selectedUserInfo) {
+    selectedUserInfo.innerHTML = '<div class="loading">Loading user information...</div>';
+    selectedUserInfo.style.display = 'block';
+    
+    // Get user details
+    fetchUserDetails(userId);
+  }
+}
+
+// NEW: Fetch User Details
+async function fetchUserDetails(userId) {
+  const token = localStorage.getItem('accessToken');
+  if (!token) return;
+  
+  const selectedUserInfo = document.getElementById('selectedUserInfo');
+  if (!selectedUserInfo) return;
+  
+  try {
+    const response = await fetch(`${API_BASE}/api/user/profile`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        const user = data.data.user;
+        selectedUserInfo.innerHTML = `
+          <div class="selected-user-info">
+            <div class="user-name">${user.name}</div>
+            <div class="user-email">${user.email}</div>
+            <div class="user-balance">Current Balance: ₦${Number(user.walletBalance).toLocaleString()}</div>
+          </div>
+        `;
+      }
+    } else if (response.status === 401) {
+      // Token expired, try to refresh
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        // Retry after refresh
+        fetchUserDetails(userId);
+      } else {
+        // If refresh fails, redirect to login
+        window.location.href = 'login.html';
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching user details:', error);
+    selectedUserInfo.innerHTML = '<div class="error">Failed to load user information</div>';
+  }
+}
+
+// NEW: Handle Fund Request
+async function handleFundRequest(e) {
+  e.preventDefault();
+  
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    showAlert('Please login to request funding');
+    return;
+  }
+  
+  const amount = document.getElementById('amount').value;
+  const paymentMethod = document.getElementById('paymentMethod').value;
+  const reference = document.getElementById('reference').value;
+  
+  try {
+    // Show loading state
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+    
+    // API call
+    const response = await fetch(`${API_BASE}/api/user/fund-request`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ amount, paymentMethod, reference })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok && data.success) {
+      showAlert('Funding request submitted successfully!', 'success');
+      // Reset form
+      e.target.reset();
+      // Reload fund requests
+      loadFundRequests();
+    } else {
+      // Show error message
+      showAlert(data.message || 'Failed to submit funding request. Please try again.');
+    }
+    
+  } catch (error) {
+    console.error('Fund request error:', error);
+    
+    // More specific error message for network issues
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      showAlert('Unable to connect to the server. Please check your internet connection.');
+    } else {
+      showAlert('Failed to submit funding request. Please check your connection and try again.');
+    }
+  } finally {
+    // Reset button state
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText || 'Submit Request';
+    }
+  }
+}
+
+// NEW: Handle Admin Fund Wallet
+async function handleAdminFundWallet(e) {
+  e.preventDefault();
+  
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    showAlert('Please login to fund wallet');
+    return;
+  }
+  
+  const userId = document.getElementById('userId').value;
+  const amount = document.getElementById('amount').value;
+  const note = document.getElementById('note').value;
+  
+  try {
+    // Show loading state
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Processing...';
+    
+    // API call
+    const response = await fetch(`${API_BASE}/api/admin/fund-wallet`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ userId, amount, note })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok && data.success) {
+      showAlert('Wallet funded successfully!', 'success');
+      // Reset form
+      e.target.reset();
+      document.getElementById('selectedUserInfo').style.display = 'none';
+      // Reload admin fund requests
+      loadAdminFundRequests();
+    } else {
+      // Show error message
+      showAlert(data.message || 'Failed to fund wallet. Please try again.');
+    }
+    
+  } catch (error) {
+    console.error('Admin fund wallet error:', error);
+    
+    // More specific error message for network issues
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      showAlert('Unable to connect to the server. Please check your internet connection.');
+    } else {
+      showAlert('Failed to fund wallet. Please check your connection and try again.');
+    }
+  } finally {
+    // Reset button state
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText || 'Fund Wallet';
+    }
+  }
+}
+
+// NEW: Approve Fund Request
+async function approveFundRequest(requestId) {
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    showAlert('Please login to approve funding requests');
+    return;
+  }
+  
+  try {
+    // Show confirmation dialog
+    const note = prompt('Enter a note for this approval (optional):');
+    
+    // API call
+    const response = await fetch(`${API_BASE}/api/admin/fund-request/${requestId}/approve`, {
+      method: 'PUT',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ note: note || '' })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok && data.success) {
+      showAlert('Funding request approved successfully!', 'success');
+      // Reload admin fund requests
+      loadAdminFundRequests();
+    } else {
+      // Show error message
+      showAlert(data.message || 'Failed to approve funding request. Please try again.');
+    }
+    
+  } catch (error) {
+    console.error('Approve fund request error:', error);
+    
+    // More specific error message for network issues
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      showAlert('Unable to connect to the server. Please check your internet connection.');
+    } else {
+      showAlert('Failed to approve funding request. Please check your connection and try again.');
+    }
+  }
+}
+
+// NEW: Reject Fund Request
+async function rejectFundRequest(requestId) {
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    showAlert('Please login to reject funding requests');
+    return;
+  }
+  
+  try {
+    // Show confirmation dialog
+    const reason = prompt('Enter a reason for rejection:');
+    if (!reason) {
+      showAlert('Reason is required to reject a funding request');
+      return;
+    }
+    
+    // API call
+    const response = await fetch(`${API_BASE}/api/admin/fund-request/${requestId}/reject`, {
+      method: 'PUT',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ reason })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok && data.success) {
+      showAlert('Funding request rejected successfully!', 'success');
+      // Reload admin fund requests
+      loadAdminFundRequests();
+    } else {
+      // Show error message
+      showAlert(data.message || 'Failed to reject funding request. Please try again.');
+    }
+    
+  } catch (error) {
+    console.error('Reject fund request error:', error);
+    
+    // More specific error message for network issues
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      showAlert('Unable to connect to the server. Please check your internet connection.');
+    } else {
+      showAlert('Failed to reject funding request. Please check your connection and try again.');
+    }
   }
 }
 
@@ -1297,9 +2058,46 @@ async function handleServiceForm(e, serviceType) {
       break;
       
     case 'tv':
+      // Validate smartcard before processing
+      const smartcardInput = document.getElementById('smartcard');
+      const tvProvider = document.getElementById('tv');
+      const smartcardError = document.getElementById('smartcard-error');
+      
+      if (!smartcardInput || !tvProvider) {
+        showAlert('Missing required fields for TV subscription');
+        return;
+      }
+      
+      const smartcard = smartcardInput.value.trim();
+      const provider = tvProvider.value;
+      
+      // Validate smartcard format
+      if (!smartcard) {
+        if (smartcardError) {
+          smartcardError.textContent = 'Smartcard number is required';
+        }
+        return;
+      }
+      
+      if (!provider) {
+        if (smartcardError) {
+          smartcardError.textContent = 'Please select a TV provider';
+        }
+        return;
+      }
+      
+      const validation = validateSmartcardFormat(smartcard, provider);
+      
+      if (!validation.valid) {
+        if (smartcardError) {
+          smartcardError.textContent = validation.message;
+        }
+        return;
+      }
+      
       formData = {
-        provider: document.getElementById('tv').value,
-        smartcard: document.getElementById('smartcard').value,
+        provider: provider,
+        smartcard: smartcard,
         plan: document.querySelector('input[name="plan"]:checked').value,
         phone: document.getElementById('phone').value,
         email: document.getElementById('email').value

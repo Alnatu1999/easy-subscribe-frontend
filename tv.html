@@ -69,10 +69,25 @@
                 <div class="error-message" id="smartcard-error"></div>
               </div>
               
+              <!-- Customer Details Section (Initially Hidden) -->
+              <div class="form-group customer-details" id="customerDetails" style="display: none;">
+                <h4>Customer Details</h4>
+                <div class="customer-info">
+                  <div class="customer-detail">
+                    <span class="detail-label">Name:</span>
+                    <span id="customerName">-</span>
+                  </div>
+                  <div class="customer-detail">
+                    <span class="detail-label">Current Plan:</span>
+                    <span id="customerPlan">-</span>
+                  </div>
+                </div>
+              </div>
+              
               <div class="form-group">
                 <label>Subscription Plan</label>
                 <div class="tv-plans" id="dstv-plans" style="display: none;">
-                  <!-- Plans will be loaded dynamically from VTU.ng API -->
+                  <!-- Plans will be loaded dynamically from API -->
                   <div class="loading-plans">
                     <i class="fas fa-spinner fa-spin"></i>
                     <p>Select a provider to view plans</p>
@@ -80,7 +95,7 @@
                 </div>
                 
                 <div class="tv-plans" id="gotv-plans" style="display: none;">
-                  <!-- Plans will be loaded dynamically from VTU.ng API -->
+                  <!-- Plans will be loaded dynamically from API -->
                   <div class="loading-plans">
                     <i class="fas fa-spinner fa-spin"></i>
                     <p>Select a provider to view plans</p>
@@ -88,7 +103,7 @@
                 </div>
                 
                 <div class="tv-plans" id="startimes-plans" style="display: none;">
-                  <!-- Plans will be loaded dynamically from VTU.ng API -->
+                  <!-- Plans will be loaded dynamically from API -->
                   <div class="loading-plans">
                     <i class="fas fa-spinner fa-spin"></i>
                     <p>Select a provider to view plans</p>
@@ -262,6 +277,140 @@
           }
         });
       }
+      
+      // Setup smartcard input listener for customer details
+      const smartcardInput = document.getElementById('smartcard');
+      if (smartcardInput) {
+        // Use debounce to avoid too many API calls
+        let debounceTimer;
+        
+        smartcardInput.addEventListener('input', function() {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            // Use the function from main.js if available
+            if (typeof loadCustomerDetails === 'function') {
+              loadCustomerDetails();
+            } else {
+              // Fallback to local implementation
+              validateAndLoadCustomerDetails();
+            }
+          }, 500); // Wait 500ms after user stops typing
+        });
+        
+        smartcardInput.addEventListener('blur', function() {
+          // Use the function from main.js if available
+          if (typeof loadCustomerDetails === 'function') {
+            loadCustomerDetails();
+          } else {
+            // Fallback to local implementation
+            validateAndLoadCustomerDetails();
+          }
+        });
+      }
+    }
+    
+    // Fallback function to validate and load customer details
+    // This will only be used if the function from main.js is not available
+    function validateAndLoadCustomerDetails() {
+      const provider = document.getElementById('tv').value;
+      const smartcard = document.getElementById('smartcard').value.trim();
+      
+      // Only proceed if both provider and smartcard are provided
+      if (provider && smartcard) {
+        // Validate smartcard format - use function from main.js if available
+        let validation;
+        if (typeof validateSmartcardFormat === 'function') {
+          validation = validateSmartcardFormat(smartcard, provider);
+        } else {
+          // Fallback validation
+          validation = validateSmartcardFormatLocal(smartcard, provider);
+        }
+        
+        const smartcardError = document.getElementById('smartcard-error');
+        if (smartcardError) {
+          smartcardError.textContent = validation.valid ? '' : validation.message;
+        }
+        
+        // If valid, load customer details
+        if (validation.valid) {
+          if (typeof loadCustomerDetails === 'function') {
+            // Use the function from main.js
+            loadCustomerDetails();
+          } else {
+            // Fallback to local implementation
+            loadCustomerDetailsLocal(provider, smartcard);
+          }
+        } else {
+          // Hide customer details if invalid
+          document.getElementById('customerDetails').style.display = 'none';
+        }
+      }
+    }
+    
+    // Fallback function to load customer details from API
+    // This will only be used if the function from main.js is not available
+    async function loadCustomerDetailsLocal(provider, smartcard) {
+      try {
+        // Use the global API_BASE if available, otherwise construct it
+        const apiUrl = typeof API_BASE !== 'undefined' ? API_BASE : 
+          (window.location.hostname === 'localhost' ? 'http://localhost:5001' : 'https://easy-subscribe-backend.onrender.com');
+        
+        const response = await fetch(`${apiUrl}/api/services/tv-customer?provider=${provider}&smartcard=${smartcard}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          // Display customer details
+          document.getElementById('customerName').textContent = data.data.customerName || 'Not available';
+          document.getElementById('customerPlan').textContent = data.data.currentPlan || 'Not available';
+          
+          // Show customer details section
+          document.getElementById('customerDetails').style.display = 'block';
+        } else {
+          // Hide customer details if not found
+          document.getElementById('customerDetails').style.display = 'none';
+        }
+      } catch (error) {
+        console.error('Error loading customer details:', error);
+        // Hide customer details on error
+        document.getElementById('customerDetails').style.display = 'none';
+      }
+    }
+    
+    // Fallback function to validate smartcard format
+    // This will only be used if the function from main.js is not available
+    function validateSmartcardFormatLocal(smartcard, provider) {
+      if (!smartcard || typeof smartcard !== 'string') {
+        return { valid: false, message: 'Smartcard number is required' };
+      }
+      
+      // Remove any spaces or dashes
+      const cleanCard = smartcard.replace(/[\s-]/g, '');
+      
+      // Provider-specific validation
+      switch (provider.toLowerCase()) {
+        case 'dstv':
+          if (!/^\d{10,11}$/.test(cleanCard)) {
+            return { valid: false, message: 'DStv smartcard must be 10-11 digits' };
+          }
+          break;
+        case 'gotv':
+          if (!/^\d{10}$/.test(cleanCard)) {
+            return { valid: false, message: 'GOtv smartcard must be 10 digits' };
+          }
+          break;
+        case 'startimes':
+          if (!/^\d{10,12}$/.test(cleanCard)) {
+            return { valid: false, message: 'StarTimes smartcard must be 10-12 digits' };
+          }
+          break;
+        default:
+          // Generic validation for unknown providers
+          if (!/^\d{8,15}$/.test(cleanCard)) {
+            return { valid: false, message: 'Invalid smartcard number format' };
+          }
+      }
+      
+      return { valid: true, message: 'Valid format' };
     }
     
     // Load TV plans from API

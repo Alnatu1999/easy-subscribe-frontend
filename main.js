@@ -6,22 +6,18 @@ if (typeof window.API_BASE === 'undefined') {
     ? 'http://localhost:5001'  // Changed from 5000 to 5001 to match server
     : 'https://easy-subscribe-backend.onrender.com'; // Updated with actual backend URL
 }
-
 // Use a local reference to API_BASE
 const API_BASE = window.API_BASE;
-
 // DOM Elements
 const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
 const desktopNav = document.querySelector('.desktop-nav');
 const menuToggle = document.querySelector('.menu-toggle');
 const sidebar = document.querySelector('.sidebar');
-
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
   initializeApp();
   checkServerConnection();
 });
-
 // Check server connection
 async function checkServerConnection() {
   try {
@@ -43,7 +39,6 @@ async function checkServerConnection() {
     }
   }
 }
-
 function initializeApp() {
   setupMobileMenu();
   setupSidebarToggle();
@@ -67,7 +62,6 @@ function initializeApp() {
   setupWalletFunding(); // NEW: Setup wallet funding
   setupSmartcardValidation(); // NEW: Setup smartcard validation
 }
-
 // Mobile Menu Toggle
 function setupMobileMenu() {
   if (mobileMenuBtn && desktopNav) {
@@ -76,7 +70,6 @@ function setupMobileMenu() {
     });
   }
 }
-
 // Sidebar Toggle for Dashboard
 function setupSidebarToggle() {
   if (menuToggle && sidebar) {
@@ -85,7 +78,6 @@ function setupSidebarToggle() {
     });
   }
 }
-
 // Form Handlers
 function setupFormHandlers() {
   // Login Form
@@ -163,7 +155,6 @@ function setupFormHandlers() {
     adminFundWalletForm.addEventListener('submit', handleAdminFundWallet);
   }
 }
-
 // Password Visibility Toggle
 function setupPasswordToggles() {
   const toggleButtons = document.querySelectorAll('.toggle-password');
@@ -184,7 +175,6 @@ function setupPasswordToggles() {
     });
   });
 }
-
 // Quick Amount Buttons for Airtime
 function setupQuickAmountButtons() {
   const amountButtons = document.querySelectorAll('.amount-btn');
@@ -198,7 +188,6 @@ function setupQuickAmountButtons() {
     });
   }
 }
-
 // Plan Selection for Data
 function setupPlanSelection() {
   const planOptions = document.querySelectorAll('.plan-option input[type="radio"]');
@@ -217,7 +206,6 @@ function setupPlanSelection() {
     });
   });
 }
-
 // UPDATED: Provider Selection for TV with VTU integration
 function setupProviderSelection() {
   const tvProvider = document.getElementById('tv');
@@ -253,7 +241,6 @@ function setupProviderSelection() {
     });
   }
 }
-
 // NEW: Setup TV variations
 function setupTvVariations() {
   const tvProvider = document.getElementById('tv');
@@ -261,7 +248,6 @@ function setupTvVariations() {
     loadTvVariations();
   }
 }
-
 // NEW: Load TV variations from API
 async function loadTvVariations() {
   try {
@@ -297,24 +283,35 @@ async function loadTvVariations() {
     console.error('Error loading TV variations:', error);
   }
 }
-
 // NEW: Setup Smartcard Validation
 function setupSmartcardValidation() {
   const smartcardInput = document.getElementById('smartcard');
   const tvProvider = document.getElementById('tv');
   
   if (smartcardInput && tvProvider) {
-    // Validate on input
-    smartcardInput.addEventListener('input', validateSmartcardOnInput);
+    // Validate on input with debounce
+    let debounceTimer;
+    smartcardInput.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        validateSmartcardOnInput();
+        loadCustomerDetails();
+      }, 500); // Wait 500ms after user stops typing
+    });
     
     // Validate on blur (when user leaves the field)
-    smartcardInput.addEventListener('blur', validateSmartcardOnBlur);
+    smartcardInput.addEventListener('blur', () => {
+      validateSmartcardOnBlur();
+      loadCustomerDetails();
+    });
     
     // Validate when provider changes
-    tvProvider.addEventListener('change', validateSmartcardOnInput);
+    tvProvider.addEventListener('change', () => {
+      validateSmartcardOnInput();
+      loadCustomerDetails();
+    });
   }
 }
-
 // NEW: Validate smartcard format on input
 function validateSmartcardOnInput() {
   const smartcardInput = document.getElementById('smartcard');
@@ -356,7 +353,6 @@ function validateSmartcardOnInput() {
     }
   }
 }
-
 // NEW: Validate smartcard format on blur
 function validateSmartcardOnBlur() {
   const smartcardInput = document.getElementById('smartcard');
@@ -402,7 +398,68 @@ function validateSmartcardOnBlur() {
     }
   }
 }
-
+// NEW: Load customer details from API
+async function loadCustomerDetails() {
+  const smartcardInput = document.getElementById('smartcard');
+  const tvProvider = document.getElementById('tv');
+  const customerNameElement = document.getElementById('customerName');
+  const customerPlanElement = document.getElementById('customerPlan');
+  const customerDetailsElement = document.getElementById('customerDetails');
+  
+  if (!smartcardInput || !tvProvider) return;
+  
+  const smartcard = smartcardInput.value.trim();
+  const provider = tvProvider.value;
+  
+  // Only proceed if both provider and smartcard are provided
+  if (provider && smartcard) {
+    // Validate smartcard format first
+    const validation = validateSmartcardFormat(smartcard, provider);
+    
+    if (validation.valid) {
+      try {
+        const response = await fetch(`${API_BASE}/api/services/tv-customer?provider=${provider}&smartcard=${smartcard}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          // Display customer details
+          if (customerNameElement) {
+            customerNameElement.textContent = data.data.customerName || 'Not available';
+          }
+          if (customerPlanElement) {
+            customerPlanElement.textContent = data.data.currentPlan || 'Not available';
+          }
+          
+          // Show customer details section
+          if (customerDetailsElement) {
+            customerDetailsElement.style.display = 'block';
+          }
+        } else {
+          // Hide customer details if not found
+          if (customerDetailsElement) {
+            customerDetailsElement.style.display = 'none';
+          }
+        }
+      } catch (error) {
+        console.error('Error loading customer details:', error);
+        // Hide customer details on error
+        if (customerDetailsElement) {
+          customerDetailsElement.style.display = 'none';
+        }
+      }
+    } else {
+      // Hide customer details if invalid
+      if (customerDetailsElement) {
+        customerDetailsElement.style.display = 'none';
+      }
+    }
+  } else {
+    // Hide customer details if missing required fields
+    if (customerDetailsElement) {
+      customerDetailsElement.style.display = 'none';
+    }
+  }
+}
 // NEW: Validate smartcard format based on provider
 function validateSmartcardFormat(smartcard, provider) {
   if (!smartcard || typeof smartcard !== 'string') {
@@ -438,7 +495,6 @@ function validateSmartcardFormat(smartcard, provider) {
   
   return { valid: true, message: 'Valid format' };
 }
-
 // FAQ Toggle
 function setupFAQToggle() {
   const faqQuestions = document.querySelectorAll('.faq-question');
@@ -454,7 +510,6 @@ function setupFAQToggle() {
     });
   });
 }
-
 // Service Navigation
 function setupServiceNavigation() {
   const viewAllButtons = document.querySelectorAll('.view-all');
@@ -467,7 +522,6 @@ function setupServiceNavigation() {
     });
   });
 }
-
 // Notification Bell
 function setupNotificationBell() {
   const notificationBell = document.querySelector('.notification-bell');
@@ -477,7 +531,6 @@ function setupNotificationBell() {
     });
   }
 }
-
 // Profile Management
 function setupProfileManagement() {
   const editProfileBtn = document.querySelector('.edit-profile-btn');
@@ -487,7 +540,6 @@ function setupProfileManagement() {
     });
   }
 }
-
 // Password Reset
 function setupPasswordReset() {
   const forgotPasswordLink = document.querySelector('.forgot-password');
@@ -498,7 +550,6 @@ function setupPasswordReset() {
     });
   }
 }
-
 // Modals Setup
 function setupModals() {
   // Close modal when clicking on close button
@@ -519,7 +570,6 @@ function setupModals() {
     }
   });
 }
-
 // Transactions Page Setup
 function setupTransactionsPage() {
   if (!document.querySelector('.transactions-page')) return;
@@ -540,7 +590,6 @@ function setupTransactionsPage() {
     });
   });
 }
-
 // Notifications Page Setup
 function setupNotificationsPage() {
   if (!document.querySelector('.notifications-page')) return;
@@ -553,7 +602,6 @@ function setupNotificationsPage() {
     markAllReadBtn.addEventListener('click', markAllNotificationsAsRead);
   }
 }
-
 // NEW: Wallet Funding Setup
 function setupWalletFunding() {
   // Setup fund wallet button
@@ -581,7 +629,6 @@ function setupWalletFunding() {
     setupUserSearch();
   }
 }
-
 // Authentication Check
 function checkAuthentication() {
   const token = localStorage.getItem('accessToken');
@@ -596,7 +643,6 @@ function checkAuthentication() {
     window.location.href = 'login.html';
   }
 }
-
 // Load User Data
 function loadUserData() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -616,7 +662,6 @@ function loadUserData() {
     }
   });
 }
-
 // Load Wallet Balance
 async function loadWalletBalance() {
   const token = localStorage.getItem('accessToken');
@@ -657,7 +702,6 @@ async function loadWalletBalance() {
     });
   }
 }
-
 // Load Notifications
 async function loadNotifications() {
   const token = localStorage.getItem('accessToken');
@@ -695,7 +739,6 @@ async function loadNotifications() {
     console.error('Error loading notifications:', error);
   }
 }
-
 // Load Notifications List
 async function loadNotificationsList() {
   const token = localStorage.getItem('accessToken');
@@ -762,7 +805,6 @@ async function loadNotificationsList() {
     notificationsContainer.innerHTML = '<div class="error">Failed to load notifications</div>';
   }
 }
-
 // Mark Notification as Read
 async function markNotificationAsRead(notificationId) {
   const token = localStorage.getItem('accessToken');
@@ -797,7 +839,6 @@ async function markNotificationAsRead(notificationId) {
     showAlert('Failed to mark notification as read');
   }
 }
-
 // Mark All Notifications as Read
 async function markAllNotificationsAsRead() {
   const token = localStorage.getItem('accessToken');
@@ -833,7 +874,6 @@ async function markAllNotificationsAsRead() {
     showAlert('Failed to mark notifications as read');
   }
 }
-
 // Load Transactions
 async function loadTransactions(type = '') {
   const token = localStorage.getItem('accessToken');
@@ -914,7 +954,6 @@ async function loadTransactions(type = '') {
     transactionsContainer.innerHTML = '<div class="error">Failed to load transactions</div>';
   }
 }
-
 // NEW: Load User Funding Requests
 async function loadFundRequests(status = '') {
   const token = localStorage.getItem('accessToken');
@@ -979,7 +1018,6 @@ async function loadFundRequests(status = '') {
     fundRequestsContainer.innerHTML = '<div class="error">Failed to load funding requests</div>';
   }
 }
-
 // NEW: Load Admin Funding Requests
 async function loadAdminFundRequests(status = '') {
   const token = localStorage.getItem('accessToken');
@@ -1071,7 +1109,6 @@ async function loadAdminFundRequests(status = '') {
     adminFundRequestsContainer.innerHTML = '<div class="error">Failed to load funding requests</div>';
   }
 }
-
 // NEW: Setup Admin Fund Request Actions
 function setupAdminFundRequestActions() {
   // Setup filter buttons
@@ -1088,7 +1125,6 @@ function setupAdminFundRequestActions() {
     });
   });
 }
-
 // NEW: Setup User Search for Admin Fund Wallet
 function setupUserSearch() {
   const userSearch = document.getElementById('userSearch');
@@ -1114,7 +1150,6 @@ function setupUserSearch() {
     });
   }
 }
-
 // NEW: Search Users for Admin Fund Wallet
 async function searchUsers(searchTerm) {
   const token = localStorage.getItem('accessToken');
@@ -1183,7 +1218,6 @@ async function searchUsers(searchTerm) {
     searchResults.style.display = 'block';
   }
 }
-
 // NEW: Select User for Funding
 function selectUserForFunding(userId) {
   const userIdInput = document.getElementById('userId');
@@ -1208,7 +1242,6 @@ function selectUserForFunding(userId) {
     fetchUserDetails(userId);
   }
 }
-
 // NEW: Fetch User Details
 async function fetchUserDetails(userId) {
   const token = localStorage.getItem('accessToken');
@@ -1252,7 +1285,6 @@ async function fetchUserDetails(userId) {
     selectedUserInfo.innerHTML = '<div class="error">Failed to load user information</div>';
   }
 }
-
 // NEW: Handle Fund Request
 async function handleFundRequest(e) {
   e.preventDefault();
@@ -1315,7 +1347,6 @@ async function handleFundRequest(e) {
     }
   }
 }
-
 // NEW: Handle Admin Fund Wallet
 async function handleAdminFundWallet(e) {
   e.preventDefault();
@@ -1379,7 +1410,6 @@ async function handleAdminFundWallet(e) {
     }
   }
 }
-
 // NEW: Approve Fund Request
 async function approveFundRequest(requestId) {
   const token = localStorage.getItem('accessToken');
@@ -1424,7 +1454,6 @@ async function approveFundRequest(requestId) {
     }
   }
 }
-
 // NEW: Reject Fund Request
 async function rejectFundRequest(requestId) {
   const token = localStorage.getItem('accessToken');
@@ -1473,7 +1502,6 @@ async function rejectFundRequest(requestId) {
     }
   }
 }
-
 // Refresh Token
 async function refreshToken() {
   const refreshToken = localStorage.getItem('refreshToken');
@@ -1505,7 +1533,6 @@ async function refreshToken() {
     return false;
   }
 }
-
 // Show Alert Function
 function showAlert(message, type = 'error') {
   const alertContainer = document.getElementById('alert-container');
@@ -1532,7 +1559,6 @@ function showAlert(message, type = 'error') {
     alertContainer.innerHTML = '';
   }, 5000);
 }
-
 // Validate Signup Form
 function validateSignupForm() {
   let isValid = true;
@@ -1598,7 +1624,6 @@ function validateSignupForm() {
   
   return isValid;
 }
-
 // Signup Handler - FIXED FIELD REFERENCES
 async function handleSignup(e) {
   e.preventDefault();
@@ -1677,7 +1702,6 @@ async function handleSignup(e) {
     }
   }
 }
-
 // Validate Login Form
 function validateLoginForm() {
   let isValid = true;
@@ -1705,7 +1729,6 @@ function validateLoginForm() {
   
   return isValid;
 }
-
 // Login Handler
 async function handleLogin(e) {
   e.preventDefault();
@@ -1778,7 +1801,6 @@ async function handleLogin(e) {
     }
   }
 }
-
 // Forgot Password Handler
 async function handleForgotPassword(e) {
   e.preventDefault();
@@ -1830,7 +1852,6 @@ async function handleForgotPassword(e) {
     }
   }
 }
-
 // Reset Password Handler
 async function handleResetPassword(e) {
   e.preventDefault();
@@ -1890,7 +1911,6 @@ async function handleResetPassword(e) {
     }
   }
 }
-
 // Update Profile Handler
 async function handleUpdateProfile(e) {
   e.preventDefault();
@@ -1955,7 +1975,6 @@ async function handleUpdateProfile(e) {
     }
   }
 }
-
 // Change Password Handler
 async function handleChangePassword(e) {
   e.preventDefault();
@@ -2024,7 +2043,6 @@ async function handleChangePassword(e) {
     }
   }
 }
-
 // Service Form Handler (Airtime, Data, Electricity, TV) - UPDATED TO REMOVE PAYSTACK
 async function handleServiceForm(e, serviceType) {
   e.preventDefault();
@@ -2125,13 +2143,17 @@ async function handleServiceForm(e, serviceType) {
         return;
       }
       
+      // Get payment method
+      const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value || 'wallet';
+      
       // Store form data in sessionStorage
       const tvData = {
         provider,
         smartcard,
         plan,
         phone,
-        email
+        email,
+        paymentMethod
       };
       
       sessionStorage.setItem('tvData', JSON.stringify(tvData));
@@ -2200,7 +2222,6 @@ async function handleServiceForm(e, serviceType) {
     }
   }
 }
-
 // Password Strength Meter
 function setupPasswordStrength() {
   const passwordInput = document.getElementById('password');
@@ -2238,17 +2259,14 @@ function setupPasswordStrength() {
     });
   }
 }
-
 // Initialize password strength meter if on signup page
 if (document.getElementById('signupForm')) {
   setupPasswordStrength();
 }
-
 // Load notifications if on dashboard
 if (document.querySelector('.notification-badge')) {
   loadNotifications();
 }
-
 // Utility function to format currency
 function formatCurrency(amount) {
   return new Intl.NumberFormat('en-NG', {
@@ -2257,13 +2275,11 @@ function formatCurrency(amount) {
     minimumFractionDigits: 2
   }).format(amount);
 }
-
 // Utility function to format date
 function formatDate(dateString) {
   const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
   return new Date(dateString).toLocaleDateString('en-NG', options);
 }
-
 // Logout function
 function logout() {
   localStorage.removeItem('accessToken');
@@ -2271,7 +2287,6 @@ function logout() {
   localStorage.removeItem('user');
   window.location.href = 'index.html';
 }
-
 // Add logout event listener to logout button
 const logoutBtn = document.querySelector('.logout-btn');
 if (logoutBtn) {
@@ -2280,7 +2295,6 @@ if (logoutBtn) {
     logout();
   });
 }
-
 // Download statement function
 async function downloadStatement() {
   const token = localStorage.getItem('accessToken');
@@ -2339,13 +2353,11 @@ async function downloadStatement() {
     }
   }
 }
-
 // Add event listener to download statement button
 const downloadStatementBtn = document.querySelector('.wallet-buttons .btn.secondary');
 if (downloadStatementBtn) {
   downloadStatementBtn.addEventListener('click', downloadStatement);
 }
-
 // Referral program function
 function startReferring() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -2356,7 +2368,6 @@ function startReferring() {
     showAlert('Please login to access the referral program');
   }
 }
-
 // Add event listener to referral button
 const referralBtn = document.querySelector('.promo-section .btn');
 if (referralBtn) {

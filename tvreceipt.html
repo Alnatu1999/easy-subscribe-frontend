@@ -9,6 +9,193 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Additional styles for receipt page */
+    .receipt-status.success {
+      background-color: #d4edda;
+      color: #155724;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .receipt-status.failed {
+      background-color: #f8d7da;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .receipt-status.pending {
+      background-color: #fff3cd;
+      color: #856404;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .receipt-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 25px;
+      margin-bottom: 30px;
+    }
+    
+    .receipt-header-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .receipt-logo h2 {
+      margin: 0;
+      color: #2c3e50;
+    }
+    
+    .receipt-logo p {
+      margin: 5px 0 0 0;
+      color: #7f8c8d;
+    }
+    
+    .receipt-date {
+      text-align: right;
+      color: #7f8c8d;
+    }
+    
+    .receipt-details h3 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+    
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #f8f9fa;
+    }
+    
+    .detail-row.total-row {
+      font-weight: bold;
+      font-size: 1.1em;
+      border-top: 2px solid #eee;
+      padding-top: 15px;
+      margin-top: 15px;
+      margin-bottom: 0;
+    }
+    
+    .detail-label {
+      font-weight: 500;
+      color: #495057;
+    }
+    
+    .detail-value {
+      color: #212529;
+      font-weight: 600;
+    }
+    
+    .receipt-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 25px;
+      flex-wrap: wrap;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .btn.primary {
+      background-color: #3498db;
+      color: white;
+    }
+    
+    .btn.primary:hover {
+      background-color: #2980b9;
+    }
+    
+    .btn.secondary {
+      background-color: #ecf0f1;
+      color: #2c3e50;
+    }
+    
+    .btn.secondary:hover {
+      background-color: #bdc3c7;
+    }
+    
+    .btn.outline {
+      background-color: white;
+      color: #3498db;
+      border: 1px solid #3498db;
+    }
+    
+    .btn.outline:hover {
+      background-color: #f8f9fa;
+    }
+    
+    .info-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 25px;
+    }
+    
+    .info-card h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: #2c3e50;
+    }
+    
+    .info-card ul {
+      padding-left: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .info-card li {
+      margin-bottom: 8px;
+    }
+    
+    .support-info {
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+    }
+    
+    .support-info h4 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: #2c3e50;
+    }
+    
+    .support-info p {
+      margin: 5px 0;
+      color: #7f8c8d;
+    }
+    
+    @media print {
+      .receipt-actions {
+        display: none;
+      }
+      
+      header, footer, .info-card {
+        display: none;
+      }
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -171,21 +358,83 @@
     });
     
     function initializeReceiptPage() {
-      // Get transaction data from sessionStorage
+      // Try to get transaction data from sessionStorage
       const transactionData = JSON.parse(sessionStorage.getItem('tvTransaction') || '{}');
       
       // Check if we have valid data
       if (!transactionData.reference) {
-        // Redirect back to TV page if no data
+        // If no transaction data, try to get it from the backend
+        fetchTransactionDetails();
+        return;
+      }
+      
+      // Populate receipt details with available data
+      populateReceiptDetails(transactionData);
+      
+      // Setup event listeners
+      setupEventListeners();
+    }
+    
+    // Fetch transaction details from backend if not available in sessionStorage
+    async function fetchTransactionDetails() {
+      // Get reference from URL parameters if available
+      const urlParams = new URLSearchParams(window.location.search);
+      const reference = urlParams.get('reference') || sessionStorage.getItem('tvTransactionRef');
+      
+      if (!reference) {
+        // Redirect back to TV page if no reference
         window.location.href = 'tv.html';
         return;
       }
       
-      // Populate receipt details
-      document.getElementById('receiptReference').textContent = transactionData.reference;
+      try {
+        // Show loading state
+        document.getElementById('receiptReference').textContent = 'Loading...';
+        
+        // Use the global API_BASE if available, otherwise construct it
+        const apiUrl = typeof API_BASE !== 'undefined' ? API_BASE : 
+          (window.location.hostname === 'localhost' ? 'http://localhost:5001' : 'https://easy-subscribe-backend.onrender.com');
+        
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          showAlert('Please login to view receipt');
+          window.location.href = 'login.html';
+          return;
+        }
+        
+        const response = await fetch(`${apiUrl}/api/transactions/${reference}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Store transaction data in sessionStorage
+          sessionStorage.setItem('tvTransaction', JSON.stringify(data.data));
+          
+          // Populate receipt details
+          populateReceiptDetails(data.data);
+        } else {
+          // Handle error
+          showAlert('Failed to load transaction details: ' + (data.message || 'Unknown error'));
+          window.location.href = 'tv.html';
+        }
+      } catch (error) {
+        console.error('Error fetching transaction details:', error);
+        showAlert('Failed to load transaction details. Please check your connection.');
+        window.location.href = 'tv.html';
+      }
+    }
+    
+    // Populate receipt details with transaction data
+    function populateReceiptDetails(transactionData) {
+      // Populate basic details
+      document.getElementById('receiptReference').textContent = transactionData.reference || '-';
       document.getElementById('receiptProvider').textContent = transactionData.provider ? transactionData.provider.toUpperCase() : '-';
       document.getElementById('receiptSmartcard').textContent = transactionData.smartcard || '-';
-      document.getElementById('receiptPlan').textContent = transactionData.planName || '-';
+      document.getElementById('receiptPlan').textContent = transactionData.planName || transactionData.package_bouquet || '-';
       document.getElementById('receiptAmount').textContent = transactionData.amount ? `₦${Number(transactionData.amount).toLocaleString()}` : '-';
       document.getElementById('receiptPayment').textContent = transactionData.paymentMethod || 'Wallet Balance';
       document.getElementById('receiptStatusText').textContent = transactionData.status || 'Success';
@@ -199,16 +448,39 @@
       }
       
       // Update status display based on transaction status
+      updateStatusDisplay(transactionData.status);
+    }
+    
+    // Update status display based on transaction status
+    function updateStatusDisplay(status) {
       const statusElement = document.getElementById('receiptStatus');
-      if (transactionData.status === 'failed') {
-        statusElement.innerHTML = '<i class="fas fa-times-circle"></i><h2>Subscription Failed</h2>';
-        statusElement.className = 'receipt-status failed';
-      } else if (transactionData.status === 'pending') {
-        statusElement.innerHTML = '<i class="fas fa-clock"></i><h2>Subscription Pending</h2>';
-        statusElement.className = 'receipt-status pending';
-      }
+      const statusTextElement = document.getElementById('receiptStatusText');
       
-      // Setup event listeners
+      // Remove all status classes
+      statusElement.classList.remove('success', 'failed', 'pending');
+      
+      switch (status) {
+        case 'failed':
+          statusElement.innerHTML = '<i class="fas fa-times-circle"></i><h2>Subscription Failed</h2>';
+          statusElement.className = 'receipt-status failed';
+          statusTextElement.innerHTML = '<span style="color: #dc3545; font-weight: bold;">Failed</span>';
+          break;
+        case 'pending':
+          statusElement.innerHTML = '<i class="fas fa-clock"></i><h2>Subscription Pending</h2>';
+          statusElement.className = 'receipt-status pending';
+          statusTextElement.innerHTML = '<span style="color: #ffc107; font-weight: bold;">Pending</span>';
+          break;
+        case 'success':
+        default:
+          statusElement.innerHTML = '<i class="fas fa-check-circle"></i><h2>Subscription Successful</h2>';
+          statusElement.className = 'receipt-status success';
+          statusTextElement.innerHTML = '<span style="color: #28a745; font-weight: bold;">Success</span>';
+          break;
+      }
+    }
+    
+    // Setup event listeners for buttons
+    function setupEventListeners() {
       const printBtn = document.getElementById('printBtn');
       if (printBtn) {
         printBtn.addEventListener('click', function() {
@@ -233,6 +505,47 @@
           window.location.href = 'dashboard.html';
         });
       }
+    }
+    
+    // Helper function to show alerts (fallback if not available in main.js)
+    function showAlert(message, type = 'error') {
+      // Check if showAlert is already defined in main.js
+      if (typeof window.showAlert === 'function') {
+        window.showAlert(message, type);
+        return;
+      }
+      
+      // Fallback implementation
+      const alertContainer = document.getElementById('alert-container') || document.body;
+      
+      const alertElement = document.createElement('div');
+      alertElement.className = `alert alert-${type}`;
+      alertElement.innerHTML = `
+        <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>
+        <span>${message}</span>
+        <button class="close-alert">&times;</button>
+      `;
+      
+      // Add to page
+      if (document.getElementById('alert-container')) {
+        document.getElementById('alert-container').innerHTML = '';
+        document.getElementById('alert-container').appendChild(alertElement);
+      } else {
+        alertContainer.appendChild(alertElement);
+      }
+      
+      // Add event listener to close button
+      const closeBtn = alertElement.querySelector('.close-alert');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          alertElement.remove();
+        });
+      }
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        alertElement.remove();
+      }, 5000);
     }
   </script>
 </body>

@@ -55,6 +55,16 @@
             </div>
             
             <div class="detail-row">
+              <div class="detail-label">Customer Name:</div>
+              <div class="detail-value" id="confirmCustomerName">-</div>
+            </div>
+            
+            <div class="detail-row">
+              <div class="detail-label">Current Plan:</div>
+              <div class="detail-value" id="confirmCurrentPlan">-</div>
+            </div>
+            
+            <div class="detail-row">
               <div class="detail-label">Subscription Plan:</div>
               <div class="detail-value" id="confirmPlan">-</div>
             </div>
@@ -171,7 +181,10 @@
       document.getElementById('confirmPayment').textContent = paymentMethod === 'wallet' ? 'Wallet Balance' : 'Debit/Credit Card';
       
       // Load plan details
-      loadPlanDetails(tvData.provider, tvData.plan);
+      loadPlanDetails(tvData.provider, tvData.plan, tvData);
+      
+      // Load customer details
+      loadCustomerDetails(tvData.provider, tvData.smartcard);
       
       // Setup event listeners
       const editBtn = document.getElementById('editBtn');
@@ -192,8 +205,13 @@
     }
     
     // Load plan details from API
-    async function loadPlanDetails(provider, planId) {
+    async function loadPlanDetails(provider, planId, tvData) {
       try {
+        // Show loading state for plan details
+        document.getElementById('confirmPlan').textContent = 'Loading...';
+        document.getElementById('confirmAmount').textContent = 'Loading...';
+        document.getElementById('confirmTotal').textContent = 'Loading...';
+        
         // Use the global API_BASE if available, otherwise construct it
         const apiUrl = typeof API_BASE !== 'undefined' ? API_BASE : 
           (window.location.hostname === 'localhost' ? 'http://localhost:5001' : 'https://easy-subscribe-backend.onrender.com');
@@ -214,10 +232,54 @@
             tvData.planName = selectedPlan.package_bouquet;
             tvData.planPrice = selectedPlan.price;
             sessionStorage.setItem('tvData', JSON.stringify(tvData));
+          } else {
+            // Plan not found
+            document.getElementById('confirmPlan').textContent = 'Unknown Plan';
+            document.getElementById('confirmAmount').textContent = '₦0.00';
+            document.getElementById('confirmTotal').textContent = '₦0.00';
           }
+        } else {
+          // API error
+          console.error('Failed to load TV plans:', data.message);
+          document.getElementById('confirmPlan').textContent = 'Error loading plan';
+          document.getElementById('confirmAmount').textContent = '₦0.00';
+          document.getElementById('confirmTotal').textContent = '₦0.00';
         }
       } catch (error) {
         console.error('Error loading plan details:', error);
+        document.getElementById('confirmPlan').textContent = 'Error loading plan';
+        document.getElementById('confirmAmount').textContent = '₦0.00';
+        document.getElementById('confirmTotal').textContent = '₦0.00';
+      }
+    }
+    
+    // Load customer details from API
+    async function loadCustomerDetails(provider, smartcard) {
+      try {
+        // Show loading state for customer details
+        document.getElementById('confirmCustomerName').textContent = 'Loading...';
+        document.getElementById('confirmCurrentPlan').textContent = 'Loading...';
+        
+        // Use the global API_BASE if available, otherwise construct it
+        const apiUrl = typeof API_BASE !== 'undefined' ? API_BASE : 
+          (window.location.hostname === 'localhost' ? 'http://localhost:5001' : 'https://easy-subscribe-backend.onrender.com');
+        
+        const response = await fetch(`${apiUrl}/api/services/tv-customer?provider=${provider}&smartcard=${smartcard}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          // Display customer details
+          document.getElementById('confirmCustomerName').textContent = data.data.customerName || 'Not available';
+          document.getElementById('confirmCurrentPlan').textContent = data.data.currentPlan || 'Not available';
+        } else {
+          // If no customer details found, show placeholders
+          document.getElementById('confirmCustomerName').textContent = 'Not available';
+          document.getElementById('confirmCurrentPlan').textContent = 'Not available';
+        }
+      } catch (error) {
+        console.error('Error loading customer details:', error);
+        document.getElementById('confirmCustomerName').textContent = 'Not available';
+        document.getElementById('confirmCurrentPlan').textContent = 'Not available';
       }
     }
     
@@ -287,6 +349,47 @@
           confirmBtn.textContent = originalText || 'Confirm Subscription';
         }
       }
+    }
+    
+    // Helper function to show alerts (fallback if not available in main.js)
+    function showAlert(message, type = 'error') {
+      // Check if showAlert is already defined in main.js
+      if (typeof window.showAlert === 'function') {
+        window.showAlert(message, type);
+        return;
+      }
+      
+      // Fallback implementation
+      const alertContainer = document.getElementById('alert-container') || document.body;
+      
+      const alertElement = document.createElement('div');
+      alertElement.className = `alert alert-${type}`;
+      alertElement.innerHTML = `
+        <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>
+        <span>${message}</span>
+        <button class="close-alert">&times;</button>
+      `;
+      
+      // Add to page
+      if (document.getElementById('alert-container')) {
+        document.getElementById('alert-container').innerHTML = '';
+        document.getElementById('alert-container').appendChild(alertElement);
+      } else {
+        alertContainer.appendChild(alertElement);
+      }
+      
+      // Add event listener to close button
+      const closeBtn = alertElement.querySelector('.close-alert');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          alertElement.remove();
+        });
+      }
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        alertElement.remove();
+      }, 5000);
     }
   </script>
 </body>

@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transactions - EasySubscribe</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Transactions Page Specific Styles */
+    .transactions-page {
+      padding: 2rem 0 4rem;
+      min-height: calc(100vh - 200px);
+    }
+    
+    .transactions-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    .transactions-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    
+    .transactions-header h2 {
+      font-size: 2rem;
+      color: var(--primary);
+    }
+    
+    .filter-buttons {
+      display: flex;
+      gap: 1rem;
+    }
+    
+    .filter-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--light-gray);
+      background: var(--white);
+      border-radius: 30px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .filter-btn:hover {
+      border-color: var(--primary);
+    }
+    
+    .filter-btn.active {
+      background: var(--primary);
+      color: var(--white);
+      border-color: var(--primary);
+    }
+    
+    .transactions-table {
+      background: var(--white);
+      border-radius: 15px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    
+    .table-header {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 1rem;
+      padding: 1.5rem;
+      background: var(--light);
+      font-weight: 600;
+      color: var(--dark);
+    }
+    
+    .table-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 1rem;
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--light-gray);
+      align-items: center;
+    }
+    
+    .table-row:last-child {
+      border-bottom: none;
+    }
+    
+    .transaction-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .transaction-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1rem;
+      color: var(--white);
+    }
+    
+    .transaction-icon.airtime {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .transaction-icon.data {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .transaction-icon.electricity {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    
+    .transaction-icon.tv {
+      background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+    }
+    
+    .transaction-icon.funding {
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      color: var(--dark);
+    }
+    
+    .transaction-details p {
+      margin: 0;
+    }
+    
+    .transaction-details .transaction-type {
+      font-weight: 500;
+      color: var(--dark);
+    }
+    
+    .transaction-details .transaction-meta {
+      font-size: 0.875rem;
+      color: var(--gray);
+    }
+    
+    .transaction-amount {
+      font-weight: 600;
+    }
+    
+    .transaction-amount.positive {
+      color: var(--success);
+    }
+    
+    .transaction-amount.negative {
+      color: var(--danger);
+    }
+    
+    .no-transactions {
+      text-align: center;
+      padding: 3rem;
+      color: var(--gray);
+    }
+    
+    .no-transactions i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: var(--light-gray);
+    }
+    
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 3rem;
+    }
+    
+    .loading i {
+      font-size: 2rem;
+      color: var(--primary);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 768px) {
+      .transactions-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      
+      .filter-buttons {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+      }
+      
+      .table-header,
+      .table-row {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+      
+      .table-header {
+        display: none;
+      }
+      
+      .table-row {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        box-shadow: var(--shadow);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">
+        <h1>EasySubscribe</h1>
+      </div>
+      <nav class="desktop-nav">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="fund-wallet.html">Fund Wallet</a>
+        <a href="airtime.html">Airtime</a>
+        <a href="data.html">Data</a>
+        <a href="electricity.html">Electricity</a>
+        <a href="tv.html">TV</a>
+      </nav>
+      <div class="mobile-menu-btn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+  
+  <main class="transactions-page">
+    <div class="transactions-container">
+      <div class="transactions-header">
+        <h2>Transaction History</h2>
+        <div class="filter-buttons">
+          <button class="filter-btn active" data-type="">All</button>
+          <button class="filter-btn" data-type="funding">Funding</button>
+          <button class="filter-btn" data-type="airtime">Airtime</button>
+          <button class="filter-btn" data-type="data">Data</button>
+          <button class="filter-btn" data-type="electricity">Electricity</button>
+          <button class="filter-btn" data-type="tv">TV</button>
+        </div>
+      </div>
+      
+      <div class="transactions-table">
+        <div class="table-header">
+          <div>Transaction</div>
+          <div>Date</div>
+          <div>Status</div>
+          <div>Amount</div>
+        </div>
+        
+        <div id="transactions-container">
+          <div class="loading">
+            <i class="fas fa-spinner"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <h2>EasySubscribe</h2>
+          <p>Your one-stop solution for bill payments</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-column">
+            <h4>Company</h4>
+            <a href="#">About Us</a>
+            <a href="#">Careers</a>
+            <a href="#">Contact</a>
+          </div>
+          <div class="footer-column">
+            <h4>Services</h4>
+            <a href="airtime.html">Airtime</a>
+            <a href="data.html">Data</a>
+            <a href="electricity.html">Electricity</a>
+            <a href="tv.html">TV Subscription</a>
+          </div>
+          <div class="footer-column">
+            <h4>Legal</h4>
+            <a href="#">Terms of Service</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">FAQ</a>
+          </div>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>&copy; 2025 EasySubscribe. All Rights Reserved.</p>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Reference the main.js file -->
+  <script src="main.js"></script>
+  
+  <script>
+    // API Configuration
+    const API_BASE = window.location.hostname === 'localhost' 
+      ? 'http://localhost:5001'  // Changed from 5000 to 5001 to match server
+      : 'https://easy-subscribe-backend.onrender.com'; // Updated with actual backend URL
+    
+    // Mobile menu toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+      const desktopNav = document.querySelector('.desktop-nav');
+      
+      if (mobileMenuBtn && desktopNav) {
+        mobileMenuBtn.addEventListener('click', function() {
+          desktopNav.classList.toggle('active');
+        });
+      }
+      
+      // Check authentication
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        window.location.href = 'login.html';
+      }
+      
+      // Load transactions
+      loadTransactions();
+      
+      // Setup filter buttons
+      const filterButtons = document.querySelectorAll('.filter-btn');
+      filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          // Remove active class from all buttons
+          filterButtons.forEach(btn => btn.classList.remove('active'));
+          // Add active class to clicked button
+          this.classList.add('active');
+          
+          // Reload transactions with filter
+          loadTransactions(this.dataset.type);
+        });
+      });
+    });
+    
+    // Load transactions
+    function loadTransactions(type = '') {
+      const token = localStorage.getItem('accessToken');
+      const container = document.getElementById('transactions-container');
+      
+      if (!token) return;
+      
+      // Show loading state
+      container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
+      
+      let url = `${API_BASE}/api/transactions`;
+      if (type) {
+        url += `?type=${type}`;
+      }
+      
+      fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Token expired, try to refresh
+            return refreshToken().then(success => {
+              if (success) {
+                return loadTransactions(type);
+              } else {
+                // If refresh fails, redirect to login
+                window.location.href = 'login.html';
+              }
+            });
+          }
+          throw new Error('Failed to fetch transactions');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data && data.success && data.data && data.data.transactions.length > 0) {
+          container.innerHTML = '';
+          
+          data.data.transactions.forEach(transaction => {
+            const row = document.createElement('div');
+            row.className = 'table-row';
+            
+            // Format date
+            const date = new Date(transaction.createdAt);
+            const formattedDate = date.toLocaleDateString('en-NG', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                });
+            
+            // Determine icon based on transaction type
+            let iconClass = '';
+            switch (transaction.type) {
+              case 'airtime': iconClass = 'airtime'; break;
+              case 'data': iconClass = 'data'; break;
+              case 'electricity': iconClass = 'electricity'; break;
+              case 'tv': iconClass = 'tv'; break;
+              case 'funding': iconClass = 'funding'; break;
+              default: iconClass = 'default';
+            }
+            
+            // Get transaction details
+            let details = '';
+            if (transaction.metadata && transaction.metadata.phone) {
+              details = transaction.metadata.phone;
+            } else if (transaction.metadata && transaction.metadata.meter) {
+              details = `Meter: ${transaction.metadata.meter}`;
+            } else if (transaction.metadata && transaction.metadata.smartcard) {
+              details = `Smart Card: ${transaction.metadata.smartcard}`;
+            } else if (transaction.metadata && transaction.metadata.recipientEmail) {
+              details = `To: ${transaction.metadata.recipientEmail}`;
+            } else if (transaction.type === 'funding' && transaction.metadata && transaction.metadata.paymentMethod) {
+              details = `Method: ${transaction.metadata.paymentMethod}`;
+            }
+            
+            // Determine if amount is positive or negative
+            const amountClass = transaction.type === 'funding' ? 'positive' : 'negative';
+            
+            row.innerHTML = `
+              <div class="transaction-info">
+                <div class="transaction-icon ${iconClass}"></div>
+                <div class="transaction-details">
+                  <p class="transaction-type">${transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}</p>
+                  <p class="transaction-meta">${details || transaction.reference}</p>
+                </div>
+              </div>
+              <div>${formattedDate}</div>
+              <div><span class="status ${transaction.status}">${transaction.status}</span></div>
+              <div class="transaction-amount ${amountClass}">₦${Number(transaction.amount).toLocaleString()}</div>
+            `;
+            
+            container.appendChild(row);
+          });
+        } else {
+          container.innerHTML = '<div class="no-transactions"><i class="fas fa-receipt"></i><p>No transactions found</p></div>';
+        }
+      })
+      .catch(error => {
+        console.error('Error loading transactions:', error);
+        container.innerHTML = '<div class="no-transactions"><i class="fas fa-exclamation-triangle"></i><p>Failed to load transactions</p></div>';
+      });
+    }
+    
+    // Refresh token function
+    function refreshToken() {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        logout();
+        return Promise.resolve(false);
+      }
+      
+      return fetch(`${API_BASE}/api/auth/refresh-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to refresh token');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data && data.success) {
+          localStorage.setItem('accessToken', data.data.accessToken);
+          return Promise.resolve(true);
+        } else {
+          // Refresh token failed, logout user
+          logout();
+          return Promise.resolve(false);
+        }
+      })
+      .catch(error => {
+        console.error('Error refreshing token:', error);
+        logout();
+        return Promise.resolve(false);
+      });
+    }
+    
+    // Logout function
+    function logout() {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

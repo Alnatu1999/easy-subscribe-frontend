@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Fund Wallet - EasySubscribe</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Admin Fund Wallet Page Specific Styles */
+    .admin-fund-wallet-page {
+      padding: 2rem 0 4rem;
+      min-height: calc(100vh - 200px);
+    }
+    
+    .admin-fund-wallet-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    .admin-fund-wallet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    
+    .admin-fund-wallet-header h2 {
+      font-size: 2rem;
+      color: var(--primary);
+    }
+    
+    .fund-form-container {
+      background: var(--white);
+      border-radius: 15px;
+      padding: 2rem;
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 2rem;
+    }
+    
+    .form-card {
+      margin-bottom: 2rem;
+    }
+    
+    .form-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .form-card h3 i {
+      color: var(--primary);
+    }
+    
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--dark);
+    }
+    
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--light-gray);
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.1);
+    }
+    
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2rem;
+    }
+    
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--primary);
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .back-btn:hover {
+      color: var(--primary-dark);
+    }
+    
+    .user-search-container {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+    
+    .user-search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      border: 1px solid var(--light-gray);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      max-height: 300px;
+      overflow-y: auto;
+      z-index: 10;
+      display: none;
+    }
+    
+    .user-search-result {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: 1px solid var(--light-gray);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .user-search-result:hover {
+      background: rgba(30, 144, 255, 0.05);
+    }
+    
+    .user-search-result:last-child {
+      border-bottom: none;
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: var(--white);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 600;
+    }
+    
+    .user-details p {
+      margin: 0;
+    }
+    
+    .user-details .user-name {
+      font-weight: 500;
+      color: var(--dark);
+    }
+    
+    .user-details .user-email {
+      font-size: 0.875rem;
+      color: var(--gray);
+    }
+    
+    .user-balance {
+      font-weight: 600;
+      color: var(--success);
+    }
+    
+    .selected-user-info {
+      background: rgba(30, 144, 255, 0.05);
+      border: 1px solid var(--primary);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      display: none;
+    }
+    
+    .selected-user-info .user-info {
+      margin-bottom: 0.5rem;
+    }
+    
+    .info-card {
+      background: var(--white);
+      border-radius: 15px;
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 2rem;
+    }
+    
+    .info-card h3 {
+      font-size: 1.3rem;
+      margin-bottom: 1.5rem;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .info-card h3 i {
+      color: var(--primary);
+    }
+    
+    .recent-funding {
+      margin-top: 1rem;
+    }
+    
+    .recent-funding h4 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      color: var(--dark);
+    }
+    
+    .funding-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .funding-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background: var(--light);
+      border-radius: 8px;
+    }
+    
+    .funding-details {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .funding-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1rem;
+      color: var(--white);
+    }
+    
+    .funding-icon.admin {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .funding-info p {
+      margin: 0;
+    }
+    
+    .funding-info .funding-method {
+      font-weight: 500;
+    }
+    
+    .funding-info .funding-date {
+      font-size: 0.8rem;
+      color: var(--gray);
+    }
+    
+    .funding-amount {
+      font-weight: 600;
+      color: var(--success);
+    }
+    
+    .alert-container {
+      margin-bottom: 1.5rem;
+    }
+    
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+    
+    .loading i {
+      font-size: 1.5rem;
+      color: var(--primary);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 768px) {
+      .admin-fund-wallet-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      
+      .form-actions {
+        flex-direction: column;
+        gap: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">
+        <h1>EasySubscribe</h1>
+      </div>
+      <nav class="desktop-nav">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="admin.html">Admin Panel</a>
+      </nav>
+      <div class="mobile-menu-btn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+  
+  <main class="admin-fund-wallet-page">
+    <div class="admin-fund-wallet-container">
+      <div class="admin-fund-wallet-header">
+        <h2>Fund User Wallet</h2>
+        <a href="admin-fund-requests.html" class="back-btn">
+          <i class="fas fa-arrow-left"></i> Back to Funding Requests
+        </a>
+      </div>
+      
+      <div class="fund-form-container">
+        <!-- Alert container for messages -->
+        <div id="alert-container" class="alert-container"></div>
+        
+        <div class="form-card">
+          <h3><i class="fas fa-user-plus"></i> Fund User Wallet</h3>
+          
+          <form id="adminFundWalletForm">
+            <input type="hidden" id="userId" name="userId">
+            
+            <div class="user-search-container">
+              <div class="form-group">
+                <label for="userSearch">Search User</label>
+                <input type="text" id="userSearch" name="userSearch" placeholder="Search by name or email">
+              </div>
+              
+              <div id="userSearchResults" class="user-search-results"></div>
+            </div>
+            
+            <div id="selectedUserInfo" class="selected-user-info"></div>
+            
+            <div class="form-group">
+              <label for="amount">Amount (₦)</label>
+              <input type="number" id="amount" name="amount" min="100" step="100" placeholder="Enter amount" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="note">Note (Optional)</label>
+              <textarea id="note" name="note" rows="3" placeholder="Enter a note for this funding"></textarea>
+            </div>
+            
+            <div class="form-actions">
+              <button type="submit" class="btn primary">Fund Wallet</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <div class="info-card">
+        <h3><i class="fas fa-history"></i> Recent Funding</h3>
+        
+        <div class="recent-funding">
+          <div class="funding-list">
+            <div class="funding-item">
+              <div class="funding-details">
+                <div class="funding-icon admin"></div>
+                <div class="funding-info">
+                  <p class="funding-method">Admin Funding</p>
+                  <p class="funding-date">May 15, 2023</p>
+                </div>
+              </div>
+              <div class="funding-amount">₦5,000</div>
+            </div>
+            
+            <div class="funding-item">
+              <div class="funding-details">
+                <div class="funding-icon admin"></div>
+                <div class="funding-info">
+                  <p class="funding-method">Admin Funding</p>
+                  <p class="funding-date">May 10, 2023</p>
+                </div>
+              </div>
+              <div class="funding-amount">₦10,000</div>
+            </div>
+            
+            <div class="funding-item">
+              <div class="funding-details">
+                <div class="funding-icon admin"></div>
+                <div class="funding-info">
+                  <p class="funding-method">Admin Funding</p>
+                  <p class="funding-date">May 5, 2023</p>
+                </div>
+              </div>
+              <div class="funding-amount">₦2,000</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <h2>EasySubscribe</h2>
+          <p>Your one-stop solution for bill payments</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-column">
+            <h4>Company</h4>
+            <a href="#">About Us</a>
+            <a href="#">Careers</a>
+            <a href="#">Contact</a>
+          </div>
+          <div class="footer-column">
+            <h4>Services</h4>
+            <a href="airtime.html">Airtime</a>
+            <a href="data.html">Data</a>
+            <a href="electricity.html">Electricity</a>
+            <a href="tv.html">TV Subscription</a>
+          </div>
+          <div class="footer-column">
+            <h4>Legal</h4>
+            <a href="#">Terms of Service</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">FAQ</a>
+          </div>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>&copy; 2025 EasySubscribe. All Rights Reserved.</p>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Reference the main.js file -->
+  <script src="main.js"></script>
+  
+  <script>
+    // API Configuration
+    const API_BASE = window.location.hostname === 'localhost' 
+      ? 'http://localhost:5001'  // Changed from 5000 to 5001 to match server
+      : 'https://easy-subscribe-backend.onrender.com'; // Updated with actual backend URL
+    
+    // Mobile menu toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+      const desktopNav = document.querySelector('.desktop-nav');
+      
+      if (mobileMenuBtn && desktopNav) {
+        mobileMenuBtn.addEventListener('click', function() {
+          desktopNav.classList.toggle('active');
+        });
+      }
+      
+      // Check authentication and admin role
+      const token = localStorage.getItem('accessToken');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      if (!token) {
+        window.location.href = 'login.html';
+      }
+      
+      if (user.role !== 'admin' && user.role !== 'super-admin') {
+        window.location.href = 'dashboard.html';
+      }
+      
+      // Setup user search
+      setupUserSearch();
+    });
+    
+    // Setup user search
+    function setupUserSearch() {
+      const userSearch = document.getElementById('userSearch');
+      const userSearchResults = document.getElementById('userSearchResults');
+      
+      if (userSearch) {
+        let debounceTimeout;
+        
+        userSearch.addEventListener('input', function(e) {
+          clearTimeout(debounceTimeout);
+          
+          const searchTerm = e.target.value.trim();
+          
+          if (searchTerm.length < 3) {
+            userSearchResults.style.display = 'none';
+            return;
+          }
+          
+          debounceTimeout = setTimeout(() => {
+            searchUsers(searchTerm);
+          }, 300);
+        });
+        
+        // Hide search results when clicking outside
+        document.addEventListener('click', function(e) {
+          if (!userSearch.contains(e.target) && !userSearchResults.contains(e.target)) {
+            userSearchResults.style.display = 'none';
+          }
+        });
+      }
+    }
+    
+    // Search users
+    function searchUsers(searchTerm) {
+      const token = localStorage.getItem('accessToken');
+      const userSearchResults = document.getElementById('userSearchResults');
+      
+      if (!token) return;
+      
+      // Show loading state
+      userSearchResults.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
+      userSearchResults.style.display = 'block';
+      
+      fetch(`${API_BASE}/api/admin/users?search=${searchTerm}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Token expired, try to refresh
+            return refreshToken().then(success => {
+              if (success) {
+                return searchUsers(searchTerm);
+              } else {
+                // If refresh fails, redirect to login
+                window.location.href = 'login.html';
+              }
+            });
+          }
+          throw new Error('Failed to search users');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data && data.success && data.data && data.data.users.length > 0) {
+          userSearchResults.innerHTML = '';
+          
+          data.data.users.forEach(user => {
+            const userResult = document.createElement('div');
+            userResult.className = 'user-search-result';
+            
+            // Get user initials
+            const userInitials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
+            
+            userResult.innerHTML = `
+              <div class="user-info">
+                <div class="user-avatar">${userInitials}</div>
+                <div class="user-details">
+                  <p class="user-name">${user.name}</p>
+                  <p class="user-email">${user.email}</p>
+                </div>
+              </div>
+              <div class="user-balance">₦${Number(user.walletBalance).toLocaleString()}</div>
+              <button class="btn btn-sm select-user" data-id="${user._id}">Select</button>
+            `;
+            
+            userSearchResults.appendChild(userResult);
+          });
+          
+          // Add event listeners to select buttons
+          const selectButtons = userSearchResults.querySelectorAll('.select-user');
+          selectButtons.forEach(button => {
+            button.addEventListener('click', function() {
+              selectUserForFunding(this.dataset.id);
+            });
+          });
+        } else {
+          userSearchResults.innerHTML = '<div class="no-users">No users found</div>';
+        }
+      })
+      .catch(error => {
+        console.error('Error searching users:', error);
+        userSearchResults.innerHTML = '<div class="error">Failed to search users</div>';
+      });
+    }
+    
+    // Select user for funding
+    function selectUserForFunding(userId) {
+      const userIdInput = document.getElementById('userId');
+      const selectedUserInfo = document.getElementById('selectedUserInfo');
+      const userSearchResults = document.getElementById('userSearchResults');
+      const userSearch = document.getElementById('userSearch');
+      
+      if (userIdInput) {
+        userIdInput.value = userId;
+      }
+      
+      // Hide search results
+      if (userSearchResults) {
+        userSearchResults.style.display = 'none';
+      }
+      
+      // Clear search input
+      if (userSearch) {
+        userSearch.value = '';
+      }
+      
+      // Show selected user info
+      if (selectedUserInfo) {
+        selectedUserInfo.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i> Loading user information...</div>';
+        selectedUserInfo.style.display = 'block';
+        
+        // Get user details
+        fetchUserDetails(userId);
+      }
+    }
+    
+    // Fetch user details
+    function fetchUserDetails(userId) {
+      const token = localStorage.getItem('accessToken');
+      const selectedUserInfo = document.getElementById('selectedUserInfo');
+      
+      if (!token) return;
+      
+      fetch(`${API_BASE}/api/user/profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Token expired, try to refresh
+            return refreshToken().then(success => {
+              if (success) {
+                return fetchUserDetails(userId);
+              } else {
+                // If refresh fails, redirect to login
+                window.location.href = 'login.html';
+              }
+            });
+          }
+          throw new Error('Failed to fetch user details');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data && data.success) {
+          const user = data.data.user;
+          
+          // Get user initials
+          const userInitials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
+          
+          selectedUserInfo.innerHTML = `
+            <div class="user-info">
+              <div class="user-avatar">${userInitials}</div>
+              <div class="user-details">
+                <p class="user-name">${user.name}</p>
+                <p class="user-email">${user.email}</p>
+              </div>
+            </div>
+            <div class="user-balance">Current Balance: ₦${Number(user.walletBalance).toLocaleString()}</div>
+          `;
+        } else {
+          selectedUserInfo.innerHTML = '<div class="error">Failed to load user information</div>';
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching user details:', error);
+        selectedUserInfo.innerHTML = '<div class="error">Failed to load user information</div>';
+      });
+    }
+    
+    // Refresh token function
+    function refreshToken() {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        logout();
+        return Promise.resolve(false);
+      }
+      
+      return fetch(`${API_BASE}/api/auth/refresh-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to refresh token');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data && data.success) {
+          localStorage.setItem('accessToken', data.data.accessToken);
+          return Promise.resolve(true);
+        } else {
+          // Refresh token failed, logout user
+          logout();
+          return Promise.resolve(false);
+        }
+      })
+      .catch(error => {
+        console.error('Error refreshing token:', error);
+        logout();
+        return Promise.resolve(false);
+      });
+    }
+    
+    // Logout function
+    function logout() {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

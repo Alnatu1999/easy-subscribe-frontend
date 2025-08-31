@@ -12,6 +12,7 @@
   --success: #4caf50;
   --warning: #ff9800;
   --danger: #f44336;
+  --info: #2196f3;
   --light: #f8f9fa;
   --dark: #343a40;
   --gray: #6c757d;
@@ -33,6 +34,7 @@ body {
   margin: 0 auto;
   padding: 0 20px;
 }
+
 /* ====== TYPOGRAPHY ====== */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
@@ -62,6 +64,7 @@ a {
 a:hover {
   color: var(--primary-dark);
 }
+
 /* ====== BUTTONS ====== */
 .btn {
   display: inline-block;
@@ -91,6 +94,24 @@ a:hover {
 .btn.secondary:hover {
   background: var(--primary);
   color: var(--white);
+}
+.btn.success {
+  background: var(--success);
+}
+.btn.success:hover {
+  background: #3d8b40;
+}
+.btn.warning {
+  background: var(--warning);
+}
+.btn.warning:hover {
+  background: #e68900;
+}
+.btn.danger {
+  background: var(--danger);
+}
+.btn.danger:hover {
+  background: #d32f2f;
 }
 .btn.full-width {
   display: block;
@@ -136,6 +157,7 @@ a:hover {
 @keyframes spinner {
   to { transform: rotate(360deg); }
 }
+
 /* ====== ALERTS AND NOTIFICATIONS ====== */
 .alert {
   padding: 1rem;
@@ -222,6 +244,7 @@ a:hover {
   color: var(--gray);
   white-space: nowrap;
 }
+
 /* ====== HEADER & NAVIGATION ====== */
 header {
   background: var(--white);
@@ -283,6 +306,7 @@ header .container {
   border-radius: 3px;
   transition: var(--transition);
 }
+
 /* ====== HERO SECTION ====== */
 .hero {
   padding: 5rem 0;
@@ -330,6 +354,7 @@ header .container {
   color: var(--white);
   font-size: 1.2rem;
 }
+
 /* ====== SERVICES SECTION ====== */
 .services {
   padding: 4rem 0;
@@ -418,6 +443,7 @@ header .container {
   background: var(--primary);
   color: var(--white);
 }
+
 /* ====== FEATURES SECTION ====== */
 .features {
   padding: 4rem 0;
@@ -465,6 +491,7 @@ header .container {
   margin-bottom: 1rem;
   color: var(--primary);
 }
+
 /* ====== FOOTER ====== */
 footer {
   background: var(--dark);
@@ -518,6 +545,7 @@ footer {
   color: rgba(255, 255, 255, 0.7);
   font-size: 0.9rem;
 }
+
 /* ====== AUTHENTICATION PAGES ====== */
 .auth-page {
   padding: 4rem 0;
@@ -719,6 +747,7 @@ footer {
 .benefit i {
   color: var(--white);
 }
+
 /* ====== PASSWORD STRENGTH METER ====== */
 .password-strength {
   margin-top: 0.5rem;
@@ -740,6 +769,7 @@ footer {
   font-size: 0.8rem;
   color: var(--gray);
 }
+
 /* ====== SERVICE PAGES ====== */
 .service-page {
   padding: 2rem 0 4rem;
@@ -894,6 +924,7 @@ footer {
   font-size: 1.5rem;
   color: var(--primary);
 }
+
 /* ====== DASHBOARD ====== */
 .dashboard-container {
   display: flex;
@@ -1236,6 +1267,10 @@ footer {
   background: rgba(244, 67, 54, 0.1);
   color: var(--danger);
 }
+.status.processing {
+  background: rgba(33, 150, 243, 0.1);
+  color: var(--info);
+}
 .promo-section {
   margin-bottom: 3rem;
 }
@@ -1267,6 +1302,188 @@ footer {
   font-size: 5rem;
   opacity: 0.8;
 }
+
+/* ====== FUNDING REQUESTS ====== */
+.fund-requests-page,
+.admin-fund-requests-page {
+  padding: 2rem 0;
+}
+.fund-request-item,
+.admin-fund-request-item {
+  background: var(--white);
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: var(--transition);
+}
+.fund-request-item:hover,
+.admin-fund-request-item:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+.fund-request-info,
+.admin-fund-request-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.fund-request-amount,
+.admin-fund-request-amount {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+.fund-request-method,
+.admin-fund-request-method {
+  font-size: 0.9rem;
+  color: var(--gray);
+}
+.fund-request-reference,
+.admin-fund-request-reference {
+  font-size: 0.8rem;
+  color: var(--gray);
+}
+.fund-request-date,
+.admin-fund-request-date {
+  font-size: 0.8rem;
+  color: var(--gray);
+}
+.admin-fund-request-user {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+.admin-fund-request-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+.approve-btn,
+.reject-btn {
+  padding: 0.4rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.approve-btn {
+  background: var(--success);
+  color: var(--white);
+  border: none;
+}
+.approve-btn:hover {
+  background: #3d8b40;
+}
+.reject-btn {
+  background: var(--danger);
+  color: var(--white);
+  border: none;
+}
+.reject-btn:hover {
+  background: #d32f2f;
+}
+.fund-request-status,
+.admin-fund-request-status {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.filter-buttons,
+.admin-filter-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.filter-btn,
+.admin-filter-btn {
+  padding: 0.5rem 1rem;
+  background: var(--light);
+  border: 1px solid var(--light-gray);
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.filter-btn.active,
+.admin-filter-btn.active {
+  background: var(--primary);
+  color: var(--white);
+  border-color: var(--primary);
+}
+.filter-btn:hover,
+.admin-filter-btn:hover {
+  background: var(--light-gray);
+}
+.filter-btn.active:hover,
+.admin-filter-btn.active:hover {
+  background: var(--primary-dark);
+}
+
+/* ====== ADMIN FUND WALLET ====== */
+.admin-fund-wallet-page {
+  padding: 2rem 0;
+}
+.user-search-container {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+.user-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--white);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 100;
+  display: none;
+}
+.user-search-result {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--light-gray);
+}
+.user-search-result:last-child {
+  border-bottom: none;
+}
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.user-name {
+  font-weight: 500;
+}
+.user-email {
+  font-size: 0.9rem;
+  color: var(--gray);
+}
+.user-balance {
+  font-size: 0.9rem;
+  color: var(--primary);
+}
+.selected-user-info {
+  background: rgba(30, 144, 255, 0.1);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  display: none;
+}
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  color: var(--gray);
+}
+
 /* ====== MODALS ====== */
 .modal {
   display: none;
@@ -1327,6 +1544,7 @@ footer {
 .close-modal:hover {
   background: var(--light-gray);
 }
+
 /* ====== PROFILE PAGE ====== */
 .profile-container {
   display: grid;
@@ -1379,6 +1597,7 @@ footer {
   font-size: 0.9rem;
   color: var(--gray);
 }
+
 /* ====== NOTIFICATIONS PAGE ====== */
 .notifications-container {
   background: var(--white);
@@ -1425,6 +1644,90 @@ footer {
   margin-bottom: 1rem;
   color: var(--light-gray);
 }
+
+/* ====== TV VARIATIONS ====== */
+.tv-variations-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  color: var(--gray);
+}
+.tv-variations-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  color: var(--danger);
+}
+
+/* ====== TRANSACTION DETAILS ====== */
+.transaction-details {
+  background: var(--white);
+  border-radius: 10px;
+  padding: 2rem;
+  box-shadow: var(--shadow);
+}
+.transaction-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--light-gray);
+}
+.transaction-reference {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+.transaction-status-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.transaction-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+.transaction-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.transaction-detail-label {
+  font-size: 0.9rem;
+  color: var(--gray);
+}
+.transaction-detail-value {
+  font-weight: 500;
+}
+.transaction-metadata {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--light-gray);
+}
+.transaction-metadata h4 {
+  margin-bottom: 1rem;
+}
+.metadata-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--light-gray);
+}
+.metadata-item:last-child {
+  border-bottom: none;
+}
+.metadata-label {
+  color: var(--gray);
+}
+.metadata-value {
+  font-weight: 500;
+}
+
 /* ====== UTILITY CLASSES ====== */
 .text-center {
   text-align: center;
@@ -1524,6 +1827,7 @@ footer {
 .overflow-auto { overflow: auto; }
 .visible { visibility: visible; }
 .invisible { visibility: hidden; }
+
 /* ====== LOADING SPINNER ====== */
 .spinner {
   display: inline-block;
@@ -1537,6 +1841,7 @@ footer {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
 /* ====== HELPER TEXT STYLES ====== */
 .form-text {
   display: block;
@@ -1547,6 +1852,7 @@ footer {
 .text-muted {
   color: var(--gray);
 }
+
 /* ====== RESPONSIVE DESIGN ====== */
 @media (max-width: 992px) {
   .service-container {
@@ -1562,6 +1868,10 @@ footer {
   }
   
   .profile-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .transaction-details-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -1660,6 +1970,19 @@ footer {
     width: 95%;
     margin: 1rem;
   }
+  
+  .fund-request-item,
+  .admin-fund-request-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .admin-fund-request-actions {
+    flex-direction: row;
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 @media (max-width: 576px) {
   h1 {
@@ -1736,5 +2059,16 @@ footer {
   
   .meter-types {
     flex-direction: column;
+  }
+  
+  .filter-buttons,
+  .admin-filter-buttons {
+    flex-wrap: wrap;
+  }
+  
+  .filter-btn,
+  .admin-filter-btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
   }
 }

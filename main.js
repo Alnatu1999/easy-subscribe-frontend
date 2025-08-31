@@ -3,16 +3,19 @@
 const API_BASE = window.location.hostname === 'localhost' 
   ? 'http://localhost:5001'  // Changed from 5000 to 5001 to match server
   : 'https://easy-subscribe-backend.onrender.com'; // Updated with actual backend URL
+
 // DOM Elements
 const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
 const desktopNav = document.querySelector('.desktop-nav');
 const menuToggle = document.querySelector('.menu-toggle');
 const sidebar = document.querySelector('.sidebar');
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
   initializeApp();
   checkServerConnection();
 });
+
 // Check server connection
 async function checkServerConnection() {
   try {
@@ -34,6 +37,7 @@ async function checkServerConnection() {
     }
   }
 }
+
 function initializeApp() {
   setupMobileMenu();
   setupSidebarToggle();
@@ -53,7 +57,9 @@ function initializeApp() {
   setupModals();
   setupTransactionsPage();
   setupNotificationsPage();
+  setupTvVariations(); // NEW: Setup TV variations
 }
+
 // Mobile Menu Toggle
 function setupMobileMenu() {
   if (mobileMenuBtn && desktopNav) {
@@ -62,6 +68,7 @@ function setupMobileMenu() {
     });
   }
 }
+
 // Sidebar Toggle for Dashboard
 function setupSidebarToggle() {
   if (menuToggle && sidebar) {
@@ -70,6 +77,7 @@ function setupSidebarToggle() {
     });
   }
 }
+
 // Form Handlers
 function setupFormHandlers() {
   // Login Form
@@ -132,6 +140,7 @@ function setupFormHandlers() {
     tvForm.addEventListener('submit', (e) => handleServiceForm(e, 'tv'));
   }
 }
+
 // Password Visibility Toggle
 function setupPasswordToggles() {
   const toggleButtons = document.querySelectorAll('.toggle-password');
@@ -152,6 +161,7 @@ function setupPasswordToggles() {
     });
   });
 }
+
 // Quick Amount Buttons for Airtime
 function setupQuickAmountButtons() {
   const amountButtons = document.querySelectorAll('.amount-btn');
@@ -165,6 +175,7 @@ function setupQuickAmountButtons() {
     });
   }
 }
+
 // Plan Selection for Data
 function setupPlanSelection() {
   const planOptions = document.querySelectorAll('.plan-option input[type="radio"]');
@@ -183,16 +194,17 @@ function setupPlanSelection() {
     });
   });
 }
-// Provider Selection for TV
+
+// UPDATED: Provider Selection for TV with VTU integration
 function setupProviderSelection() {
   const tvProvider = document.getElementById('tv');
-  const dstvPlans = document.getElementById('dstv-plans');
-  const gotvPlans = document.getElementById('gotv-plans');
-  const startimesPlans = document.getElementById('startimes-plans');
-  
   if (tvProvider) {
     tvProvider.addEventListener('change', () => {
       // Hide all plan sections
+      const dstvPlans = document.getElementById('dstv-plans');
+      const gotvPlans = document.getElementById('gotv-plans');
+      const startimesPlans = document.getElementById('startimes-plans');
+      
       if (dstvPlans) dstvPlans.style.display = 'none';
       if (gotvPlans) gotvPlans.style.display = 'none';
       if (startimesPlans) startimesPlans.style.display = 'none';
@@ -209,9 +221,57 @@ function setupProviderSelection() {
           if (startimesPlans) startimesPlans.style.display = 'grid';
           break;
       }
+      
+      // Load variations for the selected provider
+      loadTvVariations();
     });
   }
 }
+
+// NEW: Setup TV variations
+function setupTvVariations() {
+  const tvProvider = document.getElementById('tv');
+  if (tvProvider && tvProvider.value) {
+    loadTvVariations();
+  }
+}
+
+// NEW: Load TV variations from API
+async function loadTvVariations() {
+  try {
+    const provider = document.getElementById('tv')?.value;
+    if (!provider) return;
+    
+    const response = await fetch(`${API_BASE}/api/services/tv-variations?provider=${provider}`);
+    const data = await response.json();
+    
+    if (data.success) {
+      // Update the UI with the variations
+      const plansContainer = document.getElementById(`${provider}-plans`);
+      if (plansContainer) {
+        plansContainer.innerHTML = '';
+        
+        data.data.forEach(plan => {
+          const planElement = document.createElement('div');
+          planElement.className = 'plan-option';
+          planElement.innerHTML = `
+            <input type="radio" id="plan-${plan.variation_id}" name="plan" value="${plan.variation_id}" required>
+            <label for="plan-${plan.variation_id}">
+              <div class="plan-name">${plan.package_bouquet}</div>
+              <div class="plan-price">₦${Number(plan.price).toLocaleString()}</div>
+            </label>
+          `;
+          plansContainer.appendChild(planElement);
+        });
+      }
+    } else {
+      console.error('Failed to load TV variations:', data.message);
+    }
+  } catch (error) {
+    console.error('Error loading TV variations:', error);
+  }
+}
+
 // FAQ Toggle
 function setupFAQToggle() {
   const faqQuestions = document.querySelectorAll('.faq-question');
@@ -227,6 +287,7 @@ function setupFAQToggle() {
     });
   });
 }
+
 // Service Navigation
 function setupServiceNavigation() {
   const viewAllButtons = document.querySelectorAll('.view-all');
@@ -239,6 +300,7 @@ function setupServiceNavigation() {
     });
   });
 }
+
 // Notification Bell
 function setupNotificationBell() {
   const notificationBell = document.querySelector('.notification-bell');
@@ -248,6 +310,7 @@ function setupNotificationBell() {
     });
   }
 }
+
 // Profile Management
 function setupProfileManagement() {
   const editProfileBtn = document.querySelector('.edit-profile-btn');
@@ -257,6 +320,7 @@ function setupProfileManagement() {
     });
   }
 }
+
 // Password Reset
 function setupPasswordReset() {
   const forgotPasswordLink = document.querySelector('.forgot-password');
@@ -267,6 +331,7 @@ function setupPasswordReset() {
     });
   }
 }
+
 // Modals Setup
 function setupModals() {
   // Close modal when clicking on close button
@@ -287,6 +352,7 @@ function setupModals() {
     }
   });
 }
+
 // Transactions Page Setup
 function setupTransactionsPage() {
   if (!document.querySelector('.transactions-page')) return;
@@ -307,6 +373,7 @@ function setupTransactionsPage() {
     });
   });
 }
+
 // Notifications Page Setup
 function setupNotificationsPage() {
   if (!document.querySelector('.notifications-page')) return;
@@ -319,6 +386,7 @@ function setupNotificationsPage() {
     markAllReadBtn.addEventListener('click', markAllNotificationsAsRead);
   }
 }
+
 // Authentication Check
 function checkAuthentication() {
   const token = localStorage.getItem('accessToken');
@@ -333,6 +401,7 @@ function checkAuthentication() {
     window.location.href = 'login.html';
   }
 }
+
 // Load User Data
 function loadUserData() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -352,6 +421,7 @@ function loadUserData() {
     }
   });
 }
+
 // Load Wallet Balance
 async function loadWalletBalance() {
   const token = localStorage.getItem('accessToken');
@@ -392,6 +462,7 @@ async function loadWalletBalance() {
     });
   }
 }
+
 // Load Notifications
 async function loadNotifications() {
   const token = localStorage.getItem('accessToken');
@@ -429,6 +500,7 @@ async function loadNotifications() {
     console.error('Error loading notifications:', error);
   }
 }
+
 // Load Notifications List
 async function loadNotificationsList() {
   const token = localStorage.getItem('accessToken');
@@ -495,6 +567,7 @@ async function loadNotificationsList() {
     notificationsContainer.innerHTML = '<div class="error">Failed to load notifications</div>';
   }
 }
+
 // Mark Notification as Read
 async function markNotificationAsRead(notificationId) {
   const token = localStorage.getItem('accessToken');
@@ -529,6 +602,7 @@ async function markNotificationAsRead(notificationId) {
     showAlert('Failed to mark notification as read');
   }
 }
+
 // Mark All Notifications as Read
 async function markAllNotificationsAsRead() {
   const token = localStorage.getItem('accessToken');
@@ -564,6 +638,7 @@ async function markAllNotificationsAsRead() {
     showAlert('Failed to mark notifications as read');
   }
 }
+
 // Load Transactions
 async function loadTransactions(type = '') {
   const token = localStorage.getItem('accessToken');
@@ -628,6 +703,7 @@ async function loadTransactions(type = '') {
     transactionsContainer.innerHTML = '<div class="error">Failed to load transactions</div>';
   }
 }
+
 // Refresh Token
 async function refreshToken() {
   const refreshToken = localStorage.getItem('refreshToken');
@@ -659,6 +735,7 @@ async function refreshToken() {
     return false;
   }
 }
+
 // Show Alert Function
 function showAlert(message, type = 'error') {
   const alertContainer = document.getElementById('alert-container');
@@ -685,6 +762,7 @@ function showAlert(message, type = 'error') {
     alertContainer.innerHTML = '';
   }, 5000);
 }
+
 // Validate Signup Form
 function validateSignupForm() {
   let isValid = true;
@@ -750,6 +828,7 @@ function validateSignupForm() {
   
   return isValid;
 }
+
 // Signup Handler - FIXED FIELD REFERENCES
 async function handleSignup(e) {
   e.preventDefault();
@@ -828,6 +907,7 @@ async function handleSignup(e) {
     }
   }
 }
+
 // Validate Login Form
 function validateLoginForm() {
   let isValid = true;
@@ -855,6 +935,7 @@ function validateLoginForm() {
   
   return isValid;
 }
+
 // Login Handler
 async function handleLogin(e) {
   e.preventDefault();
@@ -927,6 +1008,7 @@ async function handleLogin(e) {
     }
   }
 }
+
 // Forgot Password Handler
 async function handleForgotPassword(e) {
   e.preventDefault();
@@ -978,6 +1060,7 @@ async function handleForgotPassword(e) {
     }
   }
 }
+
 // Reset Password Handler
 async function handleResetPassword(e) {
   e.preventDefault();
@@ -1037,6 +1120,7 @@ async function handleResetPassword(e) {
     }
   }
 }
+
 // Update Profile Handler
 async function handleUpdateProfile(e) {
   e.preventDefault();
@@ -1101,6 +1185,7 @@ async function handleUpdateProfile(e) {
     }
   }
 }
+
 // Change Password Handler
 async function handleChangePassword(e) {
   e.preventDefault();
@@ -1169,6 +1254,7 @@ async function handleChangePassword(e) {
     }
   }
 }
+
 // Service Form Handler (Airtime, Data, Electricity, TV) - UPDATED TO REMOVE PAYSTACK
 async function handleServiceForm(e, serviceType) {
   e.preventDefault();
@@ -1274,6 +1360,7 @@ async function handleServiceForm(e, serviceType) {
     }
   }
 }
+
 // Password Strength Meter
 function setupPasswordStrength() {
   const passwordInput = document.getElementById('password');
@@ -1311,14 +1398,17 @@ function setupPasswordStrength() {
     });
   }
 }
+
 // Initialize password strength meter if on signup page
 if (document.getElementById('signupForm')) {
   setupPasswordStrength();
 }
+
 // Load notifications if on dashboard
 if (document.querySelector('.notification-badge')) {
   loadNotifications();
 }
+
 // Utility function to format currency
 function formatCurrency(amount) {
   return new Intl.NumberFormat('en-NG', {
@@ -1327,11 +1417,13 @@ function formatCurrency(amount) {
     minimumFractionDigits: 2
   }).format(amount);
 }
+
 // Utility function to format date
 function formatDate(dateString) {
   const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
   return new Date(dateString).toLocaleDateString('en-NG', options);
 }
+
 // Logout function
 function logout() {
   localStorage.removeItem('accessToken');
@@ -1339,6 +1431,7 @@ function logout() {
   localStorage.removeItem('user');
   window.location.href = 'index.html';
 }
+
 // Add logout event listener to logout button
 const logoutBtn = document.querySelector('.logout-btn');
 if (logoutBtn) {
@@ -1347,6 +1440,7 @@ if (logoutBtn) {
     logout();
   });
 }
+
 // Download statement function
 async function downloadStatement() {
   const token = localStorage.getItem('accessToken');
@@ -1405,11 +1499,13 @@ async function downloadStatement() {
     }
   }
 }
+
 // Add event listener to download statement button
 const downloadStatementBtn = document.querySelector('.wallet-buttons .btn.secondary');
 if (downloadStatementBtn) {
   downloadStatementBtn.addEventListener('click', downloadStatement);
 }
+
 // Referral program function
 function startReferring() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -1420,6 +1516,7 @@ function startReferring() {
     showAlert('Please login to access the referral program');
   }
 }
+
 // Add event listener to referral button
 const referralBtn = document.querySelector('.promo-section .btn');
 if (referralBtn) {

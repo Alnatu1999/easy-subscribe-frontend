@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirm TV Subscription - EasySubscribe</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">
+        <h1>EasySubscribe</h1>
+      </div>
+      <nav class="desktop-nav">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="airtime.html">Airtime</a>
+        <a href="data.html">Data</a>
+        <a href="electricity.html">Electricity</a>
+        <a href="tv.html" class="active">TV</a>
+      </nav>
+      <div class="mobile-menu-btn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+  
+  <main class="confirmation-page">
+    <div class="container">
+      <div class="confirmation-header">
+        <h2>Confirm TV Subscription</h2>
+        <p>Please review your subscription details before proceeding</p>
+      </div>
+      
+      <div class="confirmation-container">
+        <div class="confirmation-card">
+          <div class="confirmation-details">
+            <h3>Subscription Details</h3>
+            
+            <div class="detail-row">
+              <div class="detail-label">Provider:</div>
+              <div class="detail-value" id="confirm-provider">-</div>
+            </div>
+            
+            <div class="detail-row">
+              <div class="detail-label">Smart Card/IUC Number:</div>
+              <div class="detail-value" id="confirm-smartcard">-</div>
+            </div>
+            
+            <div class="detail-row">
+              <div class="detail-label">Subscription Plan:</div>
+              <div class="detail-value" id="confirm-plan">-</div>
+            </div>
+            
+            <div class="detail-row">
+              <div class="detail-label">Amount:</div>
+              <div class="detail-value amount" id="confirm-amount">₦0.00</div>
+            </div>
+            
+            <div class="detail-row">
+              <div class="detail-label">Phone Number:</div>
+              <div class="detail-value" id="confirm-phone">-</div>
+            </div>
+            
+            <div class="detail-row">
+              <div class="detail-label">Email Address:</div>
+              <div class="detail-value" id="confirm-email">-</div>
+            </div>
+            
+            <div class="detail-row">
+              <div class="detail-label">Payment Method:</div>
+              <div class="detail-value" id="confirm-payment">-</div>
+            </div>
+            
+            <div class="wallet-balance" id="wallet-balance-section" style="display: none;">
+              <div class="detail-label">Wallet Balance:</div>
+              <div class="detail-value" id="confirm-wallet-balance">₦0.00</div>
+            </div>
+          </div>
+          
+          <div class="confirmation-actions">
+            <button type="button" class="btn secondary" id="cancel-btn">Cancel</button>
+            <button type="button" class="btn primary" id="confirm-btn">Confirm & Pay</button>
+          </div>
+        </div>
+        
+        <div class="info-card">
+          <h3>Important Information</h3>
+          <ul class="info-list">
+            <li><i class="fas fa-info-circle"></i> Your subscription will be activated instantly upon successful payment</li>
+            <li><i class="fas fa-info-circle"></i> You will receive a confirmation message and email receipt</li>
+            <li><i class="fas fa-info-circle"></i> Please ensure your smart card number is correct before proceeding</li>
+            <li><i class="fas fa-info-circle"></i> All transactions are secure and encrypted</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <h2>EasySubscribe</h2>
+          <p>Your one-stop solution for bill payments</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-column">
+            <h4>Company</h4>
+            <a href="#">About Us</a>
+            <a href="#">Careers</a>
+            <a href="#">Contact</a>
+          </div>
+          <div class="footer-column">
+            <h4>Services</h4>
+            <a href="airtime.html">Airtime</a>
+            <a href="data.html">Data</a>
+            <a href="electricity.html">Electricity</a>
+            <a href="tv.html">TV Subscription</a>
+          </div>
+          <div class="footer-column">
+            <h4>Legal</h4>
+            <a href="#">Terms of Service</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">FAQ</a>
+          </div>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>&copy; 2025 EasySubscribe. All Rights Reserved.</p>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Load main.js for all functionality -->
+  <script src="main.js"></script>
+  
+  <!-- Page-specific JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+      // Get TV data from sessionStorage
+      const tvData = JSON.parse(sessionStorage.getItem('tvData') || '{}');
+      
+      // If no data found, redirect back to TV page
+      if (!tvData.provider) {
+        window.location.href = 'tv.html';
+        return;
+      }
+      
+      // Populate confirmation details
+      document.getElementById('confirm-provider').textContent = tvData.provider.toUpperCase();
+      document.getElementById('confirm-smartcard').textContent = tvData.smartcard;
+      document.getElementById('confirm-phone').textContent = tvData.phone;
+      document.getElementById('confirm-email').textContent = tvData.email || 'Not provided';
+      document.getElementById('confirm-payment').textContent = 
+        tvData.paymentMethod === 'wallet' ? 'Wallet Balance' : 'Debit/Credit Card';
+      
+      // Show wallet balance if payment method is wallet
+      if (tvData.paymentMethod === 'wallet') {
+        document.getElementById('wallet-balance-section').style.display = 'flex';
+        await loadWalletBalance();
+      }
+      
+      // Get plan details
+      try {
+        const response = await fetch(`${API_BASE}/api/services/tv-variations?provider=${tvData.provider}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          const plan = data.data.find(p => p.variation_id == tvData.plan);
+          if (plan) {
+            document.getElementById('confirm-plan').textContent = plan.package_bouquet;
+            document.getElementById('confirm-amount').textContent = `₦${Number(plan.price).toLocaleString()}`;
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching plan details:', error);
+      }
+      
+      // Cancel button
+      document.getElementById('cancel-btn').addEventListener('click', function() {
+        window.location.href = 'tv.html';
+      });
+      
+      // Confirm button
+      document.getElementById('confirm-btn').addEventListener('click', async function() {
+        const planPrice = document.getElementById('confirm-amount').textContent;
+        const amount = parseFloat(planPrice.replace('₦', '').replace(/,/g, ''));
+        
+        // Check if user has sufficient wallet balance if paying with wallet
+        if (tvData.paymentMethod === 'wallet') {
+          const walletBalanceText = document.getElementById('confirm-wallet-balance').textContent;
+          const walletBalance = parseFloat(walletBalanceText.replace('₦', '').replace(/,/g, ''));
+          
+          if (walletBalance < amount) {
+            showAlert('Insufficient wallet balance. Please fund your wallet or choose another payment method.', 'error');
+            return;
+          }
+        }
+        
+        // Process payment
+        const submitBtn = document.getElementById('confirm-btn');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Processing...';
+        
+        try {
+          const response = await fetch(`${API_BASE}/api/services/tv`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+            },
+            body: JSON.stringify({
+              provider: tvData.provider,
+              smartcard: tvData.smartcard,
+              plan: tvData.plan,
+              phone: tvData.phone,
+              email: tvData.email
+            })
+          });
+          
+          const result = await response.json();
+          
+          if (response.ok && result.success) {
+            // Store transaction reference in sessionStorage
+            sessionStorage.setItem('tvTransactionRef', result.data.reference);
+            
+            // Redirect to receipt page
+            window.location.href = 'tvreceipt.html';
+          } else {
+            showAlert(result.message || 'Failed to process TV subscription. Please try again.', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+          }
+        } catch (error) {
+          console.error('Error processing TV subscription:', error);
+          showAlert('Failed to process TV subscription. Please check your connection and try again.', 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        }
+      });
+    });
+    
+    // Load wallet balance
+    async function loadWalletBalance() {
+      try {
+        const response = await fetch(`${API_BASE}/api/wallet/balance`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            document.getElementById('confirm-wallet-balance').textContent = `₦${Number(data.data.balance).toLocaleString()}`;
+          }
+        } else if (response.status === 401) {
+          // Token expired, try to refresh
+          const refreshSuccess = await refreshToken();
+          if (refreshSuccess) {
+            // Retry after refresh
+            loadWalletBalance();
+          } else {
+            // If refresh fails, redirect to login
+            window.location.href = 'login.html';
+          }
+        }
+      } catch (error) {
+        console.error('Error loading wallet balance:', error);
+      }
+    }
+  </script>
+</body>
+</html>

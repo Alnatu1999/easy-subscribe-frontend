@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TV Subscription Receipt - EasySubscribe</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">
+        <h1>EasySubscribe</h1>
+      </div>
+      <nav class="desktop-nav">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="airtime.html">Airtime</a>
+        <a href="data.html">Data</a>
+        <a href="electricity.html">Electricity</a>
+        <a href="tv.html" class="active">TV</a>
+      </nav>
+      <div class="mobile-menu-btn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+  
+  <main class="receipt-page">
+    <div class="container">
+      <div class="receipt-header">
+        <div class="receipt-icon">
+          <i class="fas fa-receipt"></i>
+        </div>
+        <div>
+          <h2>TV Subscription Receipt</h2>
+          <p id="receipt-status">Processing your subscription...</p>
+        </div>
+      </div>
+      
+      <div class="receipt-container">
+        <div class="receipt-card">
+          <div class="receipt-status" id="status-indicator">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Processing</p>
+          </div>
+          
+          <div class="receipt-details">
+            <h3>Transaction Details</h3>
+            
+            <div class="detail-row">
+              <div class="detail-label">Transaction ID:</div>
+              <div class="detail-value" id="transaction-id">-</div>
+            </div>
+            
+            <div class="detail-row">
+              <div class="detail-label">Date & Time:</div>
+              <div class="detail-value" id="transaction-date">-</div>
+            </div>
+            
+            <div class="detail-row">
+              <div class="detail-label">Provider:</div>
+              <div class="detail-value" id="receipt-provider">-</div>
+            </div>
+            
+            <div class="detail-row">
+              <div class="detail-label">Smart Card/IUC Number:</div>
+              <div class="detail-value" id="receipt-smartcard">-</div>
+            </div>
+            
+            <div class="detail-row">
+              <div class="detail-label">Subscription Plan:</div>
+              <div class="detail-value" id="receipt-plan">-</div>
+            </div>
+            
+            <div class="detail-row">
+              <div class="detail-label">Amount Paid:</div>
+              <div class="detail-value amount" id="receipt-amount">₦0.00</div>
+            </div>
+            
+            <div class="detail-row">
+              <div class="detail-label">Payment Method:</div>
+              <div class="detail-value" id="receipt-payment">-</div>
+            </div>
+            
+            <div class="detail-row">
+              <div class="detail-label">Phone Number:</div>
+              <div class="detail-value" id="receipt-phone">-</div>
+            </div>
+            
+            <div class="detail-row">
+              <div class="detail-label">Email Address:</div>
+              <div class="detail-value" id="receipt-email">-</div>
+            </div>
+          </div>
+          
+          <div class="receipt-actions">
+            <button type="button" class="btn secondary" id="print-btn">
+              <i class="fas fa-print"></i> Print Receipt
+            </button>
+            <button type="button" class="btn primary" id="dashboard-btn">
+              <i class="fas fa-home"></i> Go to Dashboard
+            </button>
+          </div>
+        </div>
+        
+        <div class="info-card">
+          <h3>What's Next?</h3>
+          <div class="next-steps">
+            <div class="step">
+              <div class="step-icon">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <div class="step-content">
+                <h4>Instant Activation</h4>
+                <p>Your TV subscription will be activated immediately upon successful payment.</p>
+              </div>
+            </div>
+            
+            <div class="step">
+              <div class="step-icon">
+                <i class="fas fa-envelope"></i>
+              </div>
+              <div class="step-content">
+                <h4>Confirmation Email</h4>
+                <p>You'll receive a confirmation email with your transaction details.</p>
+              </div>
+            </div>
+            
+            <div class="step">
+              <div class="step-icon">
+                <i class="fas fa-bell"></i>
+              </div>
+              <div class="step-content">
+                <h4>Renewal Reminder</h4>
+                <p>We'll send you a reminder before your subscription expires.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <h2>EasySubscribe</h2>
+          <p>Your one-stop solution for bill payments</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-column">
+            <h4>Company</h4>
+            <a href="#">About Us</a>
+            <a href="#">Careers</a>
+            <a href="#">Contact</a>
+          </div>
+          <div class="footer-column">
+            <h4>Services</h4>
+            <a href="airtime.html">Airtime</a>
+            <a href="data.html">Data</a>
+            <a href="electricity.html">Electricity</a>
+            <a href="tv.html">TV Subscription</a>
+          </div>
+          <div class="footer-column">
+            <h4>Legal</h4>
+            <a href="#">Terms of Service</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">FAQ</a>
+          </div>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>&copy; 2025 EasySubscribe. All Rights Reserved.</p>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Load main.js for all functionality -->
+  <script src="main.js"></script>
+  
+  <!-- Page-specific JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+      // Get transaction reference from sessionStorage
+      const transactionRef = sessionStorage.getItem('tvTransactionRef');
+      
+      // If no transaction reference found, redirect to TV page
+      if (!transactionRef) {
+        window.location.href = 'tv.html';
+        return;
+      }
+      
+      // Get TV data from sessionStorage
+      const tvData = JSON.parse(sessionStorage.getItem('tvData') || '{}');
+      
+      // Populate receipt details
+      document.getElementById('transaction-id').textContent = transactionRef;
+      document.getElementById('receipt-provider').textContent = tvData.provider.toUpperCase();
+      document.getElementById('receipt-smartcard').textContent = tvData.smartcard;
+      document.getElementById('receipt-phone').textContent = tvData.phone;
+      document.getElementById('receipt-email').textContent = tvData.email || 'Not provided';
+      document.getElementById('receipt-payment').textContent = 
+        tvData.paymentMethod === 'wallet' ? 'Wallet Balance' : 'Debit/Credit Card';
+      
+      // Set current date and time
+      const now = new Date();
+      document.getElementById('transaction-date').textContent = now.toLocaleString('en-NG', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      // Get plan details
+      try {
+        const response = await fetch(`${API_BASE}/api/services/tv-variations?provider=${tvData.provider}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          const plan = data.data.find(p => p.variation_id == tvData.plan);
+          if (plan) {
+            document.getElementById('receipt-plan').textContent = plan.package_bouquet;
+            document.getElementById('receipt-amount').textContent = `₦${Number(plan.price).toLocaleString()}`;
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching plan details:', error);
+      }
+      
+      // Check transaction status
+      checkTransactionStatus(transactionRef);
+      
+      // Print button
+      document.getElementById('print-btn').addEventListener('click', function() {
+        window.print();
+      });
+      
+      // Dashboard button
+      document.getElementById('dashboard-btn').addEventListener('click', function() {
+        // Clear sessionStorage
+        sessionStorage.removeItem('tvData');
+        sessionStorage.removeItem('tvTransactionRef');
+        
+        // Redirect to dashboard
+        window.location.href = 'dashboard.html';
+      });
+    });
+    
+    // Check transaction status
+    async function checkTransactionStatus(transactionRef) {
+      try {
+        const response = await fetch(`${API_BASE}/api/transactions/${transactionRef}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            const transaction = data.data.transaction;
+            
+            // Update receipt status
+            const statusIndicator = document.getElementById('status-indicator');
+            const receiptStatus = document.getElementById('receipt-status');
+            
+            if (transaction.status === 'successful') {
+              statusIndicator.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <p>Successful</p>
+              `;
+              statusIndicator.className = 'receipt-status success';
+              receiptStatus.textContent = 'Your TV subscription was successful!';
+            } else if (transaction.status === 'failed') {
+              statusIndicator.innerHTML = `
+                <i class="fas fa-times-circle"></i>
+                <p>Failed</p>
+              `;
+              statusIndicator.className = 'receipt-status failed';
+              receiptStatus.textContent = 'Your TV subscription failed. Please try again.';
+            } else {
+              // Still processing, check again in 5 seconds
+              setTimeout(() => checkTransactionStatus(transactionRef), 5000);
+            }
+          }
+        } else if (response.status === 401) {
+          // Token expired, try to refresh
+          const refreshSuccess = await refreshToken();
+          if (refreshSuccess) {
+            // Retry after refresh
+            checkTransactionStatus(transactionRef);
+          } else {
+            // If refresh fails, redirect to login
+            window.location.href = 'login.html';
+          }
+        }
+      } catch (error) {
+        console.error('Error checking transaction status:', error);
+        
+        // Try again in 5 seconds
+        setTimeout(() => checkTransactionStatus(transactionRef), 5000);
+      }
+    }
+  </script>
+</body>
+</html>

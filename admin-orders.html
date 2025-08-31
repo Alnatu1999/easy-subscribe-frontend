@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Orders - EasySubscribe</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Admin Orders Page Specific Styles */
+    .admin-orders-page {
+      padding: 2rem 0 4rem;
+      min-height: calc(100vh - 200px);
+    }
+    
+    .admin-orders-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    .admin-orders-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    
+    .admin-orders-header h2 {
+      font-size: 2rem;
+      color: var(--primary);
+    }
+    
+    .filter-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .filter-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--light-gray);
+      background: var(--white);
+      border-radius: 30px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .filter-btn:hover {
+      border-color: var(--primary);
+    }
+    
+    .filter-btn.active {
+      background: var(--primary);
+      color: var(--white);
+      border-color: var(--primary);
+    }
+    
+    .admin-orders-table {
+      background: var(--white);
+      border-radius: 15px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    
+    .table-header {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+      gap: 1rem;
+      padding: 1.5rem;
+      background: var(--light);
+      font-weight: 600;
+      color: var(--dark);
+    }
+    
+    .table-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+      gap: 1rem;
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--light-gray);
+      align-items: center;
+    }
+    
+    .table-row:last-child {
+      border-bottom: none;
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: var(--white);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 600;
+    }
+    
+    .user-details p {
+      margin: 0;
+    }
+    
+    .user-details .user-name {
+      font-weight: 500;
+      color: var(--dark);
+    }
+    
+    .user-details .user-email {
+      font-size: 0.875rem;
+      color: var(--gray);
+    }
+    
+    .order-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .order-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1rem;
+      color: var(--white);
+    }
+    
+    .order-icon.airtime {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .order-icon.data {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .order-icon.electricity {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    
+    .order-icon.tv {
+      background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+    }
+    
+    .order-details p {
+      margin: 0;
+    }
+    
+    .order-details .order-type {
+      font-weight: 500;
+      color: var(--dark);
+    }
+    
+    .order-details .order-meta {
+      font-size: 0.875rem;
+      color: var(--gray);
+    }
+    
+    .order-amount {
+      font-weight: 600;
+      color: var(--danger);
+    }
+    
+    .admin-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .admin-actions button {
+      padding: 0.4rem 0.8rem;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .admin-actions .verify-btn {
+      background: var(--success);
+      color: var(--white);
+    }
+    
+    .admin-actions .verify-btn:hover {
+      background: #2e7d32;
+    }
+    
+    .no-orders {
+      text-align: center;
+      padding: 3rem;
+      color: var(--gray);
+    }
+    
+    .no-orders i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: var(--light-gray);
+    }
+    
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 3rem;
+    }
+    
+    .loading i {
+      font-size: 2rem;
+      color: var(--primary);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .status {
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-align: center;
+    }
+    
+    .status.pending {
+      background-color: rgba(255, 152, 0, 0.1);
+      color: #e65100;
+    }
+    
+    .status.successful {
+      background-color: rgba(76, 175, 80, 0.1);
+      color: #2e7d32;
+    }
+    
+    .status.failed {
+      background-color: rgba(244, 67, 54, 0.1);
+      color: #c62828;
+    }
+    
+    @media (max-width: 1200px) {
+      .table-header,
+      .table-row {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+      
+      .table-header {
+        display: none;
+      }
+      
+      .table-row {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        box-shadow: var(--shadow);
+      }
+      
+      .admin-actions {
+        margin-top: 1rem;
+        justify-content: flex-end;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">
+        <h1>EasySubscribe</h1>
+      </div>
+      <nav class="desktop-nav">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="admin.html">Admin Panel</a>
+      </nav>
+      <div class="mobile-menu-btn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+  
+  <main class="admin-orders-page">
+    <div class="admin-orders-container">
+      <div class="admin-orders-header">
+        <h2>Service Orders</h2>
+      </div>
+      
+      <div class="filter-buttons">
+        <button class="filter-btn active" data-type="">All</button>
+        <button class="filter-btn" data-type="airtime">Airtime</button>
+        <button class="filter-btn" data-type="data">Data</button>
+        <button class="filter-btn" data-type="electricity">Electricity</button>
+        <button class="filter-btn" data-type="tv">TV</button>
+        <button class="filter-btn" data-status="pending">Pending</button>
+        <button class="filter-btn" data-status="failed">Failed</button>
+      </div>
+      
+      <div class="admin-orders-table">
+        <div class="table-header">
+          <div>User</div>
+          <div>Service</div>
+          <div>Details</div>
+          <div>Date</div>
+          <div>Status</div>
+          <div>Amount</div>
+        </div>
+        
+        <div id="adminOrdersList">
+          <div class="loading">
+            <i class="fas fa-spinner"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <h2>EasySubscribe</h2>
+          <p>Your one-stop solution for bill payments</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-column">
+            <h4>Company</h4>
+            <a href="#">About Us</a>
+            <a href="#">Careers</a>
+            <a href="#">Contact</a>
+          </div>
+          <div class="footer-column">
+            <h4>Services</h4>
+            <a href="airtime.html">Airtime</a>
+            <a href="data.html">Data</a>
+            <a href="electricity.html">Electricity</a>
+            <a href="tv.html">TV Subscription</a>
+          </div>
+          <div class="footer-column">
+            <h4>Legal</h4>
+            <a href="#">Terms of Service</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">FAQ</a>
+          </div>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>&copy; 2025 EasySubscribe. All Rights Reserved.</p>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Reference the main.js file -->
+  <script src="main.js"></script>
+  
+  <script>
+    // API Configuration
+    const API_BASE = window.location.hostname === 'localhost' 
+      ? 'http://localhost:5001'  // Changed from 5000 to 5001 to match server
+      : 'https://easy-subscribe-backend.onrender.com'; // Updated with actual backend URL
+    
+    // Mobile menu toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+      const desktopNav = document.querySelector('.desktop-nav');
+      
+      if (mobileMenuBtn && desktopNav) {
+        mobileMenuBtn.addEventListener('click', function() {
+          desktopNav.classList.toggle('active');
+        });
+      }
+      
+      // Check authentication and admin role
+      const token = localStorage.getItem('accessToken');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      if (!token) {
+        window.location.href = 'login.html';
+      }
+      
+      if (user.role !== 'admin' && user.role !== 'super-admin') {
+        window.location.href = 'dashboard.html';
+      }
+      
+      // Load orders
+      loadAdminOrders();
+      
+      // Setup filter buttons
+      const filterButtons = document.querySelectorAll('.filter-btn');
+      filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          // Remove active class from all buttons
+          filterButtons.forEach(btn => btn.classList.remove('active'));
+          // Add active class to clicked button
+          this.classList.add('active');
+          
+          // Reload orders with filter
+          loadAdminOrders(this.dataset.type, this.dataset.status);
+        });
+      });
+    });
+    
+    // Load admin orders
+    function loadAdminOrders(type = '', status = '') {
+      const token = localStorage.getItem('accessToken');
+      const container = document.getElementById('adminOrdersList');
+      
+      if (!token) return;
+      
+      // Show loading state
+      container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
+      
+      let url = `${API_BASE}/api/admin/transactions`;
+      const params = new URLSearchParams();
+      
+      if (type) params.append('type', type);
+      if (status) params.append('status', status);
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+      
+      fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Token expired, try to refresh
+            return refreshToken().then(success => {
+              if (success) {
+                return loadAdminOrders(type, status);
+              } else {
+                // If refresh fails, redirect to login
+                window.location.href = 'login.html';
+              }
+            });
+          }
+          throw new Error('Failed to fetch orders');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data && data.success && data.data && data.data.transactions.length > 0) {
+          // Filter out funding transactions
+          const orders = data.data.transactions.filter(t => t.type !== 'funding');
+          
+          if (orders.length > 0) {
+            container.innerHTML = '';
+            
+            orders.forEach(transaction => {
+              const row = document.createElement('div');
+              row.className = 'table-row';
+              
+              // Format date
+              const date = new Date(transaction.createdAt);
+              const formattedDate = date.toLocaleDateString('en-NG', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                  });
+              
+              // Determine icon based on transaction type
+              let iconClass = '';
+              switch (transaction.type) {
+                case 'airtime': iconClass = 'airtime'; break;
+                case 'data': iconClass = 'data'; break;
+                case 'electricity': iconClass = 'electricity'; break;
+                case 'tv': iconClass = 'tv'; break;
+                default: iconClass = 'default';
+              }
+              
+              // Get transaction details
+              let details = '';
+              if (transaction.metadata && transaction.metadata.phone) {
+                details = transaction.metadata.phone;
+              } else if (transaction.metadata && transaction.metadata.meter) {
+                details = `Meter: ${transaction.metadata.meter}`;
+              } else if (transaction.metadata && transaction.metadata.smartcard) {
+                details = `Smart Card: ${transaction.metadata.smartcard}`;
+              }
+              
+              // Get user info
+              const userName = transaction.userId ? transaction.userId.name : 'Unknown';
+              const userEmail = transaction.userId ? transaction.userId.email : 'Unknown';
+              const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase();
+              
+              // Create verify button for pending transactions
+              let verifyButton = '';
+              if (transaction.status === 'pending') {
+                verifyButton = `<button class="verify-btn" data-id="${transaction._id}">Verify</button>`;
+              }
+              
+              row.innerHTML = `
+                <div class="user-info">
+                  <div class="user-avatar">${userInitials}</div>
+                  <div class="user-details">
+                    <p class="user-name">${userName}</p>
+                    <p class="user-email">${userEmail}</p>
+                  </div>
+                </div>
+                <div class="order-info">
+                  <div class="order-icon ${iconClass}"></div>
+                  <div class="order-details">
+                    <p class="order-type">${transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}</p>
+                    <p class="order-meta">${transaction.reference}</p>
+                  </div>
+                </div>
+                <div>${details || 'N/A'}</div>
+                <div>${formattedDate}</div>
+                <div><span class="status ${transaction.status}">${transaction.status}</span></div>
+                <div class="order-amount">₦${Number(transaction.amount).toLocaleString()}</div>
+                <div>${verifyButton}</div>
+              `;
+              
+              container.appendChild(row);
+            });
+            
+            // Add event listeners to verify buttons
+            const verifyButtons = container.querySelectorAll('.verify-btn');
+            verifyButtons.forEach(button => {
+              button.addEventListener('click', function() {
+                verifyTransaction(this.dataset.id);
+              });
+            });
+          } else {
+            container.innerHTML = '<div class="no-orders"><i class="fas fa-receipt"></i><p>No orders found</p></div>';
+          }
+        } else {
+          container.innerHTML = '<div class="no-orders"><i class="fas fa-receipt"></i><p>No orders found</p></div>';
+        }
+      })
+      .catch(error => {
+        console.error('Error loading orders:', error);
+        container.innerHTML = '<div class="no-orders"><i class="fas fa-exclamation-triangle"></i><p>Failed to load orders</p></div>';
+      });
+    }
+    
+    // Verify transaction
+    function verifyTransaction(transactionId) {
+      const token = localStorage.getItem('accessToken');
+      
+      if (!token) return;
+      
+      if (confirm('Are you sure you want to mark this transaction as successful?')) {
+        fetch(`${API_BASE}/api/admin/transactions/${transactionId}/verify`, {
+          method: 'PUT',
+          headers: { 
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        .then(response => {
+          if (!response.ok) {
+            if (response.status === 401) {
+              // Token expired, try to refresh
+              return refreshToken().then(success => {
+                if (success) {
+                  return verifyTransaction(transactionId);
+                } else {
+                  // If refresh fails, redirect to login
+                  window.location.href = 'login.html';
+                }
+              });
+            }
+            throw new Error('Failed to verify transaction');
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data && data.success) {
+            alert('Transaction verified successfully!');
+            // Reload orders
+            const activeFilter = document.querySelector('.filter-btn.active');
+            loadAdminOrders(activeFilter ? activeFilter.dataset.type : '', activeFilter ? activeFilter.dataset.status : '');
+          } else {
+            alert(data.message || 'Failed to verify transaction');
+          }
+        })
+        .catch(error => {
+          console.error('Error verifying transaction:', error);
+          alert('Failed to verify transaction. Please try again.');
+        });
+      }
+    }
+    
+    // Refresh token function
+    function refreshToken() {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        logout();
+        return Promise.resolve(false);
+      }
+      
+      return fetch(`${API_BASE}/api/auth/refresh-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to refresh token');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data && data.success) {
+          localStorage.setItem('accessToken', data.data.accessToken);
+          return Promise.resolve(true);
+        } else {
+          // Refresh token failed, logout user
+          logout();
+          return Promise.resolve(false);
+        }
+      })
+      .catch(error => {
+        console.error('Error refreshing token:', error);
+        logout();
+        return Promise.resolve(false);
+      });
+    }
+    
+    // Logout function
+    function logout() {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

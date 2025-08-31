@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Funding Requests - EasySubscribe</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Fund Requests Page Specific Styles */
+    .fund-requests-page {
+      padding: 2rem 0 4rem;
+      min-height: calc(100vh - 200px);
+    }
+    
+    .fund-requests-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    .fund-requests-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    
+    .fund-requests-header h2 {
+      font-size: 2rem;
+      color: var(--primary);
+    }
+    
+    .new-request-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--primary);
+      color: var(--white);
+      padding: 0.75rem 1.5rem;
+      border-radius: 30px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+    
+    .new-request-btn:hover {
+      background: var(--primary-dark);
+    }
+    
+    .filter-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .filter-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--light-gray);
+      background: var(--white);
+      border-radius: 30px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .filter-btn:hover {
+      border-color: var(--primary);
+    }
+    
+    .filter-btn.active {
+      background: var(--primary);
+      color: var(--white);
+      border-color: var(--primary);
+    }
+    
+    .fund-requests-table {
+      background: var(--white);
+      border-radius: 15px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    
+    .table-header {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+      gap: 1rem;
+      padding: 1.5rem;
+      background: var(--light);
+      font-weight: 600;
+      color: var(--dark);
+    }
+    
+    .table-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+      gap: 1rem;
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--light-gray);
+      align-items: center;
+    }
+    
+    .table-row:last-child {
+      border-bottom: none;
+    }
+    
+    .no-fund-requests {
+      text-align: center;
+      padding: 3rem;
+      color: var(--gray);
+    }
+    
+    .no-fund-requests i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: var(--light-gray);
+    }
+    
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 3rem;
+    }
+    
+    .loading i {
+      font-size: 2rem;
+      color: var(--primary);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .status {
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-align: center;
+    }
+    
+    .status.pending {
+      background-color: rgba(255, 152, 0, 0.1);
+      color: #e65100;
+    }
+    
+    .status.successful {
+      background-color: rgba(76, 175, 80, 0.1);
+      color: #2e7d32;
+    }
+    
+    .status.failed {
+      background-color: rgba(244, 67, 54, 0.1);
+      color: #c62828;
+    }
+    
+    @media (max-width: 992px) {
+      .fund-requests-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      
+      .table-header,
+      .table-row {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+      
+      .table-header {
+        display: none;
+      }
+      
+      .table-row {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        box-shadow: var(--shadow);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">
+        <h1>EasySubscribe</h1>
+      </div>
+      <nav class="desktop-nav">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="fund-wallet.html">Fund Wallet</a>
+        <a href="airtime.html">Airtime</a>
+        <a href="data.html">Data</a>
+        <a href="electricity.html">Electricity</a>
+        <a href="tv.html">TV</a>
+      </nav>
+      <div class="mobile-menu-btn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+  
+  <main class="fund-requests-page">
+    <div class="fund-requests-container">
+      <div class="fund-requests-header">
+        <h2>Funding Requests</h2>
+        <a href="fund-wallet.html" class="new-request-btn">
+          <i class="fas fa-plus"></i> New Request
+        </a>
+      </div>
+      
+      <div class="filter-buttons">
+        <button class="filter-btn active" data-status="">All</button>
+        <button class="filter-btn" data-status="pending">Pending</button>
+        <button class="filter-btn" data-status="successful">Approved</button>
+        <button class="filter-btn" data-status="failed">Rejected</button>
+      </div>
+      
+      <div class="fund-requests-table">
+        <div class="table-header">
+          <div>Amount</div>
+          <div>Payment Method</div>
+          <div>Reference</div>
+          <div>Date</div>
+          <div>Status</div>
+        </div>
+        
+        <div id="fundRequestsList">
+          <div class="loading">
+            <i class="fas fa-spinner"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <h2>EasySubscribe</h2>
+          <p>Your one-stop solution for bill payments</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-column">
+            <h4>Company</h4>
+            <a href="#">About Us</a>
+            <a href="#">Careers</a>
+            <a href="#">Contact</a>
+          </div>
+          <div class="footer-column">
+            <h4>Services</h4>
+            <a href="airtime.html">Airtime</a>
+            <a href="data.html">Data</a>
+            <a href="electricity.html">Electricity</a>
+            <a href="tv.html">TV Subscription</a>
+          </div>
+          <div class="footer-column">
+            <h4>Legal</h4>
+            <a href="#">Terms of Service</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">FAQ</a>
+          </div>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>&copy; 2025 EasySubscribe. All Rights Reserved.</p>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Reference the main.js file -->
+  <script src="main.js"></script>
+  
+  <script>
+    // API Configuration
+    const API_BASE = window.location.hostname === 'localhost' 
+      ? 'http://localhost:5001'  // Changed from 5000 to 5001 to match server
+      : 'https://easy-subscribe-backend.onrender.com'; // Updated with actual backend URL
+    
+    // Mobile menu toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+      const desktopNav = document.querySelector('.desktop-nav');
+      
+      if (mobileMenuBtn && desktopNav) {
+        mobileMenuBtn.addEventListener('click', function() {
+          desktopNav.classList.toggle('active');
+        });
+      }
+      
+      // Check authentication
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        window.location.href = 'login.html';
+      }
+      
+      // Load fund requests
+      loadFundRequests();
+      
+      // Setup filter buttons
+      const filterButtons = document.querySelectorAll('.filter-btn');
+      filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          // Remove active class from all buttons
+          filterButtons.forEach(btn => btn.classList.remove('active'));
+          // Add active class to clicked button
+          this.classList.add('active');
+          
+          // Reload fund requests with filter
+          loadFundRequests(this.dataset.status);
+        });
+      });
+    });
+    
+    // Load fund requests
+    function loadFundRequests(status = '') {
+      const token = localStorage.getItem('accessToken');
+      const container = document.getElementById('fundRequestsList');
+      
+      if (!token) return;
+      
+      // Show loading state
+      container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
+      
+      let url = `${API_BASE}/api/user/fund-requests`;
+      if (status) {
+        url += `?status=${status}`;
+      }
+      
+      fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Token expired, try to refresh
+            return refreshToken().then(success => {
+              if (success) {
+                return loadFundRequests(status);
+              } else {
+                // If refresh fails, redirect to login
+                window.location.href = 'login.html';
+              }
+            });
+          }
+          throw new Error('Failed to fetch fund requests');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data && data.success && data.data && data.data.transactions.length > 0) {
+          container.innerHTML = '';
+          
+          data.data.transactions.forEach(transaction => {
+            const row = document.createElement('div');
+            row.className = 'table-row';
+            
+            // Format date
+            const date = new Date(transaction.createdAt);
+            const formattedDate = date.toLocaleDateString('en-NG', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                });
+            
+            row.innerHTML = `
+              <div>₦${Number(transaction.amount).toLocaleString()}</div>
+              <div>${transaction.metadata.paymentMethod}</div>
+              <div>${transaction.reference}</div>
+              <div>${formattedDate}</div>
+              <div><span class="status ${transaction.status}">${transaction.status}</span></div>
+            `;
+            
+            container.appendChild(row);
+          });
+        } else {
+          container.innerHTML = '<div class="no-fund-requests"><i class="fas fa-hand-holding-usd"></i><p>No funding requests found</p></div>';
+        }
+      })
+      .catch(error => {
+        console.error('Error loading fund requests:', error);
+        container.innerHTML = '<div class="no-fund-requests"><i class="fas fa-exclamation-triangle"></i><p>Failed to load funding requests</p></div>';
+      });
+    }
+    
+    // Refresh token function
+    function refreshToken() {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        logout();
+        return Promise.resolve(false);
+      }
+      
+      return fetch(`${API_BASE}/api/auth/refresh-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to refresh token');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data && data.success) {
+          localStorage.setItem('accessToken', data.data.accessToken);
+          return Promise.resolve(true);
+        } else {
+          // Refresh token failed, logout user
+          logout();
+          return Promise.resolve(false);
+        }
+      })
+      .catch(error => {
+        console.error('Error refreshing token:', error);
+        logout();
+        return Promise.resolve(false);
+      });
+    }
+    
+    // Logout function
+    function logout() {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

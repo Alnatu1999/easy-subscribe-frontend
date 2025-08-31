@@ -60,7 +60,7 @@
       <div class="container">
         <h3>Our Services</h3>
         <div class="services-grid">
-          <div class="service-card">
+          <div class="service-card" data-service="airtime">
             <div class="service-icon airtime-icon">
               <i class="fas fa-phone-alt"></i>
             </div>
@@ -70,7 +70,7 @@
               <i class="fas fa-arrow-right"></i>
             </div>
           </div>
-          <div class="service-card">
+          <div class="service-card" data-service="data">
             <div class="service-icon data-icon">
               <i class="fas fa-wifi"></i>
             </div>
@@ -80,7 +80,7 @@
               <i class="fas fa-arrow-right"></i>
             </div>
           </div>
-          <div class="service-card">
+          <div class="service-card" data-service="electricity">
             <div class="service-icon electricity-icon">
               <i class="fas fa-bolt"></i>
             </div>
@@ -90,7 +90,7 @@
               <i class="fas fa-arrow-right"></i>
             </div>
           </div>
-          <div class="service-card">
+          <div class="service-card" data-service="tv">
             <div class="service-icon tv-icon">
               <i class="fas fa-tv"></i>
             </div>
@@ -199,20 +199,20 @@
       const serviceCards = document.querySelectorAll('.service-card');
       serviceCards.forEach(card => {
         card.addEventListener('click', function() {
-          const serviceTitle = this.querySelector('h4').textContent;
+          const serviceType = this.getAttribute('data-service');
           let servicePage;
           
-          switch(serviceTitle) {
-            case 'Airtime Top-up':
+          switch(serviceType) {
+            case 'airtime':
               servicePage = 'airtime.html';
               break;
-            case 'Data Bundles':
+            case 'data':
               servicePage = 'data.html';
               break;
-            case 'Electricity & Utilities':
+            case 'electricity':
               servicePage = 'electricity.html';
               break;
-            case 'TV Subscription':
+            case 'tv':
               servicePage = 'tv.html';
               break;
             default:

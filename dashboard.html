@@ -106,6 +106,47 @@
       background-color: rgba(244, 67, 54, 0.1);
       color: #c62828;
     }
+    
+    .status.processing {
+      background-color: rgba(33, 150, 243, 0.1);
+      color: #0277bd;
+    }
+    
+    /* New styles for funding request card */
+    .funding-request-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 15px;
+      padding: 1.5rem;
+      color: white;
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .funding-request-content h3 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.3rem;
+    }
+    
+    .funding-request-content p {
+      margin: 0;
+      opacity: 0.9;
+    }
+    
+    .funding-request-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 30px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .funding-request-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
   </style>
 </head>
 <body>
@@ -136,9 +177,21 @@
             </a>
           </li>
           <li>
-            <a href="fund.html">
+            <a href="fund-wallet.html">
               <i class="fas fa-wallet"></i>
               <span>Fund Wallet</span>
+            </a>
+          </li>
+          <li>
+            <a href="fund-requests.html">
+              <i class="fas fa-hand-holding-usd"></i>
+              <span>Funding Requests</span>
+            </a>
+          </li>
+          <li>
+            <a href="orders.html">
+              <i class="fas fa-receipt"></i>
+              <span>My Orders</span>
             </a>
           </li>
           <li>
@@ -235,6 +288,19 @@
         <div id="dashboard-error" class="error-message" style="display: none;"></div>
         <div id="dashboard-success" class="success-message" style="display: none;"></div>
         
+        <!-- Funding Request Card -->
+        <section class="funding-request-section">
+          <div class="funding-request-card">
+            <div class="funding-request-content">
+              <h3>Need to Fund Your Wallet?</h3>
+              <p>Submit a funding request and our admin will credit your wallet.</p>
+            </div>
+            <a href="fund-wallet.html" class="funding-request-btn" id="fund-wallet-btn">
+              <i class="fas fa-plus-circle"></i> Fund Wallet
+            </a>
+          </div>
+        </section>
+        
         <!-- Wallet Section -->
         <section class="wallet-section">
           <div class="wallet-card">
@@ -253,7 +319,7 @@
               <p class="balance-label">Available Balance</p>
             </div>
             <div class="wallet-buttons">
-              <a href="fund.html" class="btn primary">
+              <a href="fund-wallet.html" class="btn primary">
                 <i class="fas fa-plus-circle"></i>
                 Fund Wallet
               </a>
@@ -414,6 +480,9 @@
         });
       }
       
+      // Initialize the app
+      initializeApp();
+      
       // Check authentication
       checkAuthentication();
       
@@ -455,76 +524,15 @@
       document.getElementById('notification-bell').addEventListener('click', function() {
         window.location.href = 'notifications.html';
       });
+      
+      // Fund wallet button
+      document.getElementById('fund-wallet-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        window.location.href = 'fund-wallet.html';
+      });
     });
     
-    // Check if user is authenticated
-    function checkAuthentication() {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        window.location.href = 'login.html';
-      }
-    }
-    
-    // Load user data
-    function loadUserData() {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      
-      if (user.name) {
-        document.getElementById('user-name').textContent = user.name;
-      }
-      
-      if (user.email) {
-        document.getElementById('user-email').textContent = user.email;
-      }
-    }
-    
-    // Load wallet balance
-    function loadWalletBalance() {
-      const token = localStorage.getItem('accessToken');
-      const balanceElement = document.getElementById('wallet-balance');
-      const refreshButton = document.getElementById('refresh-balance');
-      
-      if (!token) return;
-      
-      // Show loading state
-      balanceElement.innerHTML = '<span class="skeleton skeleton-balance"></span>';
-      
-      fetch(`${API_BASE}/api/wallet/balance`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      .then(response => {
-        if (!response.ok) {
-          if (response.status === 401) {
-            // Token expired, try to refresh
-            return refreshToken().then(success => {
-              if (success) {
-                return loadWalletBalance();
-              } else {
-                // If refresh fails, redirect to login
-                window.location.href = 'login.html';
-              }
-            });
-          }
-          throw new Error('Failed to fetch wallet balance');
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data && data.success) {
-          balanceElement.textContent = `₦${Number(data.data.balance).toLocaleString()}`;
-        } else {
-          balanceElement.textContent = '₦0.00';
-        }
-      })
-      .catch(error => {
-        console.error('Error loading wallet balance:', error);
-        balanceElement.textContent = '₦0.00';
-      });
-    }
-    
-    // Load recent transactions
+    // Load recent transactions (for dashboard)
     function loadRecentTransactions() {
       const token = localStorage.getItem('accessToken');
       const container = document.getElementById('transactions-container');
@@ -577,7 +585,7 @@
               case 'data': iconClass = 'glo'; break;
               case 'electricity': iconClass = 'ikeja'; break;
               case 'tv': iconClass = 'dstv'; break;
-              case 'transfer': iconClass = 'wallet'; break;
+              case 'funding': iconClass = 'wallet'; break;
               default: iconClass = 'default';
             }
             
@@ -591,6 +599,8 @@
               details = `Smart Card: ${transaction.metadata.smartcard}`;
             } else if (transaction.metadata && transaction.metadata.recipientEmail) {
               details = `To: ${transaction.metadata.recipientEmail}`;
+            } else if (transaction.type === 'funding' && transaction.metadata && transaction.metadata.paymentMethod) {
+              details = `Method: ${transaction.metadata.paymentMethod}`;
             }
             
             row.innerHTML = `
@@ -605,7 +615,7 @@
               </div>
               <div class="table-cell">${formattedDate}</div>
               <div class="table-cell"><span class="status ${transaction.status}">${transaction.status}</span></div>
-              <div class="table-cell">₦${Number(transaction.amount).toLocaleString()}</div>
+              <div class="table-cell ${transaction.type === 'funding' ? 'positive' : ''}">₦${Number(transaction.amount).toLocaleString()}</div>
             `;
             
             container.appendChild(row);
@@ -620,7 +630,7 @@
       });
     }
     
-    // Load transaction statistics
+    // Load transaction statistics (for dashboard)
     function loadTransactionStats() {
       const token = localStorage.getItem('accessToken');
       
@@ -674,126 +684,19 @@
       });
     }
     
-    // Load notifications
-    function loadNotifications() {
-      const token = localStorage.getItem('accessToken');
-      
-      if (!token) return;
-      
-      fetch(`${API_BASE}/api/notifications?unreadOnly=true`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      .then(response => {
-        if (!response.ok) {
-          if (response.status === 401) {
-            // Token expired, try to refresh
-            return refreshToken().then(success => {
-              if (success) {
-                return loadNotifications();
-              } else {
-                // If refresh fails, redirect to login
-                window.location.href = 'login.html';
-              }
-            });
-          }
-          throw new Error('Failed to fetch notifications');
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data && data.success && data.data) {
-          const notificationBadge = document.getElementById('notification-count');
-          if (notificationBadge) {
-            notificationBadge.textContent = data.data.unreadCount;
-            notificationBadge.style.display = data.data.unreadCount > 0 ? 'block' : 'none';
-          }
-        }
-      })
-      .catch(error => {
-        console.error('Error loading notifications:', error);
-      });
-    }
-    
-    // Check if user is admin
+    // Check if user is admin (for dashboard)
     function checkAdminAccess() {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       
       if (user.role === 'admin' || user.role === 'super-admin') {
-        document.getElementById('admin-nav-item').style.display = 'block';
+        const adminNavItem = document.getElementById('admin-nav-item');
+        if (adminNavItem) {
+          adminNavItem.style.display = 'block';
+        }
       }
     }
     
-    // Download statement function
-    function downloadStatement() {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        showAlert('Please login to download your statement');
-        return;
-      }
-      
-      fetch(`${API_BASE}/api/wallet/transactions`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      .then(response => {
-        if (!response.ok) {
-          if (response.status === 401) {
-            // Token expired, try to refresh
-            return refreshToken().then(success => {
-              if (success) {
-                return downloadStatement();
-              } else {
-                // If refresh fails, redirect to login
-                window.location.href = 'login.html';
-              }
-            });
-          }
-          throw new Error('Failed to fetch transactions');
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data && data.success) {
-          // Create CSV content
-          let csvContent = "Reference,Type,Amount,Status,Date\n";
-          
-          data.data.transactions.forEach(transaction => {
-            csvContent += `${transaction.reference},${transaction.type},${transaction.amount},${transaction.status},${new Date(transaction.createdAt).toLocaleString()}\n`;
-          });
-          
-          // Create download link
-          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.setAttribute("href", url);
-          link.setAttribute("download", `wallet-statement-${new Date().toISOString().split('T')[0]}.csv`);
-          link.style.visibility = 'hidden';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
-      })
-      .catch(error => {
-        console.error('Error downloading statement:', error);
-        showAlert('Failed to download statement. Please try again.');
-      });
-    }
-    
-    // Referral program function
-    function startReferring() {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      if (user.email) {
-        // In a real app, this would open a referral modal or navigate to a referral page
-        showAlert(`Your referral code is: ${user.email}\nShare this code with friends to earn rewards!`, 'success');
-      } else {
-        showAlert('Please login to access the referral program');
-      }
-    }
-    
-    // Show alert function
+    // Show alert function for dashboard
     function showAlert(message, type = 'error') {
       const alertContainer = document.getElementById('dashboard-error');
       const successContainer = document.getElementById('dashboard-success');
@@ -815,50 +718,6 @@
         alertContainer.style.display = 'none';
         successContainer.style.display = 'none';
       }, 5000);
-    }
-    
-    // Refresh token function
-    function refreshToken() {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) {
-        logout();
-        return Promise.resolve(false);
-      }
-      
-      return fetch(`${API_BASE}/api/auth/refresh-token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken })
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to refresh token');
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data && data.success) {
-          localStorage.setItem('accessToken', data.data.accessToken);
-          return Promise.resolve(true);
-        } else {
-          // Refresh token failed, logout user
-          logout();
-          return Promise.resolve(false);
-        }
-      })
-      .catch(error => {
-        console.error('Error refreshing token:', error);
-        logout();
-        return Promise.resolve(false);
-      });
-    }
-    
-    // Logout function
-    function logout() {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      window.location.href = 'index.html';
     }
   </script>
 </body>

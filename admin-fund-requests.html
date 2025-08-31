@@ -38,6 +38,7 @@
       display: flex;
       gap: 1rem;
       margin-bottom: 2rem;
+      flex-wrap: wrap;
     }
     
     .filter-btn {
@@ -208,6 +209,75 @@
       color: #c62828;
     }
     
+    .status.processing {
+      background-color: rgba(33, 150, 243, 0.1);
+      color: #0277bd;
+    }
+    
+    /* Alert container */
+    .alert-container {
+      margin-bottom: 1.5rem;
+    }
+    
+    .alert {
+      padding: 1rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .alert-success {
+      background: rgba(76, 175, 80, 0.1);
+      color: var(--success);
+      border: 1px solid rgba(76, 175, 80, 0.2);
+    }
+    
+    .alert-error {
+      background: rgba(244, 67, 54, 0.1);
+      color: var(--danger);
+      border: 1px solid rgba(244, 67, 54, 0.2);
+    }
+    
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 2rem;
+    }
+    
+    .pagination button {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--light-gray);
+      background: var(--white);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .pagination button:hover:not(:disabled) {
+      background: var(--light);
+    }
+    
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .pagination .active {
+      background: var(--primary);
+      color: var(--white);
+      border-color: var(--primary);
+    }
+    
+    .pagination-info {
+      margin: 0 1rem;
+      color: var(--gray);
+    }
+    
     @media (max-width: 1200px) {
       .table-header,
       .table-row {
@@ -242,7 +312,7 @@
       <nav class="desktop-nav">
         <a href="index.html">Home</a>
         <a href="dashboard.html">Dashboard</a>
-        <a href="admin.html">Admin Panel</a>
+        <a href="admin.html" class="active">Admin Panel</a>
       </nav>
       <div class="mobile-menu-btn">
         <span></span>
@@ -254,6 +324,9 @@
   
   <main class="admin-fund-requests-page">
     <div class="admin-fund-requests-container">
+      <!-- Alert container for messages -->
+      <div id="alert-container" class="alert-container"></div>
+      
       <div class="admin-fund-requests-header">
         <h2>Funding Requests</h2>
         <a href="admin-fund-wallet.html" class="btn primary">
@@ -283,6 +356,10 @@
             <i class="fas fa-spinner"></i>
           </div>
         </div>
+      </div>
+      
+      <div id="pagination" class="pagination" style="display: none;">
+        <!-- Pagination will be loaded here -->
       </div>
     </div>
   </main>
@@ -377,18 +454,20 @@
     });
     
     // Load admin fund requests
-    function loadAdminFundRequests(status = '') {
+    function loadAdminFundRequests(status = '', page = 1) {
       const token = localStorage.getItem('accessToken');
       const container = document.getElementById('adminFundRequestsList');
+      const paginationContainer = document.getElementById('pagination');
       
       if (!token) return;
       
       // Show loading state
       container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
+      paginationContainer.style.display = 'none';
       
-      let url = `${API_BASE}/api/admin/fund-requests`;
+      let url = `${API_BASE}/api/admin/fund-requests?page=${page}`;
       if (status) {
-        url += `?status=${status}`;
+        url += `&status=${status}`;
       }
       
       fetch(url, {
@@ -402,7 +481,7 @@
             // Token expired, try to refresh
             return refreshToken().then(success => {
               if (success) {
-                return loadAdminFundRequests(status);
+                return loadAdminFundRequests(status, page);
               } else {
                 // If refresh fails, redirect to login
                 window.location.href = 'login.html';
@@ -478,6 +557,11 @@
               rejectFundRequest(this.dataset.id);
             });
           });
+          
+          // Setup pagination if there are multiple pages
+          if (data.data.pagination && data.data.pagination.pages > 1) {
+            setupPagination(data.data.pagination, status);
+          }
         } else {
           container.innerHTML = '<div class="no-fund-requests"><i class="fas fa-hand-holding-usd"></i><p>No funding requests found</p></div>';
         }
@@ -486,6 +570,39 @@
         console.error('Error loading fund requests:', error);
         container.innerHTML = '<div class="no-fund-requests"><i class="fas fa-exclamation-triangle"></i><p>Failed to load funding requests</p></div>';
       });
+    }
+    
+    // Setup pagination
+    function setupPagination(pagination, status) {
+      const paginationContainer = document.getElementById('pagination');
+      paginationContainer.innerHTML = '';
+      
+      // Previous button
+      const prevBtn = document.createElement('button');
+      prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+      prevBtn.disabled = pagination.page === 1;
+      prevBtn.addEventListener('click', () => {
+        loadAdminFundRequests(status, pagination.page - 1);
+      });
+      paginationContainer.appendChild(prevBtn);
+      
+      // Page info
+      const pageInfo = document.createElement('span');
+      pageInfo.className = 'pagination-info';
+      pageInfo.textContent = `Page ${pagination.page} of ${pagination.pages}`;
+      paginationContainer.appendChild(pageInfo);
+      
+      // Next button
+      const nextBtn = document.createElement('button');
+      nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+      nextBtn.disabled = pagination.page === pagination.pages;
+      nextBtn.addEventListener('click', () => {
+        loadAdminFundRequests(status, pagination.page + 1);
+      });
+      paginationContainer.appendChild(nextBtn);
+      
+      // Show pagination
+      paginationContainer.style.display = 'flex';
     }
     
     // Approve fund request
@@ -524,17 +641,17 @@
       })
       .then(data => {
         if (data && data.success) {
-          alert('Funding request approved successfully!');
+          showAlert('Funding request approved successfully!', 'success');
           // Reload fund requests
           const activeFilter = document.querySelector('.filter-btn.active');
           loadAdminFundRequests(activeFilter ? activeFilter.dataset.status : '');
         } else {
-          alert(data.message || 'Failed to approve funding request');
+          showAlert(data.message || 'Failed to approve funding request');
         }
       })
       .catch(error => {
         console.error('Error approving fund request:', error);
-        alert('Failed to approve funding request. Please try again.');
+        showAlert('Failed to approve funding request. Please try again.');
       });
     }
     
@@ -547,7 +664,7 @@
       // Show confirmation dialog
       const reason = prompt('Enter a reason for rejection:');
       if (!reason) {
-        alert('Reason is required to reject a funding request');
+        showAlert('Reason is required to reject a funding request');
         return;
       }
       
@@ -578,18 +695,41 @@
       })
       .then(data => {
         if (data && data.success) {
-          alert('Funding request rejected successfully!');
+          showAlert('Funding request rejected successfully!', 'success');
           // Reload fund requests
           const activeFilter = document.querySelector('.filter-btn.active');
           loadAdminFundRequests(activeFilter ? activeFilter.dataset.status : '');
         } else {
-          alert(data.message || 'Failed to reject funding request');
+          showAlert(data.message || 'Failed to reject funding request');
         }
       })
       .catch(error => {
         console.error('Error rejecting fund request:', error);
-        alert('Failed to reject funding request. Please try again.');
+        showAlert('Failed to reject funding request. Please try again.');
       });
+    }
+    
+    // Show alert function
+    function showAlert(message, type = 'error') {
+      const alertContainer = document.getElementById('alert-container');
+      
+      // Clear previous alerts
+      alertContainer.innerHTML = '';
+      
+      // Create alert element
+      const alert = document.createElement('div');
+      alert.className = `alert alert-${type === 'success' ? 'success' : 'error'}`;
+      alert.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+        <span>${message}</span>
+      `;
+      
+      alertContainer.appendChild(alert);
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        alertContainer.innerHTML = '';
+      }, 5000);
     }
     
     // Refresh token function

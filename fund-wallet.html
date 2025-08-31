@@ -113,6 +113,17 @@
       box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.1);
     }
     
+    .form-group input.error,
+    .form-group select.error {
+      border-color: var(--danger);
+    }
+    
+    .error-message {
+      color: var(--danger);
+      font-size: 0.8rem;
+      margin-top: 0.3rem;
+    }
+    
     .form-actions {
       display: flex;
       justify-content: space-between;
@@ -306,6 +317,43 @@
       margin-bottom: 1.5rem;
     }
     
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+    }
+    
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    
+    .skeleton-text {
+      height: 1rem;
+      margin-bottom: 0.5rem;
+      border-radius: 4px;
+    }
+    
+    .skeleton-item {
+      height: 60px;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    
     @media (max-width: 992px) {
       .fund-container {
         grid-template-columns: 1fr;
@@ -338,6 +386,8 @@
       <nav class="desktop-nav">
         <a href="index.html">Home</a>
         <a href="dashboard.html">Dashboard</a>
+        <a href="fund-wallet.html" class="active">Fund Wallet</a>
+        <a href="fund-requests.html">Funding Requests</a>
         <a href="airtime.html">Airtime</a>
         <a href="data.html">Data</a>
         <a href="electricity.html">Electricity</a>
@@ -378,6 +428,7 @@
             <div class="form-group">
               <label for="amount">Amount (₦)</label>
               <input type="number" id="amount" name="amount" min="100" step="100" placeholder="Enter amount" required>
+              <div class="error-message" id="amount-error"></div>
             </div>
             
             <div class="form-group">
@@ -388,15 +439,17 @@
                 <option value="cash">Cash Deposit</option>
                 <option value="other">Other</option>
               </select>
+              <div class="error-message" id="paymentMethod-error"></div>
             </div>
             
             <div class="form-group">
               <label for="reference">Payment Reference (Optional)</label>
               <input type="text" id="reference" name="reference" placeholder="Enter payment reference if available">
+              <div class="error-message" id="reference-error"></div>
             </div>
             
             <div class="form-actions">
-              <button type="submit" class="btn primary">Submit Request</button>
+              <button type="submit" class="btn primary" id="submit-btn">Submit Request</button>
             </div>
           </form>
         </div>
@@ -486,39 +539,11 @@
           <h3><i class="fas fa-history"></i> Recent Funding</h3>
           
           <div class="recent-funding">
-            <div class="funding-list">
-              <div class="funding-item">
-                <div class="funding-details">
-                  <div class="funding-icon admin"></div>
-                  <div class="funding-info">
-                    <p class="funding-method">Admin Funding</p>
-                    <p class="funding-date">May 15, 2023</p>
-                  </div>
-                </div>
-                <div class="funding-amount">₦5,000</div>
-              </div>
-              
-              <div class="funding-item">
-                <div class="funding-details">
-                  <div class="funding-icon transfer"></div>
-                  <div class="funding-info">
-                    <p class="funding-method">Bank Transfer</p>
-                    <p class="funding-date">May 10, 2023</p>
-                  </div>
-                </div>
-                <div class="funding-amount">₦2,000</div>
-              </div>
-              
-              <div class="funding-item">
-                <div class="funding-details">
-                  <div class="funding-icon admin"></div>
-                  <div class="funding-info">
-                    <p class="funding-method">Admin Funding</p>
-                    <p class="funding-date">May 5, 2023</p>
-                  </div>
-                </div>
-                <div class="funding-amount">₦10,000</div>
-              </div>
+            <div class="funding-list" id="recent-funding-list">
+              <!-- Recent funding will be loaded here -->
+              <div class="skeleton skeleton-item"></div>
+              <div class="skeleton skeleton-item"></div>
+              <div class="skeleton skeleton-item"></div>
             </div>
           </div>
         </div>
@@ -575,6 +600,11 @@
   <script src="main.js"></script>
   
   <script>
+    // API Configuration
+    const API_BASE = window.location.hostname === 'localhost' 
+      ? 'http://localhost:5001'  // Changed from 5000 to 5001 to match server
+      : 'https://easy-subscribe-backend.onrender.com'; // Updated with actual backend URL
+    
     // Mobile menu toggle
     document.addEventListener('DOMContentLoaded', function() {
       const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
@@ -591,7 +621,248 @@
       if (!token) {
         window.location.href = 'login.html';
       }
+      
+      // Load recent funding requests
+      loadRecentFunding();
+      
+      // Setup form submission
+      const fundRequestForm = document.getElementById('fundRequestForm');
+      if (fundRequestForm) {
+        fundRequestForm.addEventListener('submit', handleFundRequest);
+      }
     });
+    
+    // Load recent funding requests
+    function loadRecentFunding() {
+      const token = localStorage.getItem('accessToken');
+      const container = document.getElementById('recent-funding-list');
+      
+      if (!token) return;
+      
+      fetch(`${API_BASE}/api/user/fund-requests?limit=3`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Token expired, try to refresh
+            return refreshToken().then(success => {
+              if (success) {
+                return loadRecentFunding();
+              } else {
+                // If refresh fails, redirect to login
+                window.location.href = 'login.html';
+              }
+            });
+          }
+          throw new Error('Failed to fetch funding requests');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data && data.success && data.data && data.data.transactions.length > 0) {
+          container.innerHTML = '';
+          
+          data.data.transactions.forEach(transaction => {
+            const fundingItem = document.createElement('div');
+            fundingItem.className = 'funding-item';
+            
+            // Format date
+            const date = new Date(transaction.createdAt);
+            const formattedDate = date.toLocaleDateString('en-NG', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                });
+            
+            // Determine icon based on payment method
+            const iconClass = transaction.metadata.paymentMethod === 'bank_transfer' || 
+                             transaction.metadata.paymentMethod === 'cash' ? 'transfer' : 'admin';
+            
+            fundingItem.innerHTML = `
+              <div class="funding-details">
+                <div class="funding-icon ${iconClass}"></div>
+                <div class="funding-info">
+                  <p class="funding-method">${transaction.metadata.paymentMethod}</p>
+                  <p class="funding-date">${formattedDate}</p>
+                </div>
+              </div>
+              <div class="funding-amount">₦${Number(transaction.amount).toLocaleString()}</div>
+            `;
+            
+            container.appendChild(fundingItem);
+          });
+        } else {
+          container.innerHTML = '<p style="text-align: center; color: var(--gray);">No recent funding activity</p>';
+        }
+      })
+      .catch(error => {
+        console.error('Error loading recent funding:', error);
+        container.innerHTML = '<p style="text-align: center; color: var(--danger);">Failed to load funding history</p>';
+      });
+    }
+    
+    // Handle fund request form submission
+    function handleFundRequest(e) {
+      e.preventDefault();
+      
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        showAlert('Please login to request funding');
+        return;
+      }
+      
+      // Clear previous error messages
+      document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+      
+      // Get form values
+      const amount = document.getElementById('amount').value;
+      const paymentMethod = document.getElementById('paymentMethod').value;
+      const reference = document.getElementById('reference').value;
+      
+      // Validate form
+      let isValid = true;
+      
+      if (!amount || amount < 100) {
+        document.getElementById('amount-error').textContent = 'Amount must be at least ₦100';
+        isValid = false;
+      }
+      
+      if (!paymentMethod) {
+        document.getElementById('paymentMethod-error').textContent = 'Please select a payment method';
+        isValid = false;
+      }
+      
+      if (!isValid) return;
+      
+      // Show loading state
+      const submitBtn = document.getElementById('submit-btn');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="loading-spinner"></span> Processing...';
+      
+      // Submit request
+      fetch(`${API_BASE}/api/user/fund-request`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ amount, paymentMethod, reference })
+      })
+      .then(response => {
+        if (!response.ok) {
+          if (response.status === 401) {
+            // Token expired, try to refresh
+            return refreshToken().then(success => {
+              if (success) {
+                return handleFundRequest(e);
+              } else {
+                // If refresh fails, redirect to login
+                window.location.href = 'login.html';
+              }
+            });
+          }
+          throw new Error('Failed to submit funding request');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data && data.success) {
+          showAlert('Funding request submitted successfully!', 'success');
+          // Reset form
+          e.target.reset();
+          // Reload recent funding
+          loadRecentFunding();
+        } else {
+          showAlert(data.message || 'Failed to submit funding request. Please try again.');
+        }
+      })
+      .catch(error => {
+        console.error('Fund request error:', error);
+        
+        // More specific error message for network issues
+        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+          showAlert('Unable to connect to the server. Please check your internet connection.');
+        } else {
+          showAlert('Failed to submit funding request. Please check your connection and try again.');
+        }
+      })
+      .finally(() => {
+        // Reset button state
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      });
+    }
+    
+    // Show alert function
+    function showAlert(message, type = 'error') {
+      const alertContainer = document.getElementById('alert-container');
+      
+      // Clear previous alerts
+      alertContainer.innerHTML = '';
+      
+      // Create alert element
+      const alert = document.createElement('div');
+      alert.className = `alert alert-${type === 'success' ? 'success' : 'error'}`;
+      alert.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+        <span>${message}</span>
+      `;
+      
+      alertContainer.appendChild(alert);
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        alertContainer.innerHTML = '';
+      }, 5000);
+    }
+    
+    // Refresh token function
+    function refreshToken() {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        logout();
+        return Promise.resolve(false);
+      }
+      
+      return fetch(`${API_BASE}/api/auth/refresh-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to refresh token');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data && data.success) {
+          localStorage.setItem('accessToken', data.data.accessToken);
+          return Promise.resolve(true);
+        } else {
+          // Refresh token failed, logout user
+          logout();
+          return Promise.resolve(false);
+        }
+      })
+      .catch(error => {
+        console.error('Error refreshing token:', error);
+        logout();
+        return Promise.resolve(false);
+      });
+    }
+    
+    // Logout function
+    function logout() {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      window.location.href = 'index.html';
+    }
   </script>
 </body>
 </html>

@@ -231,12 +231,6 @@
   
   <!-- Page-specific JavaScript -->
   <script>
-    // API Configuration
-    const API_BASE = window.location.hostname === 'localhost' 
-      ? 'http://localhost:5001'
-      : 'https://easy-subscribe-backend.onrender.com';
-    
-    // TV form submission handler - UPDATED to align with backend
     document.addEventListener('DOMContentLoaded', function() {
       const tvForm = document.getElementById('tvForm');
       if (tvForm) {
@@ -293,8 +287,11 @@
       
       // Validate provider
       if (!provider) {
-        document.getElementById('tv-error')?.textContent || 
-        (document.querySelector('.form-group')?.insertAdjacentHTML('beforeend', '<div class="error-message" id="tv-error">Please select a provider</div>'));
+        const providerError = document.createElement('div');
+        providerError.className = 'error-message';
+        providerError.id = 'tv-error';
+        providerError.textContent = 'Please select a provider';
+        document.getElementById('tv').parentNode.appendChild(providerError);
         isValid = false;
       }
       
@@ -312,8 +309,10 @@
       
       // Validate plan
       if (!plan) {
-        document.querySelector('.tv-plans:visible')?.insertAdjacentHTML('afterend', 
-          '<div class="error-message">Please select a subscription plan</div>');
+        const planError = document.createElement('div');
+        planError.className = 'error-message';
+        planError.textContent = 'Please select a subscription plan';
+        document.querySelector('.tv-plans:visible')?.parentNode.appendChild(planError);
         isValid = false;
       }
       
@@ -340,8 +339,19 @@
         return;
       }
       
-      // Submit form using the main.js handleServiceForm function
-      handleServiceForm(e, 'tv');
+      // Store form data in sessionStorage
+      const tvData = {
+        provider,
+        smartcard,
+        plan,
+        phone,
+        email
+      };
+      
+      sessionStorage.setItem('tvData', JSON.stringify(tvData));
+      
+      // Navigate to confirmation page
+      window.location.href = 'tvconfirm.html';
     }
     
     // Setup smartcard validation
@@ -496,7 +506,7 @@
           </div>
         `;
         
-        const response = await fetch(`${API_BASE}/api/services/tv-variations?provider=${provider}`);
+        const response = await fetch(`${window.API_BASE || (window.location.hostname === 'localhost' ? 'http://localhost:5001' : 'https://easy-subscribe-backend.onrender.com')}/api/services/tv-variations?provider=${provider}`);
         const data = await response.json();
         
         if (data.success) {

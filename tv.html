@@ -124,7 +124,7 @@
                 <label for="email">Email Address</label>
                 <div class="input-with-icon">
                   <i class="fas fa-envelope"></i>
-                  <input type="email" id="email" placeholder="Enter email for receipt">
+                  <input type="email" id="email" placeholder="Enter email for receipt" required>
                 </div>
                 <div class="error-message" id="email-error"></div>
               </div>
@@ -249,6 +249,9 @@
     document.addEventListener('DOMContentLoaded', function() {
       // Initialize TV page functionality
       initializeTvPage();
+      
+      // Setup FAQ toggle
+      setupFaqToggle();
     });
     
     // Initialize TV page
@@ -290,9 +293,6 @@
             // Use the function from main.js if available
             if (typeof loadCustomerDetails === 'function') {
               loadCustomerDetails();
-            } else {
-              // Fallback to local implementation
-              validateAndLoadCustomerDetails();
             }
           }, 500); // Wait 500ms after user stops typing
         });
@@ -301,116 +301,25 @@
           // Use the function from main.js if available
           if (typeof loadCustomerDetails === 'function') {
             loadCustomerDetails();
-          } else {
-            // Fallback to local implementation
-            validateAndLoadCustomerDetails();
           }
         });
       }
     }
     
-    // Fallback function to validate and load customer details
-    // This will only be used if the function from main.js is not available
-    function validateAndLoadCustomerDetails() {
-      const provider = document.getElementById('tv').value;
-      const smartcard = document.getElementById('smartcard').value.trim();
+    // Setup FAQ toggle for this page
+    function setupFaqToggle() {
+      const faqQuestions = document.querySelectorAll('.faq-question');
       
-      // Only proceed if both provider and smartcard are provided
-      if (provider && smartcard) {
-        // Validate smartcard format - use function from main.js if available
-        let validation;
-        if (typeof validateSmartcardFormat === 'function') {
-          validation = validateSmartcardFormat(smartcard, provider);
-        } else {
-          // Fallback validation
-          validation = validateSmartcardFormatLocal(smartcard, provider);
-        }
-        
-        const smartcardError = document.getElementById('smartcard-error');
-        if (smartcardError) {
-          smartcardError.textContent = validation.valid ? '' : validation.message;
-        }
-        
-        // If valid, load customer details
-        if (validation.valid) {
-          if (typeof loadCustomerDetails === 'function') {
-            // Use the function from main.js
-            loadCustomerDetails();
-          } else {
-            // Fallback to local implementation
-            loadCustomerDetailsLocal(provider, smartcard);
-          }
-        } else {
-          // Hide customer details if invalid
-          document.getElementById('customerDetails').style.display = 'none';
-        }
-      }
-    }
-    
-    // Fallback function to load customer details from API
-    // This will only be used if the function from main.js is not available
-    async function loadCustomerDetailsLocal(provider, smartcard) {
-      try {
-        // Use the global API_BASE if available, otherwise construct it
-        const apiUrl = typeof API_BASE !== 'undefined' ? API_BASE : 
-          (window.location.hostname === 'localhost' ? 'http://localhost:5001' : 'https://easy-subscribe-backend.onrender.com');
-        
-        const response = await fetch(`${apiUrl}/api/services/tv-customer?provider=${provider}&smartcard=${smartcard}`);
-        const data = await response.json();
-        
-        if (data.success) {
-          // Display customer details
-          document.getElementById('customerName').textContent = data.data.customerName || 'Not available';
-          document.getElementById('customerPlan').textContent = data.data.currentPlan || 'Not available';
+      faqQuestions.forEach(question => {
+        question.addEventListener('click', () => {
+          const answer = question.nextElementSibling;
+          const icon = question.querySelector('i');
           
-          // Show customer details section
-          document.getElementById('customerDetails').style.display = 'block';
-        } else {
-          // Hide customer details if not found
-          document.getElementById('customerDetails').style.display = 'none';
-        }
-      } catch (error) {
-        console.error('Error loading customer details:', error);
-        // Hide customer details on error
-        document.getElementById('customerDetails').style.display = 'none';
-      }
-    }
-    
-    // Fallback function to validate smartcard format
-    // This will only be used if the function from main.js is not available
-    function validateSmartcardFormatLocal(smartcard, provider) {
-      if (!smartcard || typeof smartcard !== 'string') {
-        return { valid: false, message: 'Smartcard number is required' };
-      }
-      
-      // Remove any spaces or dashes
-      const cleanCard = smartcard.replace(/[\s-]/g, '');
-      
-      // Provider-specific validation
-      switch (provider.toLowerCase()) {
-        case 'dstv':
-          if (!/^\d{10,11}$/.test(cleanCard)) {
-            return { valid: false, message: 'DStv smartcard must be 10-11 digits' };
-          }
-          break;
-        case 'gotv':
-          if (!/^\d{10}$/.test(cleanCard)) {
-            return { valid: false, message: 'GOtv smartcard must be 10 digits' };
-          }
-          break;
-        case 'startimes':
-          if (!/^\d{10,12}$/.test(cleanCard)) {
-            return { valid: false, message: 'StarTimes smartcard must be 10-12 digits' };
-          }
-          break;
-        default:
-          // Generic validation for unknown providers
-          if (!/^\d{8,15}$/.test(cleanCard)) {
-            return { valid: false, message: 'Invalid smartcard number format' };
-          }
-      }
-      
-      return { valid: true, message: 'Valid format' };
+          answer.classList.toggle('active');
+          icon.classList.toggle('fa-chevron-down');
+          icon.classList.toggle('fa-chevron-up');
+        });
+      });
     }
     
     // Load TV plans from API

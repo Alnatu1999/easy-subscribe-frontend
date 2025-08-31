@@ -602,7 +602,7 @@ footer {
   outline: none;
   box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
 }
-/* NEW: Input validation styles */
+/* Input validation styles */
 .input-with-icon input.input-error,
 .input-with-icon select.input-error {
   border-color: var(--danger);
@@ -1768,6 +1768,14 @@ footer {
 .detail-row:last-child {
   border-bottom: none;
 }
+.detail-row.total-row {
+  font-weight: bold;
+  font-size: 1.1em;
+  border-top: 2px solid #eee;
+  padding-top: 15px;
+  margin-top: 15px;
+  margin-bottom: 0;
+}
 .detail-label {
   color: var(--gray);
   font-weight: 500;
@@ -1790,7 +1798,7 @@ footer {
   border-top: 1px solid var(--light-gray);
   margin-top: 1rem;
 }
-/* NEW: Status badge styles */
+/* Status badge styles */
 .status-badge {
   display: inline-block;
   padding: 4px 12px;
@@ -1814,7 +1822,7 @@ footer {
   background-color: #d1ecf1;
   color: #0c5460;
 }
-/* NEW: Receipt status styles */
+/* Receipt status styles */
 .receipt-status {
   display: flex;
   align-items: center;
@@ -1839,7 +1847,7 @@ footer {
 .receipt-status i {
   margin-right: 10px;
 }
-/* NEW: Loading plans styles */
+/* Loading plans styles */
 .loading-plans {
   display: flex;
   flex-direction: column;
@@ -1852,7 +1860,7 @@ footer {
   font-size: 2rem;
   margin-bottom: 1rem;
 }
-/* NEW: Customer support styles */
+/* Customer support styles */
 .customer-support {
   margin-top: 2rem;
   padding-top: 1.5rem;
@@ -1875,6 +1883,118 @@ footer {
 }
 .support-option i {
   color: var(--primary);
+}
+/* Customer details styles */
+.customer-details {
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: rgba(30, 144, 255, 0.05);
+  border-radius: 8px;
+  border-left: 3px solid var(--primary);
+}
+.customer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.customer-detail {
+  display: flex;
+  justify-content: space-between;
+}
+.detail-label {
+  font-weight: 500;
+  color: var(--gray);
+}
+/* FAQ styles */
+.faq-section {
+  margin-top: 2rem;
+}
+.faq-item {
+  margin-bottom: 1rem;
+  border: 1px solid var(--light-gray);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.faq-question {
+  padding: 1rem;
+  background: var(--light);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 500;
+  transition: var(--transition);
+}
+.faq-question:hover {
+  background: rgba(30, 144, 255, 0.05);
+}
+.faq-answer {
+  padding: 1rem;
+  border-top: 1px solid var(--light-gray);
+  background: var(--white);
+  display: none;
+}
+.faq-answer.active {
+  display: block;
+}
+/* Payment method styles */
+.payment-method {
+  margin-bottom: 1.5rem;
+}
+.payment-options {
+  display: flex;
+  gap: 1rem;
+}
+.payment-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.payment-option input[type="radio"] {
+  margin-right: 0.5rem;
+}
+/* Error message styles */
+.error-message {
+  color: var(--danger);
+  font-size: 0.8rem;
+  margin-top: 0.3rem;
+}
+.error-debug {
+  font-size: 0.7rem;
+  color: var(--gray);
+  margin-top: 0.5rem;
+}
+/* Alert container styles */
+#alert-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1050;
+  max-width: 400px;
+}
+.alert {
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: var(--shadow);
+}
+.close-alert {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0.2rem;
+  border-radius: 50%;
+  transition: var(--transition);
+}
+.close-alert:hover {
+  background: rgba(0, 0, 0, 0.1);
 }
 /* ====== UTILITY CLASSES ====== */
 .text-center {
@@ -2233,6 +2353,10 @@ footer {
   
   .confirmation-actions,
   .receipt-actions {
+    flex-direction: column;
+  }
+  
+  .payment-options {
     flex-direction: column;
   }
 }

@@ -86,7 +86,7 @@
             
             <div class="detail-row">
               <div class="detail-label">Payment Method:</div>
-              <div class="detail-value" id="confirmPayment">-</div>
+              <div class="detail-value" id="confirmPaymentMethod">-</div>
             </div>
             
             <div class="detail-row total-row">
@@ -96,8 +96,8 @@
           </div>
           
           <div class="confirmation-actions">
-            <button id="editBtn" class="btn secondary">Edit Details</button>
-            <button id="confirmBtn" class="btn primary">Confirm Subscription</button>
+            <button id="cancelTvSubscription" class="btn secondary">Cancel</button>
+            <button id="confirmTvSubscription" class="btn primary">Confirm Subscription</button>
           </div>
         </div>
         
@@ -149,6 +149,9 @@
     </div>
   </footer>
   
+  <!-- Alert container for notifications -->
+  <div id="alert-container"></div>
+  
   <!-- Load main.js for all functionality -->
   <script src="main.js"></script>
   
@@ -166,7 +169,10 @@
       // Check if we have valid data
       if (!tvData.provider || !tvData.smartcard || !tvData.plan) {
         // Redirect back to TV page if no data
-        window.location.href = 'tv.html';
+        showAlert('Invalid subscription data. Please start over.', 'error');
+        setTimeout(() => {
+          window.location.href = 'tv.html';
+        }, 2000);
         return;
       }
       
@@ -178,7 +184,7 @@
       
       // Get payment method
       const paymentMethod = tvData.paymentMethod || 'wallet';
-      document.getElementById('confirmPayment').textContent = paymentMethod === 'wallet' ? 'Wallet Balance' : 'Debit/Credit Card';
+      document.getElementById('confirmPaymentMethod').textContent = paymentMethod === 'wallet' ? 'Wallet Balance' : 'Debit/Credit Card';
       
       // Load plan details
       loadPlanDetails(tvData.provider, tvData.plan, tvData);
@@ -187,19 +193,29 @@
       loadCustomerDetails(tvData.provider, tvData.smartcard);
       
       // Setup event listeners
-      const editBtn = document.getElementById('editBtn');
-      if (editBtn) {
-        editBtn.addEventListener('click', function() {
-          // Go back to TV page
+      const cancelBtn = document.getElementById('cancelTvSubscription');
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+          // Clear session storage and go back to TV page
+          sessionStorage.removeItem('tvData');
           window.location.href = 'tv.html';
         });
       }
       
-      const confirmBtn = document.getElementById('confirmBtn');
+      const confirmBtn = document.getElementById('confirmTvSubscription');
       if (confirmBtn) {
         confirmBtn.addEventListener('click', function() {
-          // Process TV subscription
-          processTvSubscription();
+          // Process TV subscription using the function from main.js
+          if (typeof confirmTvSubscription === 'function') {
+            // Get the plan price from the confirmation details
+            const amountText = document.getElementById('confirmAmount').textContent;
+            const amount = parseFloat(amountText.replace('₦', '').replace(',', ''));
+            
+            confirmTvSubscription(tvData, amount);
+          } else {
+            // Fallback to local implementation
+            processTvSubscription();
+          }
         });
       }
     }
@@ -283,7 +299,8 @@
       }
     }
     
-    // Process TV subscription
+    // Fallback function to process TV subscription
+    // This will only be used if the function from main.js is not available
     async function processTvSubscription() {
       const token = localStorage.getItem('accessToken');
       if (!token) {
@@ -296,7 +313,7 @@
       
       try {
         // Show loading state
-        const confirmBtn = document.getElementById('confirmBtn');
+        const confirmBtn = document.getElementById('confirmTvSubscription');
         const originalText = confirmBtn.textContent;
         confirmBtn.disabled = true;
         confirmBtn.textContent = 'Processing...';
@@ -323,6 +340,9 @@
         const data = await response.json();
         
         if (response.ok && data.success) {
+          // Clear session storage
+          sessionStorage.removeItem('tvData');
+          
           // Store transaction data in sessionStorage for receipt
           sessionStorage.setItem('tvTransaction', JSON.stringify(data.data));
           
@@ -343,53 +363,12 @@
         }
       } finally {
         // Reset button state
-        const confirmBtn = document.getElementById('confirmBtn');
+        const confirmBtn = document.getElementById('confirmTvSubscription');
         if (confirmBtn) {
           confirmBtn.disabled = false;
           confirmBtn.textContent = originalText || 'Confirm Subscription';
         }
       }
-    }
-    
-    // Helper function to show alerts (fallback if not available in main.js)
-    function showAlert(message, type = 'error') {
-      // Check if showAlert is already defined in main.js
-      if (typeof window.showAlert === 'function') {
-        window.showAlert(message, type);
-        return;
-      }
-      
-      // Fallback implementation
-      const alertContainer = document.getElementById('alert-container') || document.body;
-      
-      const alertElement = document.createElement('div');
-      alertElement.className = `alert alert-${type}`;
-      alertElement.innerHTML = `
-        <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>
-        <span>${message}</span>
-        <button class="close-alert">&times;</button>
-      `;
-      
-      // Add to page
-      if (document.getElementById('alert-container')) {
-        document.getElementById('alert-container').innerHTML = '';
-        document.getElementById('alert-container').appendChild(alertElement);
-      } else {
-        alertContainer.appendChild(alertElement);
-      }
-      
-      // Add event listener to close button
-      const closeBtn = alertElement.querySelector('.close-alert');
-      if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-          alertElement.remove();
-        });
-      }
-      
-      // Auto-hide after 5 seconds
-      setTimeout(() => {
-        alertElement.remove();
-      }, 5000);
     }
   </script>
 </body>

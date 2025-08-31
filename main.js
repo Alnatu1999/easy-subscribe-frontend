@@ -12,19 +12,31 @@ if (typeof window.API_BASE === 'undefined') {
 }
 // Use a local reference to API_BASE
 const API_BASE = window.API_BASE;
-
 // DOM Elements
 const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
 const desktopNav = document.querySelector('.desktop-nav');
 const menuToggle = document.querySelector('.menu-toggle');
 const sidebar = document.querySelector('.sidebar');
-
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
   initializeApp();
   checkServerConnection();
+  
+  // Clear TV data if returning to TV form page
+  if (window.location.pathname.includes('tv.html')) {
+    sessionStorage.removeItem('tvData');
+  }
+  
+  // Handle TV confirmation page
+  if (window.location.pathname.includes('tvconfirm.html')) {
+    setupTvConfirmationPage();
+  }
+  
+  // Handle admin dashboard
+  if (window.location.pathname.includes('admin-dashboard.html')) {
+    setupAdminDashboard();
+  }
 });
-
 // Check server connection with fallback
 async function checkServerConnection() {
   try {
@@ -47,7 +59,6 @@ async function checkServerConnection() {
     tryFallbackServer();
   }
 }
-
 // Try fallback server
 function tryFallbackServer() {
   const currentApiBase = API_BASE;
@@ -81,7 +92,6 @@ function tryFallbackServer() {
     showAlert('Unable to connect to the server. Please check your internet connection.', 'error');
   }
 }
-
 function initializeApp() {
   setupMobileMenu();
   setupSidebarToggle();
@@ -105,7 +115,6 @@ function initializeApp() {
   setupWalletFunding(); // NEW: Setup wallet funding
   setupSmartcardValidation(); // NEW: Setup smartcard validation
 }
-
 // Mobile Menu Toggle
 function setupMobileMenu() {
   if (mobileMenuBtn && desktopNav) {
@@ -114,7 +123,6 @@ function setupMobileMenu() {
     });
   }
 }
-
 // Sidebar Toggle for Dashboard
 function setupSidebarToggle() {
   if (menuToggle && sidebar) {
@@ -123,7 +131,6 @@ function setupSidebarToggle() {
     });
   }
 }
-
 // Form Handlers
 function setupFormHandlers() {
   // Login Form
@@ -201,7 +208,6 @@ function setupFormHandlers() {
     adminFundWalletForm.addEventListener('submit', handleAdminFundWallet);
   }
 }
-
 // Password Visibility Toggle
 function setupPasswordToggles() {
   const toggleButtons = document.querySelectorAll('.toggle-password');
@@ -222,7 +228,6 @@ function setupPasswordToggles() {
     });
   });
 }
-
 // Quick Amount Buttons for Airtime
 function setupQuickAmountButtons() {
   const amountButtons = document.querySelectorAll('.amount-btn');
@@ -236,7 +241,6 @@ function setupQuickAmountButtons() {
     });
   }
 }
-
 // Plan Selection for Data
 function setupPlanSelection() {
   const planOptions = document.querySelectorAll('.plan-option input[type="radio"]');
@@ -255,7 +259,6 @@ function setupPlanSelection() {
     });
   });
 }
-
 // UPDATED: Provider Selection for TV with VTU integration
 function setupProviderSelection() {
   const tvProvider = document.getElementById('tv');
@@ -291,7 +294,6 @@ function setupProviderSelection() {
     });
   }
 }
-
 // NEW: Setup TV variations
 function setupTvVariations() {
   const tvProvider = document.getElementById('tv');
@@ -299,7 +301,6 @@ function setupTvVariations() {
     loadTvVariations();
   }
 }
-
 // NEW: Load TV variations from API with better error handling
 async function loadTvVariations() {
   try {
@@ -412,7 +413,6 @@ async function loadTvVariations() {
     }
   }
 }
-
 // NEW: Setup Smartcard Validation
 function setupSmartcardValidation() {
   const smartcardInput = document.getElementById('smartcard');
@@ -442,7 +442,6 @@ function setupSmartcardValidation() {
     });
   }
 }
-
 // NEW: Validate smartcard format on input
 function validateSmartcardOnInput() {
   const smartcardInput = document.getElementById('smartcard');
@@ -484,7 +483,6 @@ function validateSmartcardOnInput() {
     }
   }
 }
-
 // NEW: Validate smartcard format on blur
 function validateSmartcardOnBlur() {
   const smartcardInput = document.getElementById('smartcard');
@@ -530,7 +528,6 @@ function validateSmartcardOnBlur() {
     }
   }
 }
-
 // NEW: Load customer details from API with better error handling
 async function loadCustomerDetails() {
   const smartcardInput = document.getElementById('smartcard');
@@ -638,7 +635,6 @@ async function loadCustomerDetails() {
     }
   }
 }
-
 // NEW: Validate smartcard format based on provider
 function validateSmartcardFormat(smartcard, provider) {
   if (!smartcard || typeof smartcard !== 'string') {
@@ -674,7 +670,6 @@ function validateSmartcardFormat(smartcard, provider) {
   
   return { valid: true, message: 'Valid format' };
 }
-
 // FAQ Toggle
 function setupFAQToggle() {
   const faqQuestions = document.querySelectorAll('.faq-question');
@@ -690,7 +685,6 @@ function setupFAQToggle() {
     });
   });
 }
-
 // Service Navigation
 function setupServiceNavigation() {
   const viewAllButtons = document.querySelectorAll('.view-all');
@@ -703,7 +697,6 @@ function setupServiceNavigation() {
     });
   });
 }
-
 // Notification Bell
 function setupNotificationBell() {
   const notificationBell = document.querySelector('.notification-bell');
@@ -713,7 +706,6 @@ function setupNotificationBell() {
     });
   }
 }
-
 // Profile Management
 function setupProfileManagement() {
   const editProfileBtn = document.querySelector('.edit-profile-btn');
@@ -723,7 +715,6 @@ function setupProfileManagement() {
     });
   }
 }
-
 // Password Reset
 function setupPasswordReset() {
   const forgotPasswordLink = document.querySelector('.forgot-password');
@@ -734,7 +725,6 @@ function setupPasswordReset() {
     });
   }
 }
-
 // Modals Setup
 function setupModals() {
   // Close modal when clicking on close button
@@ -755,7 +745,6 @@ function setupModals() {
     }
   });
 }
-
 // Transactions Page Setup
 function setupTransactionsPage() {
   if (!document.querySelector('.transactions-page')) return;
@@ -776,7 +765,6 @@ function setupTransactionsPage() {
     });
   });
 }
-
 // Notifications Page Setup
 function setupNotificationsPage() {
   if (!document.querySelector('.notifications-page')) return;
@@ -789,7 +777,6 @@ function setupNotificationsPage() {
     markAllReadBtn.addEventListener('click', markAllNotificationsAsRead);
   }
 }
-
 // NEW: Wallet Funding Setup
 function setupWalletFunding() {
   // Setup fund wallet button
@@ -817,7 +804,6 @@ function setupWalletFunding() {
     setupUserSearch();
   }
 }
-
 // Authentication Check
 function checkAuthentication() {
   const token = localStorage.getItem('accessToken');
@@ -832,7 +818,6 @@ function checkAuthentication() {
     window.location.href = 'login.html';
   }
 }
-
 // Load User Data
 function loadUserData() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -852,7 +837,6 @@ function loadUserData() {
     }
   });
 }
-
 // Load Wallet Balance with better error handling
 async function loadWalletBalance() {
   const token = localStorage.getItem('accessToken');
@@ -939,7 +923,6 @@ async function loadWalletBalance() {
     }
   }
 }
-
 // Load Notifications
 async function loadNotifications() {
   const token = localStorage.getItem('accessToken');
@@ -983,7 +966,6 @@ async function loadNotifications() {
     console.error('Error loading notifications:', error);
   }
 }
-
 // Load Notifications List
 async function loadNotificationsList() {
   const token = localStorage.getItem('accessToken');
@@ -1056,7 +1038,6 @@ async function loadNotificationsList() {
     notificationsContainer.innerHTML = '<div class="error">Failed to load notifications</div>';
   }
 }
-
 // Mark Notification as Read
 async function markNotificationAsRead(notificationId) {
   const token = localStorage.getItem('accessToken');
@@ -1097,7 +1078,6 @@ async function markNotificationAsRead(notificationId) {
     showAlert('Failed to mark notification as read');
   }
 }
-
 // Mark All Notifications as Read
 async function markAllNotificationsAsRead() {
   const token = localStorage.getItem('accessToken');
@@ -1139,7 +1119,6 @@ async function markAllNotificationsAsRead() {
     showAlert('Failed to mark notifications as read');
   }
 }
-
 // Load Transactions
 async function loadTransactions(type = '') {
   const token = localStorage.getItem('accessToken');
@@ -1226,7 +1205,6 @@ async function loadTransactions(type = '') {
     transactionsContainer.innerHTML = '<div class="error">Failed to load transactions</div>';
   }
 }
-
 // NEW: Load User Funding Requests
 async function loadFundRequests(status = '') {
   const token = localStorage.getItem('accessToken');
@@ -1297,7 +1275,6 @@ async function loadFundRequests(status = '') {
     fundRequestsContainer.innerHTML = '<div class="error">Failed to load funding requests</div>';
   }
 }
-
 // NEW: Load Admin Funding Requests
 async function loadAdminFundRequests(status = '') {
   const token = localStorage.getItem('accessToken');
@@ -1395,7 +1372,6 @@ async function loadAdminFundRequests(status = '') {
     adminFundRequestsContainer.innerHTML = '<div class="error">Failed to load funding requests</div>';
   }
 }
-
 // NEW: Setup Admin Fund Request Actions
 function setupAdminFundRequestActions() {
   // Setup filter buttons
@@ -1412,7 +1388,6 @@ function setupAdminFundRequestActions() {
     });
   });
 }
-
 // NEW: Setup User Search for Admin Fund Wallet
 function setupUserSearch() {
   const userSearch = document.getElementById('userSearch');
@@ -1438,7 +1413,6 @@ function setupUserSearch() {
     });
   }
 }
-
 // NEW: Search Users for Admin Fund Wallet
 async function searchUsers(searchTerm) {
   const token = localStorage.getItem('accessToken');
@@ -1513,7 +1487,6 @@ async function searchUsers(searchTerm) {
     searchResults.style.display = 'block';
   }
 }
-
 // NEW: Select User for Funding
 function selectUserForFunding(userId) {
   const userIdInput = document.getElementById('userId');
@@ -1538,7 +1511,6 @@ function selectUserForFunding(userId) {
     fetchUserDetails(userId);
   }
 }
-
 // NEW: Fetch User Details
 async function fetchUserDetails(userId) {
   const token = localStorage.getItem('accessToken');
@@ -1588,7 +1560,6 @@ async function fetchUserDetails(userId) {
     selectedUserInfo.innerHTML = '<div class="error">Failed to load user information</div>';
   }
 }
-
 // NEW: Handle Fund Request
 async function handleFundRequest(e) {
   e.preventDefault();
@@ -1658,7 +1629,6 @@ async function handleFundRequest(e) {
     }
   }
 }
-
 // NEW: Handle Admin Fund Wallet
 async function handleAdminFundWallet(e) {
   e.preventDefault();
@@ -1729,7 +1699,6 @@ async function handleAdminFundWallet(e) {
     }
   }
 }
-
 // NEW: Approve Fund Request
 async function approveFundRequest(requestId) {
   const token = localStorage.getItem('accessToken');
@@ -1781,7 +1750,6 @@ async function approveFundRequest(requestId) {
     }
   }
 }
-
 // NEW: Reject Fund Request
 async function rejectFundRequest(requestId) {
   const token = localStorage.getItem('accessToken');
@@ -1837,7 +1805,6 @@ async function rejectFundRequest(requestId) {
     }
   }
 }
-
 // Refresh Token
 async function refreshToken() {
   const refreshToken = localStorage.getItem('refreshToken');
@@ -1876,7 +1843,6 @@ async function refreshToken() {
     return false;
   }
 }
-
 // Show Alert Function
 function showAlert(message, type = 'error') {
   const alertContainer = document.getElementById('alert-container');
@@ -1903,7 +1869,6 @@ function showAlert(message, type = 'error') {
     alertContainer.innerHTML = '';
   }, 5000);
 }
-
 // Validate Signup Form
 function validateSignupForm() {
   let isValid = true;
@@ -1969,7 +1934,6 @@ function validateSignupForm() {
   
   return isValid;
 }
-
 // Signup Handler - FIXED FIELD REFERENCES
 async function handleSignup(e) {
   e.preventDefault();
@@ -2055,7 +2019,6 @@ async function handleSignup(e) {
     }
   }
 }
-
 // Validate Login Form
 function validateLoginForm() {
   let isValid = true;
@@ -2083,7 +2046,6 @@ function validateLoginForm() {
   
   return isValid;
 }
-
 // Login Handler
 async function handleLogin(e) {
   e.preventDefault();
@@ -2163,7 +2125,6 @@ async function handleLogin(e) {
     }
   }
 }
-
 // Forgot Password Handler
 async function handleForgotPassword(e) {
   e.preventDefault();
@@ -2222,7 +2183,6 @@ async function handleForgotPassword(e) {
     }
   }
 }
-
 // Reset Password Handler
 async function handleResetPassword(e) {
   e.preventDefault();
@@ -2289,7 +2249,6 @@ async function handleResetPassword(e) {
     }
   }
 }
-
 // Update Profile Handler
 async function handleUpdateProfile(e) {
   e.preventDefault();
@@ -2361,7 +2320,6 @@ async function handleUpdateProfile(e) {
     }
   }
 }
-
 // Change Password Handler
 async function handleChangePassword(e) {
   e.preventDefault();
@@ -2437,7 +2395,6 @@ async function handleChangePassword(e) {
     }
   }
 }
-
 // Service Form Handler (Airtime, Data, Electricity, TV) - UPDATED TO REMOVE PAYSTACK
 async function handleServiceForm(e, serviceType) {
   e.preventDefault();
@@ -2624,7 +2581,6 @@ async function handleServiceForm(e, serviceType) {
     }
   }
 }
-
 // Password Strength Meter
 function setupPasswordStrength() {
   const passwordInput = document.getElementById('password');
@@ -2662,17 +2618,14 @@ function setupPasswordStrength() {
     });
   }
 }
-
 // Initialize password strength meter if on signup page
 if (document.getElementById('signupForm')) {
   setupPasswordStrength();
 }
-
 // Load notifications if on dashboard
 if (document.querySelector('.notification-badge')) {
   loadNotifications();
 }
-
 // Utility function to format currency
 function formatCurrency(amount) {
   return new Intl.NumberFormat('en-NG', {
@@ -2681,13 +2634,11 @@ function formatCurrency(amount) {
     minimumFractionDigits: 2
   }).format(amount);
 }
-
 // Utility function to format date
 function formatDate(dateString) {
   const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
   return new Date(dateString).toLocaleDateString('en-NG', options);
 }
-
 // Logout function
 function logout() {
   localStorage.removeItem('accessToken');
@@ -2695,7 +2646,6 @@ function logout() {
   localStorage.removeItem('user');
   window.location.href = 'index.html';
 }
-
 // Add logout event listener to logout button
 const logoutBtn = document.querySelector('.logout-btn');
 if (logoutBtn) {
@@ -2704,7 +2654,6 @@ if (logoutBtn) {
     logout();
   });
 }
-
 // Download statement function
 async function downloadStatement() {
   const token = localStorage.getItem('accessToken');
@@ -2769,13 +2718,11 @@ async function downloadStatement() {
     }
   }
 }
-
 // Add event listener to download statement button
 const downloadStatementBtn = document.querySelector('.wallet-buttons .btn.secondary');
 if (downloadStatementBtn) {
   downloadStatementBtn.addEventListener('click', downloadStatement);
 }
-
 // Referral program function
 function startReferring() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -2786,9 +2733,260 @@ function startReferring() {
     showAlert('Please login to access the referral program');
   }
 }
-
 // Add event listener to referral button
 const referralBtn = document.querySelector('.promo-section .btn');
 if (referralBtn) {
   referralBtn.addEventListener('click', startReferring);
+}
+
+// NEW: Setup TV Confirmation Page
+function setupTvConfirmationPage() {
+  // Get TV data from sessionStorage
+  const tvData = JSON.parse(sessionStorage.getItem('tvData') || '{}');
+  
+  if (!tvData.provider || !tvData.smartcard || !tvData.plan) {
+    showAlert('Invalid TV subscription data. Please start over.', 'error');
+    setTimeout(() => {
+      window.location.href = 'tv.html';
+    }, 2000);
+    return;
+  }
+  
+  // Display TV subscription details
+  const providerElement = document.getElementById('confirmProvider');
+  const smartcardElement = document.getElementById('confirmSmartcard');
+  const planElement = document.getElementById('confirmPlan');
+  const amountElement = document.getElementById('confirmAmount');
+  const phoneElement = document.getElementById('confirmPhone');
+  const emailElement = document.getElementById('confirmEmail');
+  const paymentMethodElement = document.getElementById('confirmPaymentMethod');
+  
+  if (providerElement) providerElement.textContent = tvData.provider;
+  if (smartcardElement) smartcardElement.textContent = tvData.smartcard;
+  if (planElement) planElement.textContent = tvData.plan;
+  if (phoneElement) phoneElement.textContent = tvData.phone;
+  if (emailElement) emailElement.textContent = tvData.email;
+  if (paymentMethodElement) paymentMethodElement.textContent = tvData.paymentMethod;
+  
+  // Get plan details for amount display
+  const planOptions = document.querySelectorAll(`#${tvData.provider}-plans .plan-option input`);
+  let planPrice = 0;
+  let planName = '';
+  
+  planOptions.forEach(option => {
+    if (option.value === tvData.plan) {
+      const planLabel = option.nextElementSibling;
+      planName = planLabel.querySelector('.plan-name').textContent;
+      planPrice = parseFloat(planLabel.querySelector('.plan-price').textContent.replace('₦', '').replace(',', ''));
+    }
+  });
+  
+  if (amountElement) amountElement.textContent = `₦${planPrice.toLocaleString()}`;
+  
+  // Setup confirm button
+  const confirmBtn = document.getElementById('confirmTvSubscription');
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', () => {
+      confirmTvSubscription(tvData, planPrice);
+    });
+  }
+  
+  // Setup cancel button
+  const cancelBtn = document.getElementById('cancelTvSubscription');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => {
+      sessionStorage.removeItem('tvData');
+      window.location.href = 'tv.html';
+    });
+  }
+}
+
+// NEW: Confirm TV Subscription
+async function confirmTvSubscription(tvData, amount) {
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    showAlert('Please login to confirm your subscription', 'error');
+    return;
+  }
+  
+  try {
+    // Show loading state
+    const confirmBtn = document.getElementById('confirmTvSubscription');
+    const originalText = confirmBtn.textContent;
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Processing...';
+    
+    // API call
+    console.log(`Confirming TV subscription to: ${API_BASE}/api/services/tv`);
+    
+    const response = await fetch(`${API_BASE}/api/services/tv`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        provider: tvData.provider,
+        smartcard: tvData.smartcard,
+        plan: tvData.plan,
+        phone: tvData.phone,
+        email: tvData.email
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('TV subscription response:', data);
+    
+    if (response.ok && data.success) {
+      // Clear session storage
+      sessionStorage.removeItem('tvData');
+      
+      // Store transaction reference
+      if (data.data.reference) {
+        sessionStorage.setItem('tvTransactionRef', data.data.reference);
+      }
+      
+      showAlert('TV subscription successful!', 'success');
+      
+      // Redirect to dashboard
+      setTimeout(() => {
+        window.location.href = 'dashboard.html';
+      }, 2000);
+    } else {
+      // Show error message
+      showAlert(data.message || 'TV subscription failed. Please try again.', 'error');
+    }
+    
+  } catch (error) {
+    console.error('TV subscription error:', error);
+    
+    // More specific error message for network issues
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      showAlert('Unable to connect to the server. Please check your internet connection.', 'error');
+    } else {
+      showAlert('TV subscription failed. Please check your connection and try again.', 'error');
+    }
+  } finally {
+    // Reset button state
+    const confirmBtn = document.getElementById('confirmTvSubscription');
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = originalText || 'Confirm Subscription';
+    }
+  }
+}
+
+// NEW: Setup Admin Dashboard
+function setupAdminDashboard() {
+  // Load admin stats
+  loadAdminStats();
+  
+  // Setup navigation to admin pages
+  const adminNavItems = document.querySelectorAll('.admin-nav-item');
+  adminNavItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const page = item.dataset.page;
+      if (page) {
+        window.location.href = `${page}.html`;
+      }
+    });
+  });
+}
+
+// NEW: Load Admin Stats
+async function loadAdminStats() {
+  const token = localStorage.getItem('accessToken');
+  if (!token) return;
+  
+  try {
+    console.log(`Loading admin stats from: ${API_BASE}/api/admin/stats`);
+    
+    const response = await fetch(`${API_BASE}/api/admin/stats`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Admin stats response:', data);
+    
+    if (data.success) {
+      // Update UI with stats
+      const totalUsersElement = document.getElementById('totalUsers');
+      const totalTransactionsElement = document.getElementById('totalTransactions');
+      const totalVolumeElement = document.getElementById('totalVolume');
+      const verificationRateElement = document.getElementById('verificationRate');
+      
+      if (totalUsersElement) totalUsersElement.textContent = data.data.totalUsers.toLocaleString();
+      if (totalTransactionsElement) totalTransactionsElement.textContent = data.data.totalTransactions.toLocaleString();
+      if (totalVolumeElement) totalVolumeElement.textContent = `₦${Number(data.data.totalVolume).toLocaleString()}`;
+      if (verificationRateElement) verificationRateElement.textContent = `${data.data.verificationRate}%`;
+    } else if (response.status === 401) {
+      // Token expired, try to refresh
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        // Retry after refresh
+        loadAdminStats();
+      } else {
+        // If refresh fails, redirect to login
+        window.location.href = 'login.html';
+      }
+    }
+  } catch (error) {
+    console.error('Error loading admin stats:', error);
+    
+    // Try fallback API if available
+    const fallbackApiBase = API_BASE.includes('localhost') 
+      ? 'https://easy-subscribe-backend.onrender.com' 
+      : 'http://localhost:5001';
+    
+    if (API_BASE !== fallbackApiBase) {
+      console.log(`Trying fallback API at: ${fallbackApiBase}/api/admin/stats`);
+      
+      try {
+        const fallbackResponse = await fetch(`${fallbackApiBase}/api/admin/stats`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (fallbackResponse.ok) {
+          const fallbackData = await fallbackResponse.json();
+          console.log('Fallback admin stats response:', fallbackData);
+          
+          if (fallbackData.success) {
+            const totalUsersElement = document.getElementById('totalUsers');
+            const totalTransactionsElement = document.getElementById('totalTransactions');
+            const totalVolumeElement = document.getElementById('totalVolume');
+            const verificationRateElement = document.getElementById('verificationRate');
+            
+            if (totalUsersElement) totalUsersElement.textContent = fallbackData.data.totalUsers.toLocaleString();
+            if (totalTransactionsElement) totalTransactionsElement.textContent = fallbackData.data.totalTransactions.toLocaleString();
+            if (totalVolumeElement) totalVolumeElement.textContent = `₦${Number(fallbackData.data.totalVolume).toLocaleString()}`;
+            if (verificationRateElement) verificationRateElement.textContent = `${fallbackData.data.verificationRate}%`;
+            
+            showAlert('Using backup server. Some features may be limited.', 'warning');
+            return;
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Fallback API also failed:', fallbackError);
+      }
+    }
+    
+    // Show error message
+    const statsContainer = document.querySelector('.admin-stats-container');
+    if (statsContainer) {
+      statsContainer.innerHTML = '<div class="error">Failed to load admin statistics</div>';
+    }
+  }
 }

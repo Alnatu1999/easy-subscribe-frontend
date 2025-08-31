@@ -272,7 +272,7 @@
             
             <div class="detail-row">
               <div class="detail-label">Payment Method:</div>
-              <div class="detail-value" id="receiptPayment">-</div>
+              <div class="detail-value" id="receiptPaymentMethod">-</div>
             </div>
             
             <div class="detail-row">
@@ -347,6 +347,9 @@
     </div>
   </footer>
   
+  <!-- Alert container for notifications -->
+  <div id="alert-container"></div>
+  
   <!-- Load main.js for all functionality -->
   <script src="main.js"></script>
   
@@ -383,7 +386,10 @@
       
       if (!reference) {
         // Redirect back to TV page if no reference
-        window.location.href = 'tv.html';
+        showAlert('No transaction reference found. Redirecting to TV page...', 'error');
+        setTimeout(() => {
+          window.location.href = 'tv.html';
+        }, 2000);
         return;
       }
       
@@ -397,7 +403,7 @@
         
         const token = localStorage.getItem('accessToken');
         if (!token) {
-          showAlert('Please login to view receipt');
+          showAlert('Please login to view receipt', 'error');
           window.location.href = 'login.html';
           return;
         }
@@ -412,31 +418,38 @@
         
         if (data.success) {
           // Store transaction data in sessionStorage
-          sessionStorage.setItem('tvTransaction', JSON.stringify(data.data));
+          sessionStorage.setItem('tvTransaction', JSON.stringify(data.data.transaction));
           
           // Populate receipt details
-          populateReceiptDetails(data.data);
+          populateReceiptDetails(data.data.transaction);
         } else {
           // Handle error
-          showAlert('Failed to load transaction details: ' + (data.message || 'Unknown error'));
-          window.location.href = 'tv.html';
+          showAlert('Failed to load transaction details: ' + (data.message || 'Unknown error'), 'error');
+          setTimeout(() => {
+            window.location.href = 'tv.html';
+          }, 2000);
         }
       } catch (error) {
         console.error('Error fetching transaction details:', error);
-        showAlert('Failed to load transaction details. Please check your connection.');
-        window.location.href = 'tv.html';
+        showAlert('Failed to load transaction details. Please check your connection.', 'error');
+        setTimeout(() => {
+          window.location.href = 'tv.html';
+        }, 2000);
       }
     }
     
     // Populate receipt details with transaction data
     function populateReceiptDetails(transactionData) {
+      // Get TV data from sessionStorage for additional details
+      const tvData = JSON.parse(sessionStorage.getItem('tvData') || '{}');
+      
       // Populate basic details
       document.getElementById('receiptReference').textContent = transactionData.reference || '-';
-      document.getElementById('receiptProvider').textContent = transactionData.provider ? transactionData.provider.toUpperCase() : '-';
-      document.getElementById('receiptSmartcard').textContent = transactionData.smartcard || '-';
-      document.getElementById('receiptPlan').textContent = transactionData.planName || transactionData.package_bouquet || '-';
+      document.getElementById('receiptProvider').textContent = (transactionData.metadata?.provider || tvData.provider || '-').toUpperCase();
+      document.getElementById('receiptSmartcard').textContent = transactionData.metadata?.smartcard || tvData.smartcard || '-';
+      document.getElementById('receiptPlan').textContent = transactionData.metadata?.planName || tvData.planName || transactionData.metadata?.plan || '-';
       document.getElementById('receiptAmount').textContent = transactionData.amount ? `₦${Number(transactionData.amount).toLocaleString()}` : '-';
-      document.getElementById('receiptPayment').textContent = transactionData.paymentMethod || 'Wallet Balance';
+      document.getElementById('receiptPaymentMethod').textContent = transactionData.metadata?.paymentMethod || tvData.paymentMethod || 'Wallet Balance';
       document.getElementById('receiptStatusText').textContent = transactionData.status || 'Success';
       document.getElementById('receiptTotal').textContent = transactionData.amount ? `₦${Number(transactionData.amount).toLocaleString()}` : '-';
       
@@ -470,6 +483,7 @@
           statusElement.className = 'receipt-status pending';
           statusTextElement.innerHTML = '<span style="color: #ffc107; font-weight: bold;">Pending</span>';
           break;
+        case 'successful':
         case 'success':
         default:
           statusElement.innerHTML = '<i class="fas fa-check-circle"></i><h2>Subscription Successful</h2>';
@@ -494,6 +508,7 @@
           // Clear sessionStorage and go to TV page
           sessionStorage.removeItem('tvData');
           sessionStorage.removeItem('tvTransaction');
+          sessionStorage.removeItem('tvTransactionRef');
           window.location.href = 'tv.html';
         });
       }

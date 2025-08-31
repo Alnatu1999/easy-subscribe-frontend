@@ -171,106 +171,106 @@
   
   <!-- Page-specific JavaScript -->
   <script>
-    // API Configuration
-    const API_BASE = window.location.hostname === 'localhost' 
-      ? 'http://localhost:5001'
-      : 'https://easy-subscribe-backend.onrender.com';
-    
     document.addEventListener('DOMContentLoaded', function() {
-      // Get transaction reference from sessionStorage
-      const transactionRef = sessionStorage.getItem('tvTransactionRef');
+      // Get TV data from sessionStorage
+      const tvData = JSON.parse(sessionStorage.getItem('tvData') || '{}');
       
-      // If no transaction reference found, redirect to TV page
-      if (!transactionRef) {
+      // If no TV data found, redirect to TV page
+      if (!tvData.provider) {
         window.location.href = 'tv.html';
         return;
       }
       
-      // Load transaction details
-      loadTransactionDetails(transactionRef);
+      // Display the TV data on the confirmation page
+      document.getElementById('receipt-provider').textContent = tvData.provider.toUpperCase();
+      document.getElementById('receipt-smartcard').textContent = tvData.smartcard;
+      document.getElementById('receipt-phone').textContent = tvData.phone || 'Not provided';
+      document.getElementById('receipt-email').textContent = tvData.email || 'Not provided';
+      document.getElementById('transaction-date').textContent = formatDate(new Date());
+      
+      // Load plan details
+      loadPlanDetails(tvData.provider, tvData.plan);
       
       // Set up button event listeners
       document.getElementById('new-subscription-btn').addEventListener('click', function() {
         // Clear sessionStorage
-        sessionStorage.removeItem('tvTransactionRef');
+        sessionStorage.removeItem('tvData');
         window.location.href = 'tv.html';
       });
       
       document.getElementById('dashboard-btn').addEventListener('click', function() {
         // Clear sessionStorage
-        sessionStorage.removeItem('tvTransactionRef');
+        sessionStorage.removeItem('tvData');
         window.location.href = 'dashboard.html';
       });
+      
+      // Process the TV subscription
+      processTvSubscription(tvData);
     });
     
-    // Load transaction details
-    async function loadTransactionDetails(reference) {
+    // Process TV subscription
+    async function processTvSubscription(tvData) {
       try {
-        const response = await fetch(`${API_BASE}/api/transactions/${reference}`, {
-          headers: {
+        // Show loading state
+        document.getElementById('transaction-reference').textContent = 'Processing...';
+        
+        // Get API_BASE from global scope (defined in main.js)
+        const API_BASE = window.API_BASE;
+        
+        // Process the subscription
+        const response = await fetch(`${API_BASE}/api/services/tv`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-          }
+          },
+          body: JSON.stringify(tvData)
         });
         
-        if (response.ok) {
-          const data = await response.json();
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+          // Update transaction status
+          const statusElement = document.getElementById('transaction-status');
+          statusElement.innerHTML = `<span class="status-badge successful">Successful</span>`;
           
-          if (data.success) {
-            const transaction = data.data.transaction;
-            
-            // Update transaction status
-            const statusElement = document.getElementById('transaction-status');
-            statusElement.innerHTML = `<span class="status-badge ${transaction.status}">${transaction.status}</span>`;
-            
-            // Update transaction reference
-            document.getElementById('transaction-reference').textContent = transaction.reference;
-            
-            // Update transaction date
-            document.getElementById('transaction-date').textContent = formatDate(transaction.createdAt);
-            
-            // Update provider
-            document.getElementById('receipt-provider').textContent = transaction.metadata.provider.toUpperCase();
-            
-            // Update smartcard
-            document.getElementById('receipt-smartcard').textContent = transaction.metadata.smartcard;
-            
-            // Update phone
-            document.getElementById('receipt-phone').textContent = transaction.metadata.phone || 'Not provided';
-            
-            // Update email
-            document.getElementById('receipt-email').textContent = transaction.metadata.email || 'Not provided';
-            
-            // Update amount
-            document.getElementById('receipt-amount').textContent = `₦${Number(transaction.amount).toLocaleString()}`;
-            
-            // Load plan details
-            loadPlanDetails(transaction.metadata.provider, transaction.metadata.plan);
-            
-            // If transaction is still processing, check status periodically
-            if (transaction.status === 'processing' || transaction.status === 'pending') {
-              checkTransactionStatus(reference);
-            }
-          }
-        } else if (response.status === 401) {
-          // Token expired, try to refresh
-          const refreshSuccess = await refreshToken();
-          if (refreshSuccess) {
-            // Retry after refresh
-            loadTransactionDetails(reference);
-          } else {
-            // If refresh fails, redirect to login
-            window.location.href = 'login.html';
-          }
+          // Update transaction reference
+          document.getElementById('transaction-reference').textContent = data.data.reference;
+          
+          // Update amount
+          document.getElementById('receipt-amount').textContent = `₦${Number(data.data.amount).toLocaleString()}`;
+          
+          // Store transaction reference
+          sessionStorage.setItem('tvTransactionRef', data.data.reference);
+          
+          // Show success message
+          showAlert('Your TV subscription has been processed successfully!', 'success');
+        } else {
+          // Update transaction status
+          const statusElement = document.getElementById('transaction-status');
+          statusElement.innerHTML = `<span class="status-badge failed">Failed</span>`;
+          
+          // Show error message
+          showAlert(data.message || 'Failed to process TV subscription. Please try again.', 'error');
         }
       } catch (error) {
-        console.error('Error loading transaction details:', error);
-        showAlert('Failed to load transaction details. Please try again later.', 'error');
+        console.error('Error processing TV subscription:', error);
+        
+        // Update transaction status
+        const statusElement = document.getElementById('transaction-status');
+        statusElement.innerHTML = `<span class="status-badge failed">Failed</span>`;
+        
+        // Show error message
+        showAlert('Failed to process TV subscription. Please check your connection and try again.', 'error');
       }
     }
     
     // Load plan details
     async function loadPlanDetails(provider, planId) {
       try {
+        // Get API_BASE from global scope (defined in main.js)
+        const API_BASE = window.API_BASE;
+        
         const response = await fetch(`${API_BASE}/api/services/tv-variations?provider=${provider}`);
         const data = await response.json();
         
@@ -278,6 +278,7 @@
           const plan = data.data.find(p => p.variation_id == planId);
           if (plan) {
             document.getElementById('receipt-plan').textContent = plan.package_bouquet;
+            document.getElementById('receipt-amount').textContent = `₦${Number(plan.price).toLocaleString()}`;
           }
         }
       } catch (error) {
@@ -285,61 +286,10 @@
       }
     }
     
-    // Check transaction status periodically
-    async function checkTransactionStatus(reference) {
-      const maxAttempts = 10;
-      let attempts = 0;
-      
-      const checkStatus = async () => {
-        if (attempts >= maxAttempts) return;
-        
-        try {
-          const response = await fetch(`${API_BASE}/api/transactions/${reference}`, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-            }
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            
-            if (data.success) {
-              const transaction = data.data.transaction;
-              
-              // Update status if changed
-              if (transaction.status !== 'processing' && transaction.status !== 'pending') {
-                const statusElement = document.getElementById('transaction-status');
-                statusElement.innerHTML = `<span class="status-badge ${transaction.status}">${transaction.status}</span>`;
-                
-                // Show notification based on status
-                if (transaction.status === 'successful') {
-                  showAlert('Your TV subscription has been activated successfully!', 'success');
-                } else if (transaction.status === 'failed') {
-                  showAlert('Your TV subscription could not be processed. Please try again.', 'error');
-                }
-                
-                return; // Stop checking if status changed
-              }
-            }
-          }
-          
-          attempts++;
-          setTimeout(checkStatus, 5000); // Check again after 5 seconds
-        } catch (error) {
-          console.error('Error checking transaction status:', error);
-          attempts++;
-          setTimeout(checkStatus, 5000);
-        }
-      };
-      
-      // Start checking
-      checkStatus();
-    }
-    
     // Utility function to format date
-    function formatDate(dateString) {
+    function formatDate(date) {
       const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-      return new Date(dateString).toLocaleDateString('en-NG', options);
+      return new Date(date).toLocaleDateString('en-NG', options);
     }
     
     // Show alert function
@@ -371,46 +321,6 @@
       setTimeout(() => {
         alertContainerEl.innerHTML = '';
       }, 5000);
-    }
-    
-    // Refresh token function
-    async function refreshToken() {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) {
-        logout();
-        return false;
-      }
-      
-      try {
-        const response = await fetch(`${API_BASE}/api/auth/refresh-token`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refreshToken })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-          localStorage.setItem('accessToken', data.data.accessToken);
-          return true;
-        } else {
-          // Refresh token failed, logout user
-          logout();
-          return false;
-        }
-      } catch (error) {
-        console.error('Error refreshing token:', error);
-        logout();
-        return false;
-      }
-    }
-    
-    // Logout function
-    function logout() {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      window.location.href = 'index.html';
     }
   </script>
 </body>

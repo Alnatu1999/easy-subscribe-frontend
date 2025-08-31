@@ -2,25 +2,33 @@
 // API Configuration - UPDATED FOR PRODUCTION
 // Check if API_BASE is already defined to prevent redeclaration errors
 if (typeof window.API_BASE === 'undefined') {
-  window.API_BASE = window.location.hostname === 'localhost' 
-    ? 'http://localhost:5001'  // Changed from 5000 to 5001 to match server
-    : 'https://easy-subscribe-backend.onrender.com'; // Updated with actual backend URL
+  // Try to detect if we're in development or production
+  const isLocalhost = window.location.hostname === 'localhost' || 
+                     window.location.hostname === '127.0.0.1';
+  
+  window.API_BASE = isLocalhost 
+    ? 'http://localhost:5001'  // Local development server
+    : 'https://easy-subscribe-backend.onrender.com'; // Production server
 }
 // Use a local reference to API_BASE
 const API_BASE = window.API_BASE;
+
 // DOM Elements
 const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
 const desktopNav = document.querySelector('.desktop-nav');
 const menuToggle = document.querySelector('.menu-toggle');
 const sidebar = document.querySelector('.sidebar');
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
   initializeApp();
   checkServerConnection();
 });
-// Check server connection
+
+// Check server connection with fallback
 async function checkServerConnection() {
   try {
+    console.log(`Checking server connection at: ${API_BASE}/health`);
     const response = await fetch(`${API_BASE}/health`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
@@ -30,15 +38,50 @@ async function checkServerConnection() {
       console.log('Server is running and accessible');
     } else {
       console.error('Server responded with status:', response.status);
+      // Try fallback server if available
+      tryFallbackServer();
     }
   } catch (error) {
     console.error('Cannot connect to server:', error.message);
-    // Show a user-friendly message if on a page that requires server connection
-    if (document.querySelector('.auth-page') || document.querySelector('.dashboard-page')) {
-      showAlert('Unable to connect to the server. Please make sure the server is running.', 'error');
-    }
+    // Try fallback server if available
+    tryFallbackServer();
   }
 }
+
+// Try fallback server
+function tryFallbackServer() {
+  const currentApiBase = API_BASE;
+  const fallbackApiBase = currentApiBase.includes('localhost') 
+    ? 'https://easy-subscribe-backend.onrender.com' 
+    : 'http://localhost:5001';
+  
+  if (currentApiBase !== fallbackApiBase) {
+    console.log(`Trying fallback server at: ${fallbackApiBase}/health`);
+    
+    fetch(`${fallbackApiBase}/health`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => {
+      if (response.ok) {
+        console.log('Fallback server is accessible');
+        // Update API_BASE to use fallback
+        window.API_BASE = fallbackApiBase;
+        showAlert('Using backup server. Some features may be limited.', 'warning');
+      } else {
+        console.error('Fallback server responded with status:', response.status);
+        showAlert('Unable to connect to the server. Please check your internet connection.', 'error');
+      }
+    })
+    .catch(error => {
+      console.error('Cannot connect to fallback server:', error.message);
+      showAlert('Unable to connect to the server. Please check your internet connection.', 'error');
+    });
+  } else {
+    showAlert('Unable to connect to the server. Please check your internet connection.', 'error');
+  }
+}
+
 function initializeApp() {
   setupMobileMenu();
   setupSidebarToggle();
@@ -62,6 +105,7 @@ function initializeApp() {
   setupWalletFunding(); // NEW: Setup wallet funding
   setupSmartcardValidation(); // NEW: Setup smartcard validation
 }
+
 // Mobile Menu Toggle
 function setupMobileMenu() {
   if (mobileMenuBtn && desktopNav) {
@@ -70,6 +114,7 @@ function setupMobileMenu() {
     });
   }
 }
+
 // Sidebar Toggle for Dashboard
 function setupSidebarToggle() {
   if (menuToggle && sidebar) {
@@ -78,6 +123,7 @@ function setupSidebarToggle() {
     });
   }
 }
+
 // Form Handlers
 function setupFormHandlers() {
   // Login Form
@@ -155,6 +201,7 @@ function setupFormHandlers() {
     adminFundWalletForm.addEventListener('submit', handleAdminFundWallet);
   }
 }
+
 // Password Visibility Toggle
 function setupPasswordToggles() {
   const toggleButtons = document.querySelectorAll('.toggle-password');
@@ -175,6 +222,7 @@ function setupPasswordToggles() {
     });
   });
 }
+
 // Quick Amount Buttons for Airtime
 function setupQuickAmountButtons() {
   const amountButtons = document.querySelectorAll('.amount-btn');
@@ -188,6 +236,7 @@ function setupQuickAmountButtons() {
     });
   }
 }
+
 // Plan Selection for Data
 function setupPlanSelection() {
   const planOptions = document.querySelectorAll('.plan-option input[type="radio"]');
@@ -206,6 +255,7 @@ function setupPlanSelection() {
     });
   });
 }
+
 // UPDATED: Provider Selection for TV with VTU integration
 function setupProviderSelection() {
   const tvProvider = document.getElementById('tv');
@@ -241,6 +291,7 @@ function setupProviderSelection() {
     });
   }
 }
+
 // NEW: Setup TV variations
 function setupTvVariations() {
   const tvProvider = document.getElementById('tv');
@@ -248,20 +299,34 @@ function setupTvVariations() {
     loadTvVariations();
   }
 }
-// NEW: Load TV variations from API
+
+// NEW: Load TV variations from API with better error handling
 async function loadTvVariations() {
   try {
     const provider = document.getElementById('tv')?.value;
     if (!provider) return;
     
+    console.log(`Loading TV variations for provider: ${provider} from: ${API_BASE}/api/services/tv-variations?provider=${provider}`);
+    
     const response = await fetch(`${API_BASE}/api/services/tv-variations?provider=${provider}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
+    console.log('TV variations response:', data);
     
     if (data.success) {
       // Update the UI with the variations
       const plansContainer = document.getElementById(`${provider}-plans`);
       if (plansContainer) {
         plansContainer.innerHTML = '';
+        
+        if (data.data.length === 0) {
+          plansContainer.innerHTML = '<p>No plans available for this provider</p>';
+          return;
+        }
         
         data.data.forEach(plan => {
           const planElement = document.createElement('div');
@@ -278,11 +343,76 @@ async function loadTvVariations() {
       }
     } else {
       console.error('Failed to load TV variations:', data.message);
+      const plansContainer = document.getElementById(`${provider}-plans`);
+      if (plansContainer) {
+        plansContainer.innerHTML = `
+          <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            <p>Failed to load TV variations: ${data.message || 'Unknown error'}</p>
+          </div>
+        `;
+      }
     }
   } catch (error) {
     console.error('Error loading TV variations:', error);
+    
+    // Try fallback API if available
+    const fallbackApiBase = API_BASE.includes('localhost') 
+      ? 'https://easy-subscribe-backend.onrender.com' 
+      : 'http://localhost:5001';
+    
+    if (API_BASE !== fallbackApiBase) {
+      console.log(`Trying fallback API at: ${fallbackApiBase}/api/services/tv-variations?provider=${provider}`);
+      
+      try {
+        const fallbackResponse = await fetch(`${fallbackApiBase}/api/services/tv-variations?provider=${provider}`);
+        
+        if (fallbackResponse.ok) {
+          const fallbackData = await fallbackResponse.json();
+          console.log('Fallback TV variations response:', fallbackData);
+          
+          if (fallbackData.success) {
+            const plansContainer = document.getElementById(`${provider}-plans`);
+            if (plansContainer) {
+              plansContainer.innerHTML = '';
+              
+              fallbackData.data.forEach(plan => {
+                const planElement = document.createElement('div');
+                planElement.className = 'plan-option';
+                planElement.innerHTML = `
+                  <input type="radio" id="plan-${plan.variation_id}" name="plan" value="${plan.variation_id}" required>
+                  <label for="plan-${plan.variation_id}">
+                    <div class="plan-name">${plan.package_bouquet}</div>
+                    <div class="plan-price">₦${Number(plan.price).toLocaleString()}</div>
+                  </label>
+                `;
+                plansContainer.appendChild(planElement);
+              });
+            }
+            
+            showAlert('Using backup server. Some features may be limited.', 'warning');
+            return;
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Fallback API also failed:', fallbackError);
+      }
+    }
+    
+    // If all APIs fail, show error message
+    const plansContainer = document.getElementById(`${provider}-plans`);
+    if (plansContainer) {
+      plansContainer.innerHTML = `
+        <div class="error-message">
+          <i class="fas fa-exclamation-circle"></i>
+          <p>Failed to load TV variations. Please check your connection.</p>
+          <p class="error-debug">Debug: ${error.message}</p>
+        </div>
+      `;
+    }
   }
 }
+
 // NEW: Setup Smartcard Validation
 function setupSmartcardValidation() {
   const smartcardInput = document.getElementById('smartcard');
@@ -312,6 +442,7 @@ function setupSmartcardValidation() {
     });
   }
 }
+
 // NEW: Validate smartcard format on input
 function validateSmartcardOnInput() {
   const smartcardInput = document.getElementById('smartcard');
@@ -353,6 +484,7 @@ function validateSmartcardOnInput() {
     }
   }
 }
+
 // NEW: Validate smartcard format on blur
 function validateSmartcardOnBlur() {
   const smartcardInput = document.getElementById('smartcard');
@@ -398,7 +530,8 @@ function validateSmartcardOnBlur() {
     }
   }
 }
-// NEW: Load customer details from API
+
+// NEW: Load customer details from API with better error handling
 async function loadCustomerDetails() {
   const smartcardInput = document.getElementById('smartcard');
   const tvProvider = document.getElementById('tv');
@@ -418,8 +551,16 @@ async function loadCustomerDetails() {
     
     if (validation.valid) {
       try {
+        console.log(`Loading customer details for provider: ${provider}, smartcard: ${smartcard} from: ${API_BASE}/api/services/tv-customer?provider=${provider}&smartcard=${smartcard}`);
+        
         const response = await fetch(`${API_BASE}/api/services/tv-customer?provider=${provider}&smartcard=${smartcard}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('Customer details response:', data);
         
         if (data.success) {
           // Display customer details
@@ -442,6 +583,43 @@ async function loadCustomerDetails() {
         }
       } catch (error) {
         console.error('Error loading customer details:', error);
+        
+        // Try fallback API if available
+        const fallbackApiBase = API_BASE.includes('localhost') 
+          ? 'https://easy-subscribe-backend.onrender.com' 
+          : 'http://localhost:5001';
+        
+        if (API_BASE !== fallbackApiBase) {
+          console.log(`Trying fallback API at: ${fallbackApiBase}/api/services/tv-customer?provider=${provider}&smartcard=${smartcard}`);
+          
+          try {
+            const fallbackResponse = await fetch(`${fallbackApiBase}/api/services/tv-customer?provider=${provider}&smartcard=${smartcard}`);
+            
+            if (fallbackResponse.ok) {
+              const fallbackData = await fallbackResponse.json();
+              console.log('Fallback customer details response:', fallbackData);
+              
+              if (fallbackData.success) {
+                if (customerNameElement) {
+                  customerNameElement.textContent = fallbackData.data.customerName || 'Not available';
+                }
+                if (customerPlanElement) {
+                  customerPlanElement.textContent = fallbackData.data.currentPlan || 'Not available';
+                }
+                
+                if (customerDetailsElement) {
+                  customerDetailsElement.style.display = 'block';
+                }
+                
+                showAlert('Using backup server. Some features may be limited.', 'warning');
+                return;
+              }
+            }
+          } catch (fallbackError) {
+            console.error('Fallback API also failed:', fallbackError);
+          }
+        }
+        
         // Hide customer details on error
         if (customerDetailsElement) {
           customerDetailsElement.style.display = 'none';
@@ -460,6 +638,7 @@ async function loadCustomerDetails() {
     }
   }
 }
+
 // NEW: Validate smartcard format based on provider
 function validateSmartcardFormat(smartcard, provider) {
   if (!smartcard || typeof smartcard !== 'string') {
@@ -495,6 +674,7 @@ function validateSmartcardFormat(smartcard, provider) {
   
   return { valid: true, message: 'Valid format' };
 }
+
 // FAQ Toggle
 function setupFAQToggle() {
   const faqQuestions = document.querySelectorAll('.faq-question');
@@ -510,6 +690,7 @@ function setupFAQToggle() {
     });
   });
 }
+
 // Service Navigation
 function setupServiceNavigation() {
   const viewAllButtons = document.querySelectorAll('.view-all');
@@ -522,6 +703,7 @@ function setupServiceNavigation() {
     });
   });
 }
+
 // Notification Bell
 function setupNotificationBell() {
   const notificationBell = document.querySelector('.notification-bell');
@@ -531,6 +713,7 @@ function setupNotificationBell() {
     });
   }
 }
+
 // Profile Management
 function setupProfileManagement() {
   const editProfileBtn = document.querySelector('.edit-profile-btn');
@@ -540,6 +723,7 @@ function setupProfileManagement() {
     });
   }
 }
+
 // Password Reset
 function setupPasswordReset() {
   const forgotPasswordLink = document.querySelector('.forgot-password');
@@ -550,6 +734,7 @@ function setupPasswordReset() {
     });
   }
 }
+
 // Modals Setup
 function setupModals() {
   // Close modal when clicking on close button
@@ -570,6 +755,7 @@ function setupModals() {
     }
   });
 }
+
 // Transactions Page Setup
 function setupTransactionsPage() {
   if (!document.querySelector('.transactions-page')) return;
@@ -590,6 +776,7 @@ function setupTransactionsPage() {
     });
   });
 }
+
 // Notifications Page Setup
 function setupNotificationsPage() {
   if (!document.querySelector('.notifications-page')) return;
@@ -602,6 +789,7 @@ function setupNotificationsPage() {
     markAllReadBtn.addEventListener('click', markAllNotificationsAsRead);
   }
 }
+
 // NEW: Wallet Funding Setup
 function setupWalletFunding() {
   // Setup fund wallet button
@@ -629,6 +817,7 @@ function setupWalletFunding() {
     setupUserSearch();
   }
 }
+
 // Authentication Check
 function checkAuthentication() {
   const token = localStorage.getItem('accessToken');
@@ -643,6 +832,7 @@ function checkAuthentication() {
     window.location.href = 'login.html';
   }
 }
+
 // Load User Data
 function loadUserData() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -662,26 +852,33 @@ function loadUserData() {
     }
   });
 }
-// Load Wallet Balance
+
+// Load Wallet Balance with better error handling
 async function loadWalletBalance() {
   const token = localStorage.getItem('accessToken');
   if (!token) return;
   
   try {
+    console.log(`Loading wallet balance from: ${API_BASE}/api/wallet/balance`);
+    
     const response = await fetch(`${API_BASE}/api/wallet/balance`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
     
-    if (response.ok) {
-      const data = await response.json();
-      if (data.success) {
-        const balanceElements = document.querySelectorAll('.wallet-balance');
-        balanceElements.forEach(element => {
-          element.textContent = `₦${Number(data.data.balance).toLocaleString()}`;
-        });
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Wallet balance response:', data);
+    
+    if (data.success) {
+      const balanceElements = document.querySelectorAll('.wallet-balance');
+      balanceElements.forEach(element => {
+        element.textContent = `₦${Number(data.data.balance).toLocaleString()}`;
+      });
     } else if (response.status === 401) {
       // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
@@ -695,34 +892,81 @@ async function loadWalletBalance() {
     }
   } catch (error) {
     console.error('Error loading wallet balance:', error);
+    
+    // Try fallback API if available
+    const fallbackApiBase = API_BASE.includes('localhost') 
+      ? 'https://easy-subscribe-backend.onrender.com' 
+      : 'http://localhost:5001';
+    
+    if (API_BASE !== fallbackApiBase) {
+      console.log(`Trying fallback API at: ${fallbackApiBase}/api/wallet/balance`);
+      
+      try {
+        const fallbackResponse = await fetch(`${fallbackApiBase}/api/wallet/balance`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (fallbackResponse.ok) {
+          const fallbackData = await fallbackResponse.json();
+          console.log('Fallback wallet balance response:', fallbackData);
+          
+          if (fallbackData.success) {
+            const balanceElements = document.querySelectorAll('.wallet-balance');
+            balanceElements.forEach(element => {
+              element.textContent = `₦${Number(fallbackData.data.balance).toLocaleString()}`;
+            });
+            
+            showAlert('Using backup server. Some features may be limited.', 'warning');
+            return;
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Fallback API also failed:', fallbackError);
+      }
+    }
+    
     // Show user-friendly error message
     const balanceElements = document.querySelectorAll('.wallet-balance');
     balanceElements.forEach(element => {
       element.textContent = '₦0.00';
     });
+    
+    // Show error message if on a page that requires server connection
+    if (document.querySelector('.auth-page') || document.querySelector('.dashboard-page')) {
+      showAlert('Unable to connect to the server. Please make sure the server is running.', 'error');
+    }
   }
 }
+
 // Load Notifications
 async function loadNotifications() {
   const token = localStorage.getItem('accessToken');
   if (!token) return;
   
   try {
+    console.log(`Loading notifications from: ${API_BASE}/api/notifications?unreadOnly=true`);
+    
     const response = await fetch(`${API_BASE}/api/notifications?unreadOnly=true`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
     
-    if (response.ok) {
-      const data = await response.json();
-      if (data.success) {
-        // Update notification badge
-        const notificationBadge = document.querySelector('.notification-badge');
-        if (notificationBadge) {
-          notificationBadge.textContent = data.data.unreadCount;
-          notificationBadge.style.display = data.data.unreadCount > 0 ? 'block' : 'none';
-        }
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Notifications response:', data);
+    
+    if (data.success) {
+      // Update notification badge
+      const notificationBadge = document.querySelector('.notification-badge');
+      if (notificationBadge) {
+        notificationBadge.textContent = data.data.unreadCount;
+        notificationBadge.style.display = data.data.unreadCount > 0 ? 'block' : 'none';
       }
     } else if (response.status === 401) {
       // Token expired, try to refresh
@@ -739,6 +983,7 @@ async function loadNotifications() {
     console.error('Error loading notifications:', error);
   }
 }
+
 // Load Notifications List
 async function loadNotificationsList() {
   const token = localStorage.getItem('accessToken');
@@ -748,47 +993,53 @@ async function loadNotificationsList() {
   if (!notificationsContainer) return;
   
   try {
+    console.log(`Loading notifications list from: ${API_BASE}/api/notifications`);
+    
     const response = await fetch(`${API_BASE}/api/notifications`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
     
-    if (response.ok) {
-      const data = await response.json();
-      if (data.success) {
-        // Clear existing notifications
-        notificationsContainer.innerHTML = '';
-        
-        if (data.data.notifications.length === 0) {
-          notificationsContainer.innerHTML = '<div class="no-notifications">No notifications found</div>';
-          return;
-        }
-        
-        // Add notifications to the list
-        data.data.notifications.forEach(notification => {
-          const notificationElement = document.createElement('div');
-          notificationElement.className = `notification-item ${notification.isRead ? 'read' : 'unread'}`;
-          notificationElement.innerHTML = `
-            <div class="notification-header">
-              <h3>${notification.title}</h3>
-              <span class="notification-date">${formatDate(notification.createdAt)}</span>
-            </div>
-            <p>${notification.message}</p>
-            ${!notification.isRead ? `<button class="btn btn-sm mark-read" data-id="${notification._id}">Mark as Read</button>` : ''}
-          `;
-          
-          notificationsContainer.appendChild(notificationElement);
-        });
-        
-        // Add event listeners to mark as read buttons
-        const markReadButtons = notificationsContainer.querySelectorAll('.mark-read');
-        markReadButtons.forEach(button => {
-          button.addEventListener('click', () => {
-            markNotificationAsRead(button.dataset.id);
-          });
-        });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Notifications list response:', data);
+    
+    if (data.success) {
+      // Clear existing notifications
+      notificationsContainer.innerHTML = '';
+      
+      if (data.data.notifications.length === 0) {
+        notificationsContainer.innerHTML = '<div class="no-notifications">No notifications found</div>';
+        return;
       }
+      
+      // Add notifications to the list
+      data.data.notifications.forEach(notification => {
+        const notificationElement = document.createElement('div');
+        notificationElement.className = `notification-item ${notification.isRead ? 'read' : 'unread'}`;
+        notificationElement.innerHTML = `
+          <div class="notification-header">
+            <h3>${notification.title}</h3>
+            <span class="notification-date">${formatDate(notification.createdAt)}</span>
+          </div>
+          <p>${notification.message}</p>
+          ${!notification.isRead ? `<button class="btn btn-sm mark-read" data-id="${notification._id}">Mark as Read</button>` : ''}
+        `;
+        
+        notificationsContainer.appendChild(notificationElement);
+      });
+      
+      // Add event listeners to mark as read buttons
+      const markReadButtons = notificationsContainer.querySelectorAll('.mark-read');
+      markReadButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          markNotificationAsRead(button.dataset.id);
+        });
+      });
     } else if (response.status === 401) {
       // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
@@ -805,18 +1056,25 @@ async function loadNotificationsList() {
     notificationsContainer.innerHTML = '<div class="error">Failed to load notifications</div>';
   }
 }
+
 // Mark Notification as Read
 async function markNotificationAsRead(notificationId) {
   const token = localStorage.getItem('accessToken');
   if (!token) return;
   
   try {
+    console.log(`Marking notification as read: ${notificationId} from: ${API_BASE}/api/notifications/${notificationId}/read`);
+    
     const response = await fetch(`${API_BASE}/api/notifications/${notificationId}/read`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     
     if (response.ok) {
       // Reload notifications list
@@ -839,18 +1097,25 @@ async function markNotificationAsRead(notificationId) {
     showAlert('Failed to mark notification as read');
   }
 }
+
 // Mark All Notifications as Read
 async function markAllNotificationsAsRead() {
   const token = localStorage.getItem('accessToken');
   if (!token) return;
   
   try {
+    console.log(`Marking all notifications as read from: ${API_BASE}/api/notifications/read-all`);
+    
     const response = await fetch(`${API_BASE}/api/notifications/read-all`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     
     if (response.ok) {
       // Reload notifications list
@@ -874,6 +1139,7 @@ async function markAllNotificationsAsRead() {
     showAlert('Failed to mark notifications as read');
   }
 }
+
 // Load Transactions
 async function loadTransactions(type = '') {
   const token = localStorage.getItem('accessToken');
@@ -888,56 +1154,62 @@ async function loadTransactions(type = '') {
       url += `?type=${type}`;
     }
     
+    console.log(`Loading transactions from: ${url}`);
+    
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
     
-    if (response.ok) {
-      const data = await response.json();
-      if (data.success) {
-        // Clear existing transactions
-        transactionsContainer.innerHTML = '';
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Transactions response:', data);
+    
+    if (data.success) {
+      // Clear existing transactions
+      transactionsContainer.innerHTML = '';
+      
+      if (data.data.transactions.length === 0) {
+        transactionsContainer.innerHTML = '<div class="no-transactions">No transactions found</div>';
+        return;
+      }
+      
+      // Add transactions to the list
+      data.data.transactions.forEach(transaction => {
+        const transactionElement = document.createElement('div');
+        transactionElement.className = `transaction-item ${transaction.status}`;
         
-        if (data.data.transactions.length === 0) {
-          transactionsContainer.innerHTML = '<div class="no-transactions">No transactions found</div>';
-          return;
-        }
+        // Add funding-specific display
+        let transactionInfo = `
+          <div class="transaction-info">
+            <div class="transaction-type">${transaction.type}</div>
+            <div class="transaction-reference">${transaction.reference}</div>
+            <div class="transaction-date">${formatDate(transaction.createdAt)}</div>
+          </div>
+          <div class="transaction-amount ${transaction.type === 'funding' ? 'positive' : ''}">₦${Number(transaction.amount).toLocaleString()}</div>
+          <div class="transaction-status ${transaction.status}">${transaction.status}</div>
+        `;
         
-        // Add transactions to the list
-        data.data.transactions.forEach(transaction => {
-          const transactionElement = document.createElement('div');
-          transactionElement.className = `transaction-item ${transaction.status}`;
-          
-          // Add funding-specific display
-          let transactionInfo = `
+        // Add payment method for funding transactions
+        if (transaction.type === 'funding' && transaction.metadata && transaction.metadata.paymentMethod) {
+          transactionInfo = `
             <div class="transaction-info">
-              <div class="transaction-type">${transaction.type}</div>
+              <div class="transaction-type">${transaction.type} (${transaction.metadata.paymentMethod})</div>
               <div class="transaction-reference">${transaction.reference}</div>
               <div class="transaction-date">${formatDate(transaction.createdAt)}</div>
             </div>
-            <div class="transaction-amount ${transaction.type === 'funding' ? 'positive' : ''}">₦${Number(transaction.amount).toLocaleString()}</div>
+            <div class="transaction-amount positive">₦${Number(transaction.amount).toLocaleString()}</div>
             <div class="transaction-status ${transaction.status}">${transaction.status}</div>
           `;
-          
-          // Add payment method for funding transactions
-          if (transaction.type === 'funding' && transaction.metadata && transaction.metadata.paymentMethod) {
-            transactionInfo = `
-              <div class="transaction-info">
-                <div class="transaction-type">${transaction.type} (${transaction.metadata.paymentMethod})</div>
-                <div class="transaction-reference">${transaction.reference}</div>
-                <div class="transaction-date">${formatDate(transaction.createdAt)}</div>
-              </div>
-              <div class="transaction-amount positive">₦${Number(transaction.amount).toLocaleString()}</div>
-              <div class="transaction-status ${transaction.status}">${transaction.status}</div>
-            `;
-          }
-          
-          transactionElement.innerHTML = transactionInfo;
-          transactionsContainer.appendChild(transactionElement);
-        });
-      }
+        }
+        
+        transactionElement.innerHTML = transactionInfo;
+        transactionsContainer.appendChild(transactionElement);
+      });
     } else if (response.status === 401) {
       // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
@@ -954,6 +1226,7 @@ async function loadTransactions(type = '') {
     transactionsContainer.innerHTML = '<div class="error">Failed to load transactions</div>';
   }
 }
+
 // NEW: Load User Funding Requests
 async function loadFundRequests(status = '') {
   const token = localStorage.getItem('accessToken');
@@ -968,40 +1241,46 @@ async function loadFundRequests(status = '') {
       url += `?status=${status}`;
     }
     
+    console.log(`Loading fund requests from: ${url}`);
+    
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
     
-    if (response.ok) {
-      const data = await response.json();
-      if (data.success) {
-        // Clear existing fund requests
-        fundRequestsContainer.innerHTML = '';
-        
-        if (data.data.transactions.length === 0) {
-          fundRequestsContainer.innerHTML = '<div class="no-fund-requests">No funding requests found</div>';
-          return;
-        }
-        
-        // Add fund requests to the list
-        data.data.transactions.forEach(transaction => {
-          const requestElement = document.createElement('div');
-          requestElement.className = `fund-request-item ${transaction.status}`;
-          requestElement.innerHTML = `
-            <div class="fund-request-info">
-              <div class="fund-request-amount">₦${Number(transaction.amount).toLocaleString()}</div>
-              <div class="fund-request-method">${transaction.metadata.paymentMethod}</div>
-              <div class="fund-request-reference">${transaction.reference}</div>
-              <div class="fund-request-date">${formatDate(transaction.createdAt)}</div>
-            </div>
-            <div class="fund-request-status ${transaction.status}">${transaction.status}</div>
-          `;
-          
-          fundRequestsContainer.appendChild(requestElement);
-        });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Fund requests response:', data);
+    
+    if (data.success) {
+      // Clear existing fund requests
+      fundRequestsContainer.innerHTML = '';
+      
+      if (data.data.transactions.length === 0) {
+        fundRequestsContainer.innerHTML = '<div class="no-fund-requests">No funding requests found</div>';
+        return;
       }
+      
+      // Add fund requests to the list
+      data.data.transactions.forEach(transaction => {
+        const requestElement = document.createElement('div');
+        requestElement.className = `fund-request-item ${transaction.status}`;
+        requestElement.innerHTML = `
+          <div class="fund-request-info">
+            <div class="fund-request-amount">₦${Number(transaction.amount).toLocaleString()}</div>
+            <div class="fund-request-method">${transaction.metadata.paymentMethod}</div>
+            <div class="fund-request-reference">${transaction.reference}</div>
+            <div class="fund-request-date">${formatDate(transaction.createdAt)}</div>
+          </div>
+          <div class="fund-request-status ${transaction.status}">${transaction.status}</div>
+        `;
+        
+        fundRequestsContainer.appendChild(requestElement);
+      });
     } else if (response.status === 401) {
       // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
@@ -1018,6 +1297,7 @@ async function loadFundRequests(status = '') {
     fundRequestsContainer.innerHTML = '<div class="error">Failed to load funding requests</div>';
   }
 }
+
 // NEW: Load Admin Funding Requests
 async function loadAdminFundRequests(status = '') {
   const token = localStorage.getItem('accessToken');
@@ -1032,67 +1312,73 @@ async function loadAdminFundRequests(status = '') {
       url += `?status=${status}`;
     }
     
+    console.log(`Loading admin fund requests from: ${url}`);
+    
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
     
-    if (response.ok) {
-      const data = await response.json();
-      if (data.success) {
-        // Clear existing fund requests
-        adminFundRequestsContainer.innerHTML = '';
-        
-        if (data.data.transactions.length === 0) {
-          adminFundRequestsContainer.innerHTML = '<div class="no-fund-requests">No funding requests found</div>';
-          return;
-        }
-        
-        // Add fund requests to the list
-        data.data.transactions.forEach(transaction => {
-          const requestElement = document.createElement('div');
-          requestElement.className = `admin-fund-request-item ${transaction.status}`;
-          
-          // Get user info
-          const userName = transaction.userId ? transaction.userId.name : 'Unknown';
-          const userEmail = transaction.userId ? transaction.userId.email : 'Unknown';
-          
-          requestElement.innerHTML = `
-            <div class="admin-fund-request-info">
-              <div class="admin-fund-request-user">${userName} (${userEmail})</div>
-              <div class="admin-fund-request-amount">₦${Number(transaction.amount).toLocaleString()}</div>
-              <div class="admin-fund-request-method">${transaction.metadata.paymentMethod}</div>
-              <div class="admin-fund-request-reference">${transaction.reference}</div>
-              <div class="admin-fund-request-date">${formatDate(transaction.createdAt)}</div>
-            </div>
-            <div class="admin-fund-request-actions">
-              <div class="admin-fund-request-status ${transaction.status}">${transaction.status}</div>
-              ${transaction.status === 'pending' ? `
-                <button class="btn btn-sm approve-btn" data-id="${transaction._id}">Approve</button>
-                <button class="btn btn-sm reject-btn" data-id="${transaction._id}">Reject</button>
-              ` : ''}
-            </div>
-          `;
-          
-          adminFundRequestsContainer.appendChild(requestElement);
-        });
-        
-        // Add event listeners to approve/reject buttons
-        const approveButtons = adminFundRequestsContainer.querySelectorAll('.approve-btn');
-        approveButtons.forEach(button => {
-          button.addEventListener('click', () => {
-            approveFundRequest(button.dataset.id);
-          });
-        });
-        
-        const rejectButtons = adminFundRequestsContainer.querySelectorAll('.reject-btn');
-        rejectButtons.forEach(button => {
-          button.addEventListener('click', () => {
-            rejectFundRequest(button.dataset.id);
-          });
-        });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Admin fund requests response:', data);
+    
+    if (data.success) {
+      // Clear existing fund requests
+      adminFundRequestsContainer.innerHTML = '';
+      
+      if (data.data.transactions.length === 0) {
+        adminFundRequestsContainer.innerHTML = '<div class="no-fund-requests">No funding requests found</div>';
+        return;
       }
+      
+      // Add fund requests to the list
+      data.data.transactions.forEach(transaction => {
+        const requestElement = document.createElement('div');
+        requestElement.className = `admin-fund-request-item ${transaction.status}`;
+        
+        // Get user info
+        const userName = transaction.userId ? transaction.userId.name : 'Unknown';
+        const userEmail = transaction.userId ? transaction.userId.email : 'Unknown';
+        
+        requestElement.innerHTML = `
+          <div class="admin-fund-request-info">
+            <div class="admin-fund-request-user">${userName} (${userEmail})</div>
+            <div class="admin-fund-request-amount">₦${Number(transaction.amount).toLocaleString()}</div>
+            <div class="admin-fund-request-method">${transaction.metadata.paymentMethod}</div>
+            <div class="admin-fund-request-reference">${transaction.reference}</div>
+            <div class="admin-fund-request-date">${formatDate(transaction.createdAt)}</div>
+          </div>
+          <div class="admin-fund-request-actions">
+            <div class="admin-fund-request-status ${transaction.status}">${transaction.status}</div>
+            ${transaction.status === 'pending' ? `
+              <button class="btn btn-sm approve-btn" data-id="${transaction._id}">Approve</button>
+              <button class="btn btn-sm reject-btn" data-id="${transaction._id}">Reject</button>
+            ` : ''}
+          </div>
+        `;
+        
+        adminFundRequestsContainer.appendChild(requestElement);
+      });
+      
+      // Add event listeners to approve/reject buttons
+      const approveButtons = adminFundRequestsContainer.querySelectorAll('.approve-btn');
+      approveButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          approveFundRequest(button.dataset.id);
+        });
+      });
+      
+      const rejectButtons = adminFundRequestsContainer.querySelectorAll('.reject-btn');
+      rejectButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          rejectFundRequest(button.dataset.id);
+        });
+      });
     } else if (response.status === 401) {
       // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
@@ -1109,6 +1395,7 @@ async function loadAdminFundRequests(status = '') {
     adminFundRequestsContainer.innerHTML = '<div class="error">Failed to load funding requests</div>';
   }
 }
+
 // NEW: Setup Admin Fund Request Actions
 function setupAdminFundRequestActions() {
   // Setup filter buttons
@@ -1125,6 +1412,7 @@ function setupAdminFundRequestActions() {
     });
   });
 }
+
 // NEW: Setup User Search for Admin Fund Wallet
 function setupUserSearch() {
   const userSearch = document.getElementById('userSearch');
@@ -1150,6 +1438,7 @@ function setupUserSearch() {
     });
   }
 }
+
 // NEW: Search Users for Admin Fund Wallet
 async function searchUsers(searchTerm) {
   const token = localStorage.getItem('accessToken');
@@ -1159,48 +1448,54 @@ async function searchUsers(searchTerm) {
   if (!searchResults) return;
   
   try {
+    console.log(`Searching users from: ${API_BASE}/api/admin/users?search=${searchTerm}`);
+    
     const response = await fetch(`${API_BASE}/api/admin/users?search=${searchTerm}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
     
-    if (response.ok) {
-      const data = await response.json();
-      if (data.success) {
-        // Clear previous results
-        searchResults.innerHTML = '';
-        
-        if (data.data.users.length === 0) {
-          searchResults.innerHTML = '<div class="no-users">No users found</div>';
-        } else {
-          // Add users to results
-          data.data.users.forEach(user => {
-            const userElement = document.createElement('div');
-            userElement.className = 'user-search-result';
-            userElement.innerHTML = `
-              <div class="user-info">
-                <div class="user-name">${user.name}</div>
-                <div class="user-email">${user.email}</div>
-                <div class="user-balance">Balance: ₦${Number(user.walletBalance).toLocaleString()}</div>
-              </div>
-              <button class="btn btn-sm select-user" data-id="${user._id}">Select</button>
-            `;
-            
-            searchResults.appendChild(userElement);
-          });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Search users response:', data);
+    
+    if (data.success) {
+      // Clear previous results
+      searchResults.innerHTML = '';
+      
+      if (data.data.users.length === 0) {
+        searchResults.innerHTML = '<div class="no-users">No users found</div>';
+      } else {
+        // Add users to results
+        data.data.users.forEach(user => {
+          const userElement = document.createElement('div');
+          userElement.className = 'user-search-result';
+          userElement.innerHTML = `
+            <div class="user-info">
+              <div class="user-name">${user.name}</div>
+              <div class="user-email">${user.email}</div>
+              <div class="user-balance">Balance: ₦${Number(user.walletBalance).toLocaleString()}</div>
+            </div>
+            <button class="btn btn-sm select-user" data-id="${user._id}">Select</button>
+          `;
           
-          // Add event listeners to select buttons
-          const selectButtons = searchResults.querySelectorAll('.select-user');
-          selectButtons.forEach(button => {
-            button.addEventListener('click', () => {
-              selectUserForFunding(button.dataset.id);
-            });
-          });
-        }
+          searchResults.appendChild(userElement);
+        });
         
-        searchResults.style.display = 'block';
+        // Add event listeners to select buttons
+        const selectButtons = searchResults.querySelectorAll('.select-user');
+        selectButtons.forEach(button => {
+          button.addEventListener('click', () => {
+            selectUserForFunding(button.dataset.id);
+          });
+        });
       }
+      
+      searchResults.style.display = 'block';
     } else if (response.status === 401) {
       // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
@@ -1218,6 +1513,7 @@ async function searchUsers(searchTerm) {
     searchResults.style.display = 'block';
   }
 }
+
 // NEW: Select User for Funding
 function selectUserForFunding(userId) {
   const userIdInput = document.getElementById('userId');
@@ -1242,6 +1538,7 @@ function selectUserForFunding(userId) {
     fetchUserDetails(userId);
   }
 }
+
 // NEW: Fetch User Details
 async function fetchUserDetails(userId) {
   const token = localStorage.getItem('accessToken');
@@ -1251,24 +1548,30 @@ async function fetchUserDetails(userId) {
   if (!selectedUserInfo) return;
   
   try {
+    console.log(`Fetching user details from: ${API_BASE}/api/user/profile`);
+    
     const response = await fetch(`${API_BASE}/api/user/profile`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
     
-    if (response.ok) {
-      const data = await response.json();
-      if (data.success) {
-        const user = data.data.user;
-        selectedUserInfo.innerHTML = `
-          <div class="selected-user-info">
-            <div class="user-name">${user.name}</div>
-            <div class="user-email">${user.email}</div>
-            <div class="user-balance">Current Balance: ₦${Number(user.walletBalance).toLocaleString()}</div>
-          </div>
-        `;
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('User details response:', data);
+    
+    if (data.success) {
+      const user = data.data.user;
+      selectedUserInfo.innerHTML = `
+        <div class="selected-user-info">
+          <div class="user-name">${user.name}</div>
+          <div class="user-email">${user.email}</div>
+          <div class="user-balance">Current Balance: ₦${Number(user.walletBalance).toLocaleString()}</div>
+        </div>
+      `;
     } else if (response.status === 401) {
       // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
@@ -1285,6 +1588,7 @@ async function fetchUserDetails(userId) {
     selectedUserInfo.innerHTML = '<div class="error">Failed to load user information</div>';
   }
 }
+
 // NEW: Handle Fund Request
 async function handleFundRequest(e) {
   e.preventDefault();
@@ -1307,6 +1611,8 @@ async function handleFundRequest(e) {
     submitBtn.textContent = 'Submitting...';
     
     // API call
+    console.log(`Submitting fund request to: ${API_BASE}/api/user/fund-request`);
+    
     const response = await fetch(`${API_BASE}/api/user/fund-request`, {
       method: 'POST',
       headers: { 
@@ -1316,7 +1622,12 @@ async function handleFundRequest(e) {
       body: JSON.stringify({ amount, paymentMethod, reference })
     });
     
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
+    console.log('Fund request response:', data);
     
     if (response.ok && data.success) {
       showAlert('Funding request submitted successfully!', 'success');
@@ -1347,6 +1658,7 @@ async function handleFundRequest(e) {
     }
   }
 }
+
 // NEW: Handle Admin Fund Wallet
 async function handleAdminFundWallet(e) {
   e.preventDefault();
@@ -1369,6 +1681,8 @@ async function handleAdminFundWallet(e) {
     submitBtn.textContent = 'Processing...';
     
     // API call
+    console.log(`Admin funding wallet to: ${API_BASE}/api/admin/fund-wallet`);
+    
     const response = await fetch(`${API_BASE}/api/admin/fund-wallet`, {
       method: 'POST',
       headers: { 
@@ -1378,7 +1692,12 @@ async function handleAdminFundWallet(e) {
       body: JSON.stringify({ userId, amount, note })
     });
     
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
+    console.log('Admin fund wallet response:', data);
     
     if (response.ok && data.success) {
       showAlert('Wallet funded successfully!', 'success');
@@ -1410,6 +1729,7 @@ async function handleAdminFundWallet(e) {
     }
   }
 }
+
 // NEW: Approve Fund Request
 async function approveFundRequest(requestId) {
   const token = localStorage.getItem('accessToken');
@@ -1423,6 +1743,8 @@ async function approveFundRequest(requestId) {
     const note = prompt('Enter a note for this approval (optional):');
     
     // API call
+    console.log(`Approving fund request: ${requestId} from: ${API_BASE}/api/admin/fund-request/${requestId}/approve`);
+    
     const response = await fetch(`${API_BASE}/api/admin/fund-request/${requestId}/approve`, {
       method: 'PUT',
       headers: { 
@@ -1432,7 +1754,12 @@ async function approveFundRequest(requestId) {
       body: JSON.stringify({ note: note || '' })
     });
     
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
+    console.log('Approve fund request response:', data);
     
     if (response.ok && data.success) {
       showAlert('Funding request approved successfully!', 'success');
@@ -1454,6 +1781,7 @@ async function approveFundRequest(requestId) {
     }
   }
 }
+
 // NEW: Reject Fund Request
 async function rejectFundRequest(requestId) {
   const token = localStorage.getItem('accessToken');
@@ -1471,6 +1799,8 @@ async function rejectFundRequest(requestId) {
     }
     
     // API call
+    console.log(`Rejecting fund request: ${requestId} from: ${API_BASE}/api/admin/fund-request/${requestId}/reject`);
+    
     const response = await fetch(`${API_BASE}/api/admin/fund-request/${requestId}/reject`, {
       method: 'PUT',
       headers: { 
@@ -1480,7 +1810,12 @@ async function rejectFundRequest(requestId) {
       body: JSON.stringify({ reason })
     });
     
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
+    console.log('Reject fund request response:', data);
     
     if (response.ok && data.success) {
       showAlert('Funding request rejected successfully!', 'success');
@@ -1502,6 +1837,7 @@ async function rejectFundRequest(requestId) {
     }
   }
 }
+
 // Refresh Token
 async function refreshToken() {
   const refreshToken = localStorage.getItem('refreshToken');
@@ -1511,13 +1847,20 @@ async function refreshToken() {
   }
   
   try {
+    console.log(`Refreshing token from: ${API_BASE}/api/auth/refresh-token`);
+    
     const response = await fetch(`${API_BASE}/api/auth/refresh-token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken })
     });
     
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
+    console.log('Refresh token response:', data);
     
     if (response.ok && data.success) {
       localStorage.setItem('accessToken', data.data.accessToken);
@@ -1533,6 +1876,7 @@ async function refreshToken() {
     return false;
   }
 }
+
 // Show Alert Function
 function showAlert(message, type = 'error') {
   const alertContainer = document.getElementById('alert-container');
@@ -1559,6 +1903,7 @@ function showAlert(message, type = 'error') {
     alertContainer.innerHTML = '';
   }, 5000);
 }
+
 // Validate Signup Form
 function validateSignupForm() {
   let isValid = true;
@@ -1624,6 +1969,7 @@ function validateSignupForm() {
   
   return isValid;
 }
+
 // Signup Handler - FIXED FIELD REFERENCES
 async function handleSignup(e) {
   e.preventDefault();
@@ -1659,13 +2005,20 @@ async function handleSignup(e) {
     submitBtn.textContent = 'Creating Account...';
     
     // API call
+    console.log(`Signing up from: ${API_BASE}/api/auth/register`);
+    
     const response = await fetch(`${API_BASE}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password, phone })
     });
     
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
+    console.log('Signup response:', data);
     
     if (response.ok && data.success) {
       // Save tokens and user data
@@ -1702,6 +2055,7 @@ async function handleSignup(e) {
     }
   }
 }
+
 // Validate Login Form
 function validateLoginForm() {
   let isValid = true;
@@ -1729,6 +2083,7 @@ function validateLoginForm() {
   
   return isValid;
 }
+
 // Login Handler
 async function handleLogin(e) {
   e.preventDefault();
@@ -1749,13 +2104,20 @@ async function handleLogin(e) {
     submitBtn.textContent = 'Logging in...';
     
     // API call
+    console.log(`Logging in from: ${API_BASE}/api/auth/login`);
+    
     const response = await fetch(`${API_BASE}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
     
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
+    console.log('Login response:', data);
     
     if (response.ok && data.success) {
       // Save tokens and user data
@@ -1801,6 +2163,7 @@ async function handleLogin(e) {
     }
   }
 }
+
 // Forgot Password Handler
 async function handleForgotPassword(e) {
   e.preventDefault();
@@ -1815,13 +2178,20 @@ async function handleForgotPassword(e) {
     submitBtn.textContent = 'Sending...';
     
     // API call
+    console.log(`Forgot password from: ${API_BASE}/api/auth/forgot-password`);
+    
     const response = await fetch(`${API_BASE}/api/auth/forgot-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
     });
     
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
+    console.log('Forgot password response:', data);
     
     if (response.ok) {
       showAlert(data.message, 'success');
@@ -1852,6 +2222,7 @@ async function handleForgotPassword(e) {
     }
   }
 }
+
 // Reset Password Handler
 async function handleResetPassword(e) {
   e.preventDefault();
@@ -1874,13 +2245,20 @@ async function handleResetPassword(e) {
     submitBtn.textContent = 'Resetting...';
     
     // API call
+    console.log(`Reset password from: ${API_BASE}/api/auth/reset-password`);
+    
     const response = await fetch(`${API_BASE}/api/auth/reset-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, password })
     });
     
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
+    console.log('Reset password response:', data);
     
     if (response.ok) {
       showAlert(data.message, 'success');
@@ -1911,6 +2289,7 @@ async function handleResetPassword(e) {
     }
   }
 }
+
 // Update Profile Handler
 async function handleUpdateProfile(e) {
   e.preventDefault();
@@ -1932,6 +2311,8 @@ async function handleUpdateProfile(e) {
     submitBtn.textContent = 'Updating...';
     
     // API call
+    console.log(`Updating profile from: ${API_BASE}/api/user/profile`);
+    
     const response = await fetch(`${API_BASE}/api/user/profile`, {
       method: 'PUT',
       headers: { 
@@ -1941,7 +2322,12 @@ async function handleUpdateProfile(e) {
       body: JSON.stringify({ name, phone })
     });
     
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
+    console.log('Update profile response:', data);
     
     if (response.ok && data.success) {
       // Update user data in localStorage
@@ -1975,6 +2361,7 @@ async function handleUpdateProfile(e) {
     }
   }
 }
+
 // Change Password Handler
 async function handleChangePassword(e) {
   e.preventDefault();
@@ -2003,6 +2390,8 @@ async function handleChangePassword(e) {
     submitBtn.textContent = 'Changing...';
     
     // API call
+    console.log(`Changing password from: ${API_BASE}/api/user/change-password`);
+    
     const response = await fetch(`${API_BASE}/api/user/change-password`, {
       method: 'POST',
       headers: { 
@@ -2012,7 +2401,12 @@ async function handleChangePassword(e) {
       body: JSON.stringify({ currentPassword, newPassword })
     });
     
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
+    console.log('Change password response:', data);
     
     if (response.ok && data.success) {
       showAlert(data.message, 'success');
@@ -2043,6 +2437,7 @@ async function handleChangePassword(e) {
     }
   }
 }
+
 // Service Form Handler (Airtime, Data, Electricity, TV) - UPDATED TO REMOVE PAYSTACK
 async function handleServiceForm(e, serviceType) {
   e.preventDefault();
@@ -2171,6 +2566,8 @@ async function handleServiceForm(e, serviceType) {
     submitBtn.textContent = 'Processing...';
     
     // API call
+    console.log(`Processing ${serviceType} service from: ${API_BASE}/api/services/${serviceType}`);
+    
     const response = await fetch(`${API_BASE}/api/services/${serviceType}`, {
       method: 'POST',
       headers: { 
@@ -2180,7 +2577,12 @@ async function handleServiceForm(e, serviceType) {
       body: JSON.stringify(formData)
     });
     
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
+    console.log(`${serviceType} service response:`, data);
     
     if (response.ok && data.success) {
       // For electricity, show token if available
@@ -2222,6 +2624,7 @@ async function handleServiceForm(e, serviceType) {
     }
   }
 }
+
 // Password Strength Meter
 function setupPasswordStrength() {
   const passwordInput = document.getElementById('password');
@@ -2259,14 +2662,17 @@ function setupPasswordStrength() {
     });
   }
 }
+
 // Initialize password strength meter if on signup page
 if (document.getElementById('signupForm')) {
   setupPasswordStrength();
 }
+
 // Load notifications if on dashboard
 if (document.querySelector('.notification-badge')) {
   loadNotifications();
 }
+
 // Utility function to format currency
 function formatCurrency(amount) {
   return new Intl.NumberFormat('en-NG', {
@@ -2275,11 +2681,13 @@ function formatCurrency(amount) {
     minimumFractionDigits: 2
   }).format(amount);
 }
+
 // Utility function to format date
 function formatDate(dateString) {
   const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
   return new Date(dateString).toLocaleDateString('en-NG', options);
 }
+
 // Logout function
 function logout() {
   localStorage.removeItem('accessToken');
@@ -2287,6 +2695,7 @@ function logout() {
   localStorage.removeItem('user');
   window.location.href = 'index.html';
 }
+
 // Add logout event listener to logout button
 const logoutBtn = document.querySelector('.logout-btn');
 if (logoutBtn) {
@@ -2295,6 +2704,7 @@ if (logoutBtn) {
     logout();
   });
 }
+
 // Download statement function
 async function downloadStatement() {
   const token = localStorage.getItem('accessToken');
@@ -2304,33 +2714,39 @@ async function downloadStatement() {
   }
   
   try {
+    console.log(`Downloading statement from: ${API_BASE}/api/wallet/transactions`);
+    
     const response = await fetch(`${API_BASE}/api/wallet/transactions`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
     
-    if (response.ok) {
-      const data = await response.json();
-      if (data.success) {
-        // Create CSV content
-        let csvContent = "Reference,Type,Amount,Status,Date\n";
-        
-        data.data.transactions.forEach(transaction => {
-          csvContent += `${transaction.reference},${transaction.type},${transaction.amount},${transaction.status},${new Date(transaction.createdAt).toLocaleString()}\n`;
-        });
-        
-        // Create download link
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", `wallet-statement-${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Download statement response:', data);
+    
+    if (data.success) {
+      // Create CSV content
+      let csvContent = "Reference,Type,Amount,Status,Date\n";
+      
+      data.data.transactions.forEach(transaction => {
+        csvContent += `${transaction.reference},${transaction.type},${transaction.amount},${transaction.status},${new Date(transaction.createdAt).toLocaleString()}\n`;
+      });
+      
+      // Create download link
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `wallet-statement-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } else if (response.status === 401) {
       // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
@@ -2353,11 +2769,13 @@ async function downloadStatement() {
     }
   }
 }
+
 // Add event listener to download statement button
 const downloadStatementBtn = document.querySelector('.wallet-buttons .btn.secondary');
 if (downloadStatementBtn) {
   downloadStatementBtn.addEventListener('click', downloadStatement);
 }
+
 // Referral program function
 function startReferring() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -2368,6 +2786,7 @@ function startReferring() {
     showAlert('Please login to access the referral program');
   }
 }
+
 // Add event listener to referral button
 const referralBtn = document.querySelector('.promo-section .btn');
 if (referralBtn) {

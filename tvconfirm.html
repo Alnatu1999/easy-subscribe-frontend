@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TV Subscription Receipt - EasySubscribe</title>
+  <title>Confirm TV Subscription - EasySubscribe</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,97 +35,70 @@
   <main class="confirmation-page">
     <div class="container">
       <div class="confirmation-header">
-        <h2>TV Subscription Receipt</h2>
-        <p>Your TV subscription has been processed successfully</p>
+        <h2>Confirm Your TV Subscription</h2>
+        <p>Please review your subscription details before confirming</p>
       </div>
       
       <div class="confirmation-container">
         <div class="confirmation-card">
           <div class="confirmation-details">
-            <h3>Transaction Details</h3>
-            
-            <div class="detail-row">
-              <div class="detail-label">Transaction Status:</div>
-              <div class="detail-value status" id="transaction-status">
-                <span class="status-badge processing">Processing</span>
-              </div>
-            </div>
-            
-            <div class="detail-row">
-              <div class="detail-label">Transaction Reference:</div>
-              <div class="detail-value" id="transaction-reference">Loading...</div>
-            </div>
+            <h3>Subscription Details</h3>
             
             <div class="detail-row">
               <div class="detail-label">Provider:</div>
-              <div class="detail-value" id="receipt-provider">-</div>
+              <div class="detail-value" id="confirmProvider">-</div>
             </div>
             
             <div class="detail-row">
-              <div class="detail-label">Smart Card/IUC Number:</div>
-              <div class="detail-value" id="receipt-smartcard">-</div>
+              <div class="detail-label">Smart Card / IUC Number:</div>
+              <div class="detail-value" id="confirmSmartcard">-</div>
             </div>
             
             <div class="detail-row">
               <div class="detail-label">Subscription Plan:</div>
-              <div class="detail-value" id="receipt-plan">-</div>
+              <div class="detail-value" id="confirmPlan">-</div>
             </div>
             
             <div class="detail-row">
               <div class="detail-label">Amount:</div>
-              <div class="detail-value amount" id="receipt-amount">₦0.00</div>
+              <div class="detail-value" id="confirmAmount">-</div>
             </div>
             
             <div class="detail-row">
               <div class="detail-label">Phone Number:</div>
-              <div class="detail-value" id="receipt-phone">-</div>
+              <div class="detail-value" id="confirmPhone">-</div>
             </div>
             
             <div class="detail-row">
               <div class="detail-label">Email Address:</div>
-              <div class="detail-value" id="receipt-email">-</div>
+              <div class="detail-value" id="confirmEmail">-</div>
             </div>
             
             <div class="detail-row">
               <div class="detail-label">Payment Method:</div>
-              <div class="detail-value" id="receipt-payment">Wallet Balance</div>
+              <div class="detail-value" id="confirmPayment">-</div>
             </div>
             
-            <div class="detail-row">
-              <div class="detail-label">Transaction Date:</div>
-              <div class="detail-value" id="transaction-date">-</div>
+            <div class="detail-row total-row">
+              <div class="detail-label">Total Amount:</div>
+              <div class="detail-value" id="confirmTotal">-</div>
             </div>
           </div>
           
           <div class="confirmation-actions">
-            <button type="button" class="btn secondary" id="new-subscription-btn">New Subscription</button>
-            <button type="button" class="btn primary" id="dashboard-btn">Go to Dashboard</button>
+            <button id="editBtn" class="btn secondary">Edit Details</button>
+            <button id="confirmBtn" class="btn primary">Confirm Subscription</button>
           </div>
         </div>
         
         <div class="info-card">
-          <h3>What's Next?</h3>
-          <ul class="info-list">
-            <li><i class="fas fa-check-circle"></i> Your subscription will be activated shortly</li>
-            <li><i class="fas fa-check-circle"></i> You will receive a confirmation message and email receipt</li>
-            <li><i class="fas fa-check-circle"></i> Transaction details can be viewed in your dashboard</li>
-            <li><i class="fas fa-check-circle"></i> For any issues, contact our customer support</li>
+          <h3>Important Information</h3>
+          <ul>
+            <li>Your subscription will be activated immediately upon confirmation</li>
+            <li>You will receive a confirmation message with transaction details</li>
+            <li>Ensure your smart card number is correct before confirming</li>
+            <li>Keep your transaction reference for future reference</li>
           </ul>
-          
-          <div class="customer-support">
-            <h4>Need Help?</h4>
-            <p>Contact our customer support team for assistance with your subscription.</p>
-            <div class="support-options">
-              <div class="support-option">
-                <i class="fas fa-phone"></i>
-                <span>0800-123-4567</span>
-              </div>
-              <div class="support-option">
-                <i class="fas fa-envelope"></i>
-                <span>support@easysubscribe.com</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -172,155 +145,148 @@
   <!-- Page-specific JavaScript -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      // Initialize confirmation page
+      initializeConfirmationPage();
+    });
+    
+    function initializeConfirmationPage() {
       // Get TV data from sessionStorage
       const tvData = JSON.parse(sessionStorage.getItem('tvData') || '{}');
       
-      // If no TV data found, redirect to TV page
-      if (!tvData.provider) {
+      // Check if we have valid data
+      if (!tvData.provider || !tvData.smartcard || !tvData.plan) {
+        // Redirect back to TV page if no data
         window.location.href = 'tv.html';
         return;
       }
       
-      // Display the TV data on the confirmation page
-      document.getElementById('receipt-provider').textContent = tvData.provider.toUpperCase();
-      document.getElementById('receipt-smartcard').textContent = tvData.smartcard;
-      document.getElementById('receipt-phone').textContent = tvData.phone || 'Not provided';
-      document.getElementById('receipt-email').textContent = tvData.email || 'Not provided';
-      document.getElementById('transaction-date').textContent = formatDate(new Date());
+      // Populate confirmation details
+      document.getElementById('confirmProvider').textContent = tvData.provider.toUpperCase();
+      document.getElementById('confirmSmartcard').textContent = tvData.smartcard;
+      document.getElementById('confirmPhone').textContent = tvData.phone;
+      document.getElementById('confirmEmail').textContent = tvData.email;
+      
+      // Get payment method
+      const paymentMethod = tvData.paymentMethod || 'wallet';
+      document.getElementById('confirmPayment').textContent = paymentMethod === 'wallet' ? 'Wallet Balance' : 'Debit/Credit Card';
       
       // Load plan details
       loadPlanDetails(tvData.provider, tvData.plan);
       
-      // Set up button event listeners
-      document.getElementById('new-subscription-btn').addEventListener('click', function() {
-        // Clear sessionStorage
-        sessionStorage.removeItem('tvData');
-        window.location.href = 'tv.html';
-      });
+      // Setup event listeners
+      const editBtn = document.getElementById('editBtn');
+      if (editBtn) {
+        editBtn.addEventListener('click', function() {
+          // Go back to TV page
+          window.location.href = 'tv.html';
+        });
+      }
       
-      document.getElementById('dashboard-btn').addEventListener('click', function() {
-        // Clear sessionStorage
-        sessionStorage.removeItem('tvData');
-        window.location.href = 'dashboard.html';
-      });
-      
-      // Process the TV subscription
-      processTvSubscription(tvData);
-    });
+      const confirmBtn = document.getElementById('confirmBtn');
+      if (confirmBtn) {
+        confirmBtn.addEventListener('click', function() {
+          // Process TV subscription
+          processTvSubscription();
+        });
+      }
+    }
+    
+    // Load plan details from API
+    async function loadPlanDetails(provider, planId) {
+      try {
+        // Use the global API_BASE if available, otherwise construct it
+        const apiUrl = typeof API_BASE !== 'undefined' ? API_BASE : 
+          (window.location.hostname === 'localhost' ? 'http://localhost:5001' : 'https://easy-subscribe-backend.onrender.com');
+        
+        const response = await fetch(`${apiUrl}/api/services/tv-variations?provider=${provider}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          // Find the selected plan
+          const selectedPlan = data.data.find(plan => plan.variation_id == planId);
+          
+          if (selectedPlan) {
+            document.getElementById('confirmPlan').textContent = selectedPlan.package_bouquet;
+            document.getElementById('confirmAmount').textContent = `₦${Number(selectedPlan.price).toLocaleString()}`;
+            document.getElementById('confirmTotal').textContent = `₦${Number(selectedPlan.price).toLocaleString()}`;
+            
+            // Store plan details in sessionStorage for receipt
+            tvData.planName = selectedPlan.package_bouquet;
+            tvData.planPrice = selectedPlan.price;
+            sessionStorage.setItem('tvData', JSON.stringify(tvData));
+          }
+        }
+      } catch (error) {
+        console.error('Error loading plan details:', error);
+      }
+    }
     
     // Process TV subscription
-    async function processTvSubscription(tvData) {
+    async function processTvSubscription() {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        showAlert('Please login to confirm TV subscription');
+        return;
+      }
+      
+      // Get TV data from sessionStorage
+      const tvData = JSON.parse(sessionStorage.getItem('tvData') || '{}');
+      
       try {
         // Show loading state
-        document.getElementById('transaction-reference').textContent = 'Processing...';
+        const confirmBtn = document.getElementById('confirmBtn');
+        const originalText = confirmBtn.textContent;
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Processing...';
         
-        // Get API_BASE from global scope (defined in main.js)
-        const API_BASE = window.API_BASE;
+        // API call
+        const apiUrl = typeof API_BASE !== 'undefined' ? API_BASE : 
+          (window.location.hostname === 'localhost' ? 'http://localhost:5001' : 'https://easy-subscribe-backend.onrender.com');
         
-        // Process the subscription
-        const response = await fetch(`${API_BASE}/api/services/tv`, {
+        const response = await fetch(`${apiUrl}/api/services/tv`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+            'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify(tvData)
+          body: JSON.stringify({
+            provider: tvData.provider,
+            smartcard: tvData.smartcard,
+            plan: tvData.plan,
+            phone: tvData.phone,
+            email: tvData.email
+          })
         });
         
         const data = await response.json();
         
         if (response.ok && data.success) {
-          // Update transaction status
-          const statusElement = document.getElementById('transaction-status');
-          statusElement.innerHTML = `<span class="status-badge successful">Successful</span>`;
+          // Store transaction data in sessionStorage for receipt
+          sessionStorage.setItem('tvTransaction', JSON.stringify(data.data));
           
-          // Update transaction reference
-          document.getElementById('transaction-reference').textContent = data.data.reference;
-          
-          // Update amount
-          document.getElementById('receipt-amount').textContent = `₦${Number(data.data.amount).toLocaleString()}`;
-          
-          // Store transaction reference
-          sessionStorage.setItem('tvTransactionRef', data.data.reference);
-          
-          // Show success message
-          showAlert('Your TV subscription has been processed successfully!', 'success');
+          // Redirect to receipt page
+          window.location.href = 'tvreceipt.html';
         } else {
-          // Update transaction status
-          const statusElement = document.getElementById('transaction-status');
-          statusElement.innerHTML = `<span class="status-badge failed">Failed</span>`;
-          
           // Show error message
-          showAlert(data.message || 'Failed to process TV subscription. Please try again.', 'error');
+          showAlert(data.message || 'TV subscription failed. Please try again.');
         }
+        
       } catch (error) {
-        console.error('Error processing TV subscription:', error);
+        console.error('TV subscription error:', error);
         
-        // Update transaction status
-        const statusElement = document.getElementById('transaction-status');
-        statusElement.innerHTML = `<span class="status-badge failed">Failed</span>`;
-        
-        // Show error message
-        showAlert('Failed to process TV subscription. Please check your connection and try again.', 'error');
-      }
-    }
-    
-    // Load plan details
-    async function loadPlanDetails(provider, planId) {
-      try {
-        // Get API_BASE from global scope (defined in main.js)
-        const API_BASE = window.API_BASE;
-        
-        const response = await fetch(`${API_BASE}/api/services/tv-variations?provider=${provider}`);
-        const data = await response.json();
-        
-        if (data.success) {
-          const plan = data.data.find(p => p.variation_id == planId);
-          if (plan) {
-            document.getElementById('receipt-plan').textContent = plan.package_bouquet;
-            document.getElementById('receipt-amount').textContent = `₦${Number(plan.price).toLocaleString()}`;
-          }
+        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+          showAlert('Unable to connect to the server. Please check your internet connection.');
+        } else {
+          showAlert('TV subscription failed. Please check your connection and try again.');
         }
-      } catch (error) {
-        console.error('Error fetching plan details:', error);
+      } finally {
+        // Reset button state
+        const confirmBtn = document.getElementById('confirmBtn');
+        if (confirmBtn) {
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = originalText || 'Confirm Subscription';
+        }
       }
-    }
-    
-    // Utility function to format date
-    function formatDate(date) {
-      const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-      return new Date(date).toLocaleDateString('en-NG', options);
-    }
-    
-    // Show alert function
-    function showAlert(message, type = 'error') {
-      const alertContainer = document.getElementById('alert-container') || 
-                             document.querySelector('.confirmation-header')?.insertAdjacentHTML('afterend', 
-                               '<div id="alert-container"></div>');
-      
-      if (!alertContainer) return;
-      
-      const alertContainerEl = document.getElementById('alert-container');
-      alertContainerEl.innerHTML = `
-        <div class="alert alert-${type}">
-          <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>
-          <span>${message}</span>
-          <button class="close-alert">&times;</button>
-        </div>
-      `;
-      
-      // Add event listener to close button
-      const closeBtn = alertContainerEl.querySelector('.close-alert');
-      if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-          alertContainerEl.innerHTML = '';
-        });
-      }
-      
-      // Auto-hide after 5 seconds
-      setTimeout(() => {
-        alertContainerEl.innerHTML = '';
-      }, 5000);
     }
   </script>
 </body>

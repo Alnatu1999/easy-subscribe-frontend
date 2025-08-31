@@ -9,96 +9,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    /* Additional styles for receipt page */
-    .status-badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 500;
-    }
-    
-    .status-badge.processing {
-      background-color: #fff3cd;
-      color: #856404;
-    }
-    
-    .status-badge.successful {
-      background-color: #d4edda;
-      color: #155724;
-    }
-    
-    .status-badge.failed {
-      background-color: #f8d7da;
-      color: #721c24;
-    }
-    
-    .status-badge.pending {
-      background-color: #d1ecf1;
-      color: #0c5460;
-    }
-    
-    .receipt-status {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 15px;
-      margin-bottom: 20px;
-      border-radius: 8px;
-      font-weight: 500;
-    }
-    
-    .receipt-status.success {
-      background-color: #d4edda;
-      color: #155724;
-    }
-    
-    .receipt-status.failed {
-      background-color: #f8d7da;
-      color: #721c24;
-    }
-    
-    .receipt-status.processing {
-      background-color: #fff3cd;
-      color: #856404;
-    }
-    
-    .receipt-status i {
-      margin-right: 10px;
-    }
-    
-    .alert {
-      padding: 15px;
-      margin-bottom: 20px;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-    }
-    
-    .alert-success {
-      background-color: #d4edda;
-      color: #155724;
-    }
-    
-    .alert-error {
-      background-color: #f8d7da;
-      color: #721c24;
-    }
-    
-    .alert i {
-      margin-right: 10px;
-    }
-    
-    .close-alert {
-      margin-left: auto;
-      background: none;
-      border: none;
-      font-size: 18px;
-      cursor: pointer;
-      color: inherit;
-    }
-  </style>
 </head>
 <body>
   <header>
@@ -125,137 +35,90 @@
   <main class="receipt-page">
     <div class="container">
       <div class="receipt-header">
-        <div class="receipt-icon">
-          <i class="fas fa-receipt"></i>
+        <div class="receipt-status" id="receiptStatus">
+          <i class="fas fa-check-circle"></i>
+          <h2>Subscription Successful</h2>
         </div>
-        <div>
-          <h2>TV Subscription Receipt</h2>
-          <p id="receipt-status">Processing your subscription...</p>
-        </div>
+        <p>Your TV subscription has been processed successfully</p>
       </div>
       
       <div class="receipt-container">
-        <div id="alert-container"></div>
-        
         <div class="receipt-card">
-          <div class="receipt-status processing" id="status-indicator">
-            <i class="fas fa-spinner fa-spin"></i>
-            <p>Processing</p>
+          <div class="receipt-header-info">
+            <div class="receipt-logo">
+              <h2>EasySubscribe</h2>
+              <p>TV Subscription Receipt</p>
+            </div>
+            <div class="receipt-date">
+              <div id="receiptDate">-</div>
+              <div id="receiptTime">-</div>
+            </div>
           </div>
           
           <div class="receipt-details">
             <h3>Transaction Details</h3>
             
             <div class="detail-row">
-              <div class="detail-label">Transaction ID:</div>
-              <div class="detail-value" id="transaction-id">-</div>
-            </div>
-            
-            <div class="detail-row">
-              <div class="detail-label">Transaction Status:</div>
-              <div class="detail-value" id="transaction-status">
-                <span class="status-badge processing">Processing</span>
-              </div>
-            </div>
-            
-            <div class="detail-row">
-              <div class="detail-label">Date & Time:</div>
-              <div class="detail-value" id="transaction-date">-</div>
+              <div class="detail-label">Transaction Reference:</div>
+              <div class="detail-value" id="receiptReference">-</div>
             </div>
             
             <div class="detail-row">
               <div class="detail-label">Provider:</div>
-              <div class="detail-value" id="receipt-provider">-</div>
+              <div class="detail-value" id="receiptProvider">-</div>
             </div>
             
             <div class="detail-row">
-              < class="detail-label">Smart Card/IUC Number:</div>
-              <div class="detail-value" id="receipt-smartcard">-</div>
+              <div class="detail-label">Smart Card / IUC Number:</div>
+              <div class="detail-value" id="receiptSmartcard">-</div>
             </div>
             
             <div class="detail-row">
               <div class="detail-label">Subscription Plan:</div>
-              <div class="detail-value" id="receipt-plan">-</div>
+              <div class="detail-value" id="receiptPlan">-</div>
             </div>
             
             <div class="detail-row">
               <div class="detail-label">Amount Paid:</div>
-              <div class="detail-value amount" id="receipt-amount">₦0.00</div>
+              <div class="detail-value" id="receiptAmount">-</div>
             </div>
             
             <div class="detail-row">
               <div class="detail-label">Payment Method:</div>
-              <div class="detail-value" id="receipt-payment">Wallet Balance</div>
+              <div class="detail-value" id="receiptPayment">-</div>
             </div>
             
             <div class="detail-row">
-              <div class="detail-label">Phone Number:</div>
-              <div class="detail-value" id="receipt-phone">-</div>
+              <div class="detail-label">Status:</div>
+              <div class="detail-value" id="receiptStatusText">-</div>
             </div>
             
-            <div class="detail-row">
-              <div class="detail-label">Email Address:</div>
-              <div class="detail-value" id="receipt-email">-</div>
+            <div class="detail-row total-row">
+              <div class="detail-label">Total Amount:</div>
+              <div class="detail-value" id="receiptTotal">-</div>
             </div>
           </div>
           
           <div class="receipt-actions">
-            <button type="button" class="btn secondary" id="print-btn">
-              <i class="fas fa-print"></i> Print Receipt
-            </button>
-            <button type="button" class="btn primary" id="dashboard-btn">
-              <i class="fas fa-home"></i> Go to Dashboard
-            </button>
+            <button id="printBtn" class="btn secondary"><i class="fas fa-print"></i> Print Receipt</button>
+            <button id="newSubscriptionBtn" class="btn primary">New Subscription</button>
+            <button id="dashboardBtn" class="btn outline">Go to Dashboard</button>
           </div>
         </div>
         
         <div class="info-card">
           <h3>What's Next?</h3>
-          <div class="next-steps">
-            <div class="step">
-              <div class="step-icon">
-                <i class="fas fa-check-circle"></i>
-              </div>
-              <div class="step-content">
-                <h4>Instant Activation</h4>
-                <p>Your TV subscription will be activated immediately upon successful payment.</p>
-              </div>
-            </div>
-            
-            <div class="step">
-              <div class="step-icon">
-                <i class="fas fa-envelope"></i>
-              </div>
-              <div class="step-content">
-                <h4>Confirmation Email</h4>
-                <p>You'll receive a confirmation email with your transaction details.</p>
-              </div>
-            </div>
-            
-            <div class="step">
-              <div class="step-icon">
-                <i class="fas fa-bell"></i>
-              </div>
-              <div class="step-content">
-                <h4>Renewal Reminder</h4>
-                <p>We'll send you a reminder before your subscription expires.</p>
-              </div>
-            </div>
-          </div>
+          <ul>
+            <li>Your subscription should be activated within 5 minutes</li>
+            <li>You will receive a confirmation SMS on your registered phone number</li>
+            <li>Save this receipt for future reference</li>
+            <li>Contact support if you don't receive confirmation within 10 minutes</li>
+          </ul>
           
-          <div class="customer-support">
+          <div class="support-info">
             <h4>Need Help?</h4>
-            <p>Contact our customer support team for assistance with your subscription.</p>
-            <div class="support-options">
-              <div class="support-option">
-                <i class="fas fa-phone"></i>
-                <span>0800-123-4567</span>
-              </div>
-              <div class="support-option">
-                <i class="fas fa-envelope"></i>
-                <span>support@easysubscribe.com</span>
-              </div>
-            </div>
+            <p>Email: support@easysubscribe.com</p>
+            <p>Phone: 0800-EASYSUBSCRIBE</p>
           </div>
         </div>
       </div>
@@ -302,278 +165,74 @@
   
   <!-- Page-specific JavaScript -->
   <script>
-    // API Configuration
-    const API_BASE = window.location.hostname === 'localhost' 
-      ? 'http://localhost:5001'
-      : 'https://easy-subscribe-backend.onrender.com';
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize receipt page
+      initializeReceiptPage();
+    });
     
-    document.addEventListener('DOMContentLoaded', async function() {
-      // Get transaction reference from sessionStorage
-      const transactionRef = sessionStorage.getItem('tvTransactionRef');
+    function initializeReceiptPage() {
+      // Get transaction data from sessionStorage
+      const transactionData = JSON.parse(sessionStorage.getItem('tvTransaction') || '{}');
       
-      // If no transaction reference found, redirect to TV page
-      if (!transactionRef) {
+      // Check if we have valid data
+      if (!transactionData.reference) {
+        // Redirect back to TV page if no data
         window.location.href = 'tv.html';
         return;
       }
       
-      // Load transaction details
-      await loadTransactionDetails(transactionRef);
+      // Populate receipt details
+      document.getElementById('receiptReference').textContent = transactionData.reference;
+      document.getElementById('receiptProvider').textContent = transactionData.provider ? transactionData.provider.toUpperCase() : '-';
+      document.getElementById('receiptSmartcard').textContent = transactionData.smartcard || '-';
+      document.getElementById('receiptPlan').textContent = transactionData.planName || '-';
+      document.getElementById('receiptAmount').textContent = transactionData.amount ? `₦${Number(transactionData.amount).toLocaleString()}` : '-';
+      document.getElementById('receiptPayment').textContent = transactionData.paymentMethod || 'Wallet Balance';
+      document.getElementById('receiptStatusText').textContent = transactionData.status || 'Success';
+      document.getElementById('receiptTotal').textContent = transactionData.amount ? `₦${Number(transactionData.amount).toLocaleString()}` : '-';
       
-      // Set up button event listeners
-      document.getElementById('print-btn').addEventListener('click', function() {
-        window.print();
-      });
-      
-      document.getElementById('dashboard-btn').addEventListener('click', function() {
-        // Clear sessionStorage
-        sessionStorage.removeItem('tvTransactionRef');
-        window.location.href = 'dashboard.html';
-      });
-    });
-    
-    // Load transaction details
-    async function loadTransactionDetails(reference) {
-      try {
-        const response = await fetch(`${API_BASE}/api/transactions/${reference}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          
-          if (data.success) {
-            const transaction = data.data.transaction;
-            
-            // Update transaction ID
-            document.getElementById('transaction-id').textContent = transaction.reference;
-            
-            // Update transaction date
-            document.getElementById('transaction-date').textContent = formatDate(transaction.createdAt);
-            
-            // Update provider
-            document.getElementById('receipt-provider').textContent = transaction.metadata.provider.toUpperCase();
-            
-            // Update smartcard
-            document.getElementById('receipt-smartcard').textContent = transaction.metadata.smartcard;
-            
-            // Update phone
-            document.getElementById('receipt-phone').textContent = transaction.metadata.phone || 'Not provided';
-            
-            // Update email
-            document.getElementById('receipt-email').textContent = transaction.metadata.email || 'Not provided';
-            
-            // Update amount
-            document.getElementById('receipt-amount').textContent = `₦${Number(transaction.amount).toLocaleString()}`;
-            
-            // Update transaction status
-            updateTransactionStatus(transaction.status);
-            
-            // Load plan details
-            await loadPlanDetails(transaction.metadata.provider, transaction.metadata.plan);
-            
-            // If transaction is still processing, check status periodically
-            if (transaction.status === 'processing' || transaction.status === 'pending') {
-              checkTransactionStatus(reference);
-            }
-          }
-        } else if (response.status === 401) {
-          // Token expired, try to refresh
-          const refreshSuccess = await refreshToken();
-          if (refreshSuccess) {
-            // Retry after refresh
-            loadTransactionDetails(reference);
-          } else {
-            // If refresh fails, redirect to login
-            window.location.href = 'login.html';
-          }
-        }
-      } catch (error) {
-        console.error('Error loading transaction details:', error);
-        showAlert('Failed to load transaction details. Please try again later.', 'error');
+      // Format date and time
+      if (transactionData.createdAt) {
+        const date = new Date(transactionData.createdAt);
+        document.getElementById('receiptDate').textContent = date.toLocaleDateString();
+        document.getElementById('receiptTime').textContent = date.toLocaleTimeString();
       }
-    }
-    
-    // Load plan details
-    async function loadPlanDetails(provider, planId) {
-      try {
-        const response = await fetch(`${API_BASE}/api/services/tv-variations?provider=${provider}`);
-        const data = await response.json();
-        
-        if (data.success) {
-          const plan = data.data.find(p => p.variation_id == planId);
-          if (plan) {
-            document.getElementById('receipt-plan').textContent = plan.package_bouquet;
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching plan details:', error);
+      
+      // Update status display based on transaction status
+      const statusElement = document.getElementById('receiptStatus');
+      if (transactionData.status === 'failed') {
+        statusElement.innerHTML = '<i class="fas fa-times-circle"></i><h2>Subscription Failed</h2>';
+        statusElement.className = 'receipt-status failed';
+      } else if (transactionData.status === 'pending') {
+        statusElement.innerHTML = '<i class="fas fa-clock"></i><h2>Subscription Pending</h2>';
+        statusElement.className = 'receipt-status pending';
       }
-    }
-    
-    // Update transaction status UI
-    function updateTransactionStatus(status) {
-      const statusIndicator = document.getElementById('status-indicator');
-      const transactionStatus = document.getElementById('transaction-status');
-      const receiptStatus = document.getElementById('receipt-status');
       
-      // Update status indicator
-      if (status === 'successful') {
-        statusIndicator.innerHTML = `
-          <i class="fas fa-check-circle"></i>
-          <p>Successful</p>
-        `;
-        statusIndicator.className = 'receipt-status success';
-        
-        transactionStatus.innerHTML = `<span class="status-badge successful">Successful</span>`;
-        
-        receiptStatus.textContent = 'Your TV subscription was successful!';
-      } else if (status === 'failed') {
-        statusIndicator.innerHTML = `
-          <i class="fas fa-times-circle"></i>
-          <p>Failed</p>
-        `;
-        statusIndicator.className = 'receipt-status failed';
-        
-        transactionStatus.innerHTML = `<span class="status-badge failed">Failed</span>`;
-        
-        receiptStatus.textContent = 'Your TV subscription failed. Please try again.';
-      } else {
-        statusIndicator.innerHTML = `
-          <i class="fas fa-spinner fa-spin"></i>
-          <p>Processing</p>
-        `;
-        statusIndicator.className = 'receipt-status processing';
-        
-        transactionStatus.innerHTML = `<span class="status-badge processing">Processing</span>`;
-        
-        receiptStatus.textContent = 'Processing your subscription...';
-      }
-    }
-    
-    // Check transaction status periodically
-    async function checkTransactionStatus(reference) {
-      const maxAttempts = 10;
-      let attempts = 0;
-      
-      const checkStatus = async () => {
-        if (attempts >= maxAttempts) return;
-        
-        try {
-          const response = await fetch(`${API_BASE}/api/transactions/${reference}`, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-            }
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            
-            if (data.success) {
-              const transaction = data.data.transaction;
-              
-              // Update status if changed
-              if (transaction.status !== 'processing' && transaction.status !== 'pending') {
-                updateTransactionStatus(transaction.status);
-                
-                // Show notification based on status
-                if (transaction.status === 'successful') {
-                  showAlert('Your TV subscription has been activated successfully!', 'success');
-                } else if (transaction.status === 'failed') {
-                  showAlert('Your TV subscription could not be processed. Please try again.', 'error');
-                }
-                
-                return; // Stop checking if status changed
-              }
-            }
-          }
-          
-          attempts++;
-          setTimeout(checkStatus, 5000); // Check again after 5 seconds
-        } catch (error) {
-          console.error('Error checking transaction status:', error);
-          attempts++;
-          setTimeout(checkStatus, 5000);
-        }
-      };
-      
-      // Start checking
-      checkStatus();
-    }
-    
-    // Utility function to format date
-    function formatDate(dateString) {
-      const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-      return new Date(dateString).toLocaleDateString('en-NG', options);
-    }
-    
-    // Show alert function
-    function showAlert(message, type = 'error') {
-      const alertContainer = document.getElementById('alert-container');
-      if (!alertContainer) return;
-      
-      alertContainer.innerHTML = `
-        <div class="alert alert-${type}">
-          <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>
-          <span>${message}</span>
-          <button class="close-alert">&times;</button>
-        </div>
-      `;
-      
-      // Add event listener to close button
-      const closeBtn = alertContainer.querySelector('.close-alert');
-      if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-          alertContainer.innerHTML = '';
+      // Setup event listeners
+      const printBtn = document.getElementById('printBtn');
+      if (printBtn) {
+        printBtn.addEventListener('click', function() {
+          window.print();
         });
       }
       
-      // Auto-hide after 5 seconds
-      setTimeout(() => {
-        alertContainer.innerHTML = '';
-      }, 5000);
-    }
-    
-    // Refresh token function
-    async function refreshToken() {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) {
-        logout();
-        return false;
+      const newSubscriptionBtn = document.getElementById('newSubscriptionBtn');
+      if (newSubscriptionBtn) {
+        newSubscriptionBtn.addEventListener('click', function() {
+          // Clear sessionStorage and go to TV page
+          sessionStorage.removeItem('tvData');
+          sessionStorage.removeItem('tvTransaction');
+          window.location.href = 'tv.html';
+        });
       }
       
-      try {
-        const response = await fetch(`${API_BASE}/api/auth/refresh-token`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refreshToken })
+      const dashboardBtn = document.getElementById('dashboardBtn');
+      if (dashboardBtn) {
+        dashboardBtn.addEventListener('click', function() {
+          // Go to dashboard
+          window.location.href = 'dashboard.html';
         });
-        
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-          localStorage.setItem('accessToken', data.data.accessToken);
-          return true;
-        } else {
-          // Refresh token failed, logout user
-          logout();
-          return false;
-        }
-      } catch (error) {
-        console.error('Error refreshing token:', error);
-        logout();
-        return false;
       }
-    }
-    
-    // Logout function
-    function logout() {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      window.location.href = 'index.html';
     }
   </script>
 </body>

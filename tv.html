@@ -431,8 +431,17 @@
         const apiUrl = typeof API_BASE !== 'undefined' ? API_BASE : 
           (window.location.hostname === 'localhost' ? 'http://localhost:5001' : 'https://easy-subscribe-backend.onrender.com');
         
+        console.log(`Fetching TV plans from: ${apiUrl}/api/services/tv-variations?provider=${provider}`);
+        
         const response = await fetch(`${apiUrl}/api/services/tv-variations?provider=${provider}`);
+        
+        // Check if response is OK
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('TV plans response:', data);
         
         if (data.success) {
           plansContainer.innerHTML = '';
@@ -459,7 +468,7 @@
           plansContainer.innerHTML = `
             <div class="error-message">
               <i class="fas fa-exclamation-circle"></i>
-              <p>Failed to load TV plans. Please try again later.</p>
+              <p>Failed to load TV plans: ${data.message || 'Unknown error'}</p>
             </div>
           `;
         }
@@ -470,7 +479,8 @@
           plansContainer.innerHTML = `
             <div class="error-message">
               <i class="fas fa-exclamation-circle"></i>
-              <p>Failed to load TV plans. Please check your connection.</p>
+              <p>Failed to load TV plans: ${error.message || 'Please check your connection.'}</p>
+              <p class="error-debug">Debug: Check browser console for more details</p>
             </div>
           `;
         }

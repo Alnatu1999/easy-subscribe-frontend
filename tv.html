@@ -1,400 +1,720 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TV Subscription - EasySubscribe</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TV Subscription - EasySubscribe</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #4a6de5, #6a11cb);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            margin-right: 10px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .wallet-balance {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            margin-right: 15px;
+        }
+        
+        .notification-bell {
+            position: relative;
+            margin-right: 20px;
+            cursor: pointer;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .user-name {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+        
+        .dashboard {
+            display: flex;
+            margin-top: 30px;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            height: fit-content;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+        }
+        
+        .sidebar-menu li {
+            margin-bottom: 10px;
+        }
+        
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: #555;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background: #f0f3ff;
+            color: #4a6de5;
+        }
+        
+        .sidebar-menu i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 30px;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            color: #777;
+        }
+        
+        .breadcrumb a {
+            color: #4a6de5;
+            text-decoration: none;
+        }
+        
+        .breadcrumb i {
+            margin: 0 10px;
+            color: #ccc;
+        }
+        
+        .service-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+        }
+        
+        .service-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .service-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4a6de5, #6a11cb);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin-right: 20px;
+        }
+        
+        .service-title h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .service-title p {
+            color: #777;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: #4a6de5;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 109, 229, 0.2);
+        }
+        
+        .form-control.input-error {
+            border-color: #ff4757;
+        }
+        
+        .form-control.input-success {
+            border-color: #2ed573;
+        }
+        
+        .error-message {
+            color: #ff4757;
+            font-size: 14px;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .error-message i {
+            margin-right: 5px;
+        }
+        
+        .provider-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .provider-option {
+            flex: 1;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .provider-option:hover {
+            border-color: #4a6de5;
+        }
+        
+        .provider-option.selected {
+            border-color: #4a6de5;
+            background: #f0f3ff;
+        }
+        
+        .provider-option i {
+            font-size: 36px;
+            margin-bottom: 10px;
+            color: #4a6de5;
+        }
+        
+        .provider-option h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        
+        .provider-option p {
+            color: #777;
+            font-size: 14px;
+        }
+        
+        .plans-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .plan-option {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .plan-option:hover {
+            border-color: #4a6de5;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .plan-option.selected {
+            border-color: #4a6de5;
+            background: #f0f3ff;
+        }
+        
+        .plan-option input[type="radio"] {
+            display: none;
+        }
+        
+        .plan-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .plan-price {
+            color: #4a6de5;
+            font-weight: 700;
+            font-size: 18px;
+        }
+        
+        .customer-details {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .customer-details h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .customer-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-label {
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-weight: 600;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: #4a6de5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background: #3a5bd0;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-success {
+            background: #2ed573;
+        }
+        
+        .btn-success:hover {
+            background: #26d065;
+        }
+        
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn-group .btn {
+            flex: 1;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        
+        .loading-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #4a6de5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        .loading-message {
+            font-size: 18px;
+            color: #4a6de5;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 400px;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .alert-error {
+            background: #ff4757;
+            color: white;
+        }
+        
+        .alert-success {
+            background: #2ed573;
+            color: white;
+        }
+        
+        .alert-warning {
+            background: #ffa502;
+            color: white;
+        }
+        
+        .alert i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+        
+        .close-alert {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: inherit;
+            font-size: 18px;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+        
+        .close-alert:hover {
+            opacity: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                margin-bottom: 30px;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .provider-options {
+                flex-direction: column;
+            }
+            
+            .plans-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <div class="container">
-      <div class="logo">
-        <h1>EasySubscribe</h1>
-      </div>
-      <nav class="desktop-nav">
-        <a href="index.html">Home</a>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="airtime.html">Airtime</a>
-        <a href="data.html">Data</a>
-        <a href="electricity.html">Electricity</a>
-        <a href="tv.html" class="active">TV</a>
-      </nav>
-      <div class="mobile-menu-btn">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-    </div>
-  </header>
-  
-  <main class="service-page">
-    <div class="container">
-      <div class="service-header">
-        <div class="service-icon tv-icon"></div>
-        <div>
-          <h2>TV Subscription</h2>
-          <p>Renew your TV subscriptions instantly</p>
-        </div>
-      </div>
-      
-      <div class="service-container">
-        <div class="service-form-container">
-          <div class="form-card">
-            <h3>Pay TV Subscription</h3>
-            <form id="tvForm">
-              <div class="form-group">
-                <label for="tv">Select Provider</label>
-                <div class="input-with-icon">
-                  <i class="fas fa-tv"></i>
-                  <select id="tv" required>
-                    <option value="">-- Choose Provider --</option>
-                    <option value="dstv">DSTV</option>
-                    <option value="gotv">GOtv</option>
-                    <option value="startimes">StarTimes</option>
-                  </select>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-bolt"></i>
+                <span>EasySubscribe</span>
+            </div>
+            <div class="user-info">
+                <div class="wallet-balance">₦<span class="wallet-balance">0.00</span></div>
+                <div class="notification-bell">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">0</span>
                 </div>
-              </div>
-              
-              <div class="form-group">
-                <label for="smartcard">Smart Card / IUC Number</label>
-                <div class="input-with-icon">
-                  <i class="fas fa-id-card"></i>
-                  <input type="text" id="smartcard" placeholder="Enter smart card number" required>
-                </div>
-                <div class="error-message" id="smartcard-error"></div>
-              </div>
-              
-              <!-- Customer Details Section (Initially Hidden) -->
-              <div class="form-group customer-details" id="customerDetails" style="display: none;">
-                <h4>Customer Details</h4>
-                <div class="customer-info">
-                  <div class="customer-detail">
-                    <span class="detail-label">Name:</span>
-                    <span id="customerName">-</span>
-                  </div>
-                  <div class="customer-detail">
-                    <span class="detail-label">Current Plan:</span>
-                    <span id="customerPlan">-</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="form-group">
-                <label>Subscription Plan</label>
-                <div class="tv-plans" id="dstv-plans" style="display: none;">
-                  <!-- Plans will be loaded dynamically from API -->
-                  <div class="loading-plans">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <p>Select a provider to view plans</p>
-                  </div>
-                </div>
-                
-                <div class="tv-plans" id="gotv-plans" style="display: none;">
-                  <!-- Plans will be loaded dynamically from API -->
-                  <div class="loading-plans">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <p>Select a provider to view plans</p>
-                  </div>
-                </div>
-                
-                <div class="tv-plans" id="startimes-plans" style="display: none;">
-                  <!-- Plans will be loaded dynamically from API -->
-                  <div class="loading-plans">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <p>Select a provider to view plans</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="form-group">
-                <label for="phone">Phone Number</label>
-                <div class="input-with-icon">
-                  <i class="fas fa-phone"></i>
-                  <input type="tel" id="phone" placeholder="Enter phone number for notification" required>
-                </div>
-                <div class="error-message" id="phone-error"></div>
-              </div>
-              
-              <div class="form-group">
-                <label for="email">Email Address</label>
-                <div class="input-with-icon">
-                  <i class="fas fa-envelope"></i>
-                  <input type="email" id="email" placeholder="Enter email for receipt" required>
-                </div>
-                <div class="error-message" id="email-error"></div>
-              </div>
-              
-              <div class="form-group">
-                <div class="payment-method">
-                  <label>Payment Method</label>
-                  <div class="payment-options">
-                    <div class="payment-option">
-                      <input type="radio" id="wallet" name="payment" value="wallet" checked>
-                      <label for="wallet">Wallet Balance</label>
+                <div class="user-name">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
                     </div>
-                    <div class="payment-option">
-                      <input type="radio" id="card" name="payment" value="card">
-                      <label for="card">Debit/Credit Card</label>
-                    </div>
-                  </div>
+                    <span class="user-name">User</span>
                 </div>
-              </div>
-              
-              <button type="submit" class="btn primary full-width">Subscribe Now</button>
-            </form>
-          </div>
-        </div>
-        
-        <div class="service-info">
-          <div class="info-card">
-            <h3>Why Renew TV Subscription With Us?</h3>
-            <ul class="benefits-list">
-              <li><i class="fas fa-check-circle"></i> Instant activation</li>
-              <li><i class="fas fa-check-circle"></i> No convenience fees</li>
-              <li><i class="fas fa-check-circle"></i> Automatic renewal reminders</li>
-              <li><i class="fas fa-check-circle"></i> Subscription history tracking</li>
-              <li><i class="fas fa-check-circle"></i> 24/7 customer support</li>
-            </ul>
-            
-            <div class="faq-section">
-              <h4>Frequently Asked Questions</h4>
-              <div class="faq-item">
-                <div class="faq-question">
-                  <p>How long does it take for my subscription to activate?</p>
-                  <i class="fas fa-chevron-down"></i>
-                </div>
-                <div class="faq-answer">
-                  <p>TV subscriptions are activated instantly upon successful payment. You'll receive a confirmation message.</p>
-                </div>
-              </div>
-              <div class="faq-item">
-                <div class="faq-question">
-                  <p>What happens if I enter the wrong smart card number?</p>
-                  <i class="fas fa-chevron-down"></i>
-                </div>
-                <div class="faq-answer">
-                  <p>Always double-check your smart card number before payment. If you make a mistake, contact our support team immediately for assistance.</p>
-                </div>
-              </div>
-              <div class="faq-item">
-                <div class="faq-question">
-                  <p>Can I pay for someone else's TV subscription?</p>
-                  <i class="fas fa-chevron-down"></i>
-                </div>
-                <div class="faq-answer">
-                  <p>Yes, simply enter the correct smart card/IUC number and your contact details for notifications and receipts.</p>
-                </div>
-              </div>
-              <div class="faq-item">
-                <div class="faq-question">
-                  <p>What is the format for smart card numbers?</p>
-                  <i class="fas fa-chevron-down"></i>
-                </div>
-                <div class="faq-answer">
-                  <p>DStv: 10-11 digits, GOtv: 10 digits, StarTimes: 10-12 digits. Our system will validate your entry.</p>
-                </div>
-              </div>
             </div>
-          </div>
         </div>
-      </div>
-    </div>
-  </main>
-  
-  <footer>
+    </header>
+
     <div class="container">
-      <div class="footer-content">
-        <div class="footer-logo">
-          <h2>EasySubscribe</h2>
-          <p>Your one-stop solution for bill payments</p>
+        <div class="dashboard">
+            <div class="sidebar">
+                <ul class="sidebar-menu">
+                    <li><a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="airtime.html"><i class="fas fa-mobile-alt"></i> Airtime</a></li>
+                    <li><a href="data.html"><i class="fas fa-wifi"></i> Data</a></li>
+                    <li><a href="tv.html" class="active"><i class="fas fa-tv"></i> TV Subscription</a></li>
+                    <li><a href="electricity.html"><i class="fas fa-bolt"></i> Electricity</a></li>
+                    <li><a href="transactions.html"><i class="fas fa-exchange-alt"></i> Transactions</a></li>
+                    <li><a href="fund-wallet.html"><i class="fas fa-wallet"></i> Fund Wallet</a></li>
+                    <li><a href="profile.html"><i class="fas fa-user-cog"></i> Profile</a></li>
+                    <li><a href="#" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </div>
+
+            <div class="main-content">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">TV Subscription</h1>
+                        <div class="breadcrumb">
+                            <a href="dashboard.html">Dashboard</a>
+                            <i class="fas fa-chevron-right"></i>
+                            <span>TV Subscription</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-header">
+                        <div class="service-icon">
+                            <i class="fas fa-tv"></i>
+                        </div>
+                        <div class="service-title">
+                            <h2>TV Subscription</h2>
+                            <p>Subscribe to your favorite TV packages</p>
+                        </div>
+                    </div>
+
+                    <form id="tvForm">
+                        <div class="form-group">
+                            <label>Select TV Provider</label>
+                            <div class="provider-options">
+                                <div class="provider-option" data-provider="dstv">
+                                    <i class="fas fa-satellite-dish"></i>
+                                    <h3>DStv</h3>
+                                    <p>Premium Entertainment</p>
+                                </div>
+                                <div class="provider-option" data-provider="gotv">
+                                    <i class="fas fa-broadcast-tower"></i>
+                                    <h3>GOtv</h3>
+                                    <p>Affordable Entertainment</p>
+                                </div>
+                                <div class="provider-option" data-provider="startimes">
+                                    <i class="fas fa-satellite"></i>
+                                    <h3>StarTimes</h3>
+                                    <p>Digital Entertainment</p>
+                                </div>
+                            </div>
+                            <input type="hidden" id="tv" name="tv" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="smartcard">Smartcard/IUC Number</label>
+                            <input type="text" id="smartcard" class="form-control" placeholder="Enter your smartcard number" required>
+                            <div id="smartcard-error" class="error-message" style="display: none;">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span></span>
+                            </div>
+                        </div>
+
+                        <div id="dstv-plans" class="plans-container" style="display: none;">
+                            <!-- DStv plans will be loaded here -->
+                        </div>
+
+                        <div id="gotv-plans" class="plans-container" style="display: none;">
+                            <!-- GOtv plans will be loaded here -->
+                        </div>
+
+                        <div id="startimes-plans" class="plans-container" style="display: none;">
+                            <!-- StarTimes plans will be loaded here -->
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" class="form-control" placeholder="Enter your phone number" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" class="form-control" placeholder="Enter your email address" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Payment Method</label>
+                            <div class="provider-options">
+                                <div class="provider-option selected" data-payment="wallet">
+                                    <i class="fas fa-wallet"></i>
+                                    <h3>Wallet Balance</h3>
+                                    <p>Pay from your wallet</p>
+                                </div>
+                            </div>
+                            <input type="hidden" id="payment" name="payment" value="wallet" required>
+                        </div>
+
+                        <div id="customerDetails" class="customer-details">
+                            <h3>Customer Details</h3>
+                            <div class="customer-info">
+                                <div class="info-item">
+                                    <div class="info-label">Customer Name</div>
+                                    <div id="customerName" class="info-value">-</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Current Plan</div>
+                                    <div id="customerPlan" class="info-value">-</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" id="validateBtn" class="btn btn-secondary">Validate Smartcard</button>
+                            <button type="submit" id="proceedBtn" class="btn btn-success" disabled>Proceed to Confirmation</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div class="footer-links">
-          <div class="footer-column">
-            <h4>Company</h4>
-            <a href="#">About Us</a>
-            <a href="#">Careers</a>
-            <a href="#">Contact</a>
-          </div>
-          <div class="footer-column">
-            <h4>Services</h4>
-            <a href="airtime.html">Airtime</a>
-            <a href="data.html">Data</a>
-            <a href="electricity.html">Electricity</a>
-            <a href="tv.html">TV Subscription</a>
-          </div>
-          <div class="footer-column">
-            <h4>Legal</h4>
-            <a href="#">Terms of Service</a>
-            <a href="#">Privacy Policy</a>
-            <a href="#">FAQ</a>
-          </div>
-        </div>
-      </div>
-      <div class="copyright">
-        <p>&copy; 2025 EasySubscribe. All Rights Reserved.</p>
-      </div>
     </div>
-  </footer>
-  
-  <!-- Load main.js for all functionality -->
-  <script src="main.js"></script>
-  
-  <!-- Page-specific JavaScript -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Initialize TV page functionality
-      initializeTvPage();
-      
-      // Setup FAQ toggle
-      setupFaqToggle();
-    });
-    
-    // Initialize TV page
-    function initializeTvPage() {
-      // Setup provider change listener
-      const tvProvider = document.getElementById('tv');
-      if (tvProvider) {
-        tvProvider.addEventListener('change', function() {
-          const provider = this.value;
-          if (provider) {
-            // Hide all plan sections
-            document.getElementById('dstv-plans').style.display = 'none';
-            document.getElementById('gotv-plans').style.display = 'none';
-            document.getElementById('startimes-plans').style.display = 'none';
-            
-            // Show selected provider's plans
-            document.getElementById(`${provider}-plans`).style.display = 'grid';
-            
-            // Load plans for the selected provider
-            loadTvPlans(provider);
-            
-            // Validate smartcard if it has a value
-            if (typeof validateSmartcardOnInput === 'function') {
-              validateSmartcardOnInput();
-            }
-          }
-        });
-      }
-      
-      // Setup smartcard input listener for customer details
-      const smartcardInput = document.getElementById('smartcard');
-      if (smartcardInput) {
-        // Use debounce to avoid too many API calls
-        let debounceTimer;
-        
-        smartcardInput.addEventListener('input', function() {
-          clearTimeout(debounceTimer);
-          debounceTimer = setTimeout(() => {
-            // Use the function from main.js if available
-            if (typeof loadCustomerDetails === 'function') {
-              loadCustomerDetails();
-            }
-          }, 500); // Wait 500ms after user stops typing
-        });
-        
-        smartcardInput.addEventListener('blur', function() {
-          // Use the function from main.js if available
-          if (typeof loadCustomerDetails === 'function') {
-            loadCustomerDetails();
-          }
-        });
-      }
-    }
-    
-    // Setup FAQ toggle for this page
-    function setupFaqToggle() {
-      const faqQuestions = document.querySelectorAll('.faq-question');
-      
-      faqQuestions.forEach(question => {
-        question.addEventListener('click', () => {
-          const answer = question.nextElementSibling;
-          const icon = question.querySelector('i');
-          
-          answer.classList.toggle('active');
-          icon.classList.toggle('fa-chevron-down');
-          icon.classList.toggle('fa-chevron-up');
-        });
-      });
-    }
-    
-    // Load TV plans from API
-    async function loadTvPlans(provider) {
-      try {
-        const plansContainer = document.getElementById(`${provider}-plans`);
-        if (!plansContainer) return;
-        
-        // Show loading state
-        plansContainer.innerHTML = `
-          <div class="loading-plans">
-            <i class="fas fa-spinner fa-spin"></i>
-            <p>Loading ${provider} plans...</p>
-          </div>
-        `;
-        
-        // Use the global API_BASE if available, otherwise construct it
-        const apiUrl = typeof API_BASE !== 'undefined' ? API_BASE : 
-          (window.location.hostname === 'localhost' ? 'http://localhost:5001' : 'https://easy-subscribe-backend.onrender.com');
-        
-        console.log(`Fetching TV plans from: ${apiUrl}/api/services/tv-variations?provider=${provider}`);
-        
-        const response = await fetch(`${apiUrl}/api/services/tv-variations?provider=${provider}`);
-        
-        // Check if response is OK
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log('TV plans response:', data);
-        
-        if (data.success) {
-          plansContainer.innerHTML = '';
-          
-          if (data.data.length === 0) {
-            plansContainer.innerHTML = '<p>No plans available for this provider</p>';
-            return;
-          }
-          
-          data.data.forEach(plan => {
-            const planOption = document.createElement('div');
-            planOption.className = 'plan-option';
-            planOption.innerHTML = `
-              <input type="radio" id="plan-${plan.variation_id}" name="plan" value="${plan.variation_id}" required>
-              <label for="plan-${plan.variation_id}">
-                <div class="plan-name">${plan.package_bouquet}</div>
-                <div class="plan-price">₦${Number(plan.price).toLocaleString()}</div>
-              </label>
-            `;
-            plansContainer.appendChild(planOption);
-          });
-        } else {
-          console.error('Failed to load TV plans:', data.message);
-          plansContainer.innerHTML = `
-            <div class="error-message">
-              <i class="fas fa-exclamation-circle"></i>
-              <p>Failed to load TV plans: ${data.message || 'Unknown error'}</p>
-            </div>
-          `;
-        }
-      } catch (error) {
-        console.error('Error loading TV plans:', error);
-        const plansContainer = document.getElementById(`${provider}-plans`);
-        if (plansContainer) {
-          plansContainer.innerHTML = `
-            <div class="error-message">
-              <i class="fas fa-exclamation-circle"></i>
-              <p>Failed to load TV plans: ${error.message || 'Please check your connection.'}</p>
-              <p class="error-debug">Debug: Check browser console for more details</p>
-            </div>
-          `;
-        }
-      }
-    }
-  </script>
+
+    <div class="loading-indicator">
+        <div class="loading-spinner"></div>
+        <div class="loading-message">Loading...</div>
+    </div>
+
+    <div id="alert-container" class="alert-container"></div>
+
+    <script src="main.js"></script>
 </body>
 </html>

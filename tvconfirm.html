@@ -1,375 +1,584 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Confirm TV Subscription - EasySubscribe</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm TV Subscription - EasySubscribe</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #4a6de5, #6a11cb);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            margin-right: 10px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .wallet-balance {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            margin-right: 15px;
+        }
+        
+        .notification-bell {
+            position: relative;
+            margin-right: 20px;
+            cursor: pointer;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .user-name {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+        
+        .dashboard {
+            display: flex;
+            margin-top: 30px;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            height: fit-content;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+        }
+        
+        .sidebar-menu li {
+            margin-bottom: 10px;
+        }
+        
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: #555;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background: #f0f3ff;
+            color: #4a6de5;
+        }
+        
+        .sidebar-menu i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 30px;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            color: #777;
+        }
+        
+        .breadcrumb a {
+            color: #4a6de5;
+            text-decoration: none;
+        }
+        
+        .breadcrumb i {
+            margin: 0 10px;
+            color: #ccc;
+        }
+        
+        .service-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+        }
+        
+        .confirmation-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .confirmation-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #4a6de5, #6a11cb);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 36px;
+            margin: 0 auto 20px;
+        }
+        
+        .confirmation-header h2 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .confirmation-header p {
+            color: #777;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .confirmation-details {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .confirmation-details h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .detail-label {
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .payment-summary {
+            background: #f0f3ff;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .payment-summary h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .summary-row.total {
+            font-weight: 700;
+            font-size: 18px;
+            color: #4a6de5;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            margin-top: 15px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: #4a6de5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background: #3a5bd0;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-success {
+            background: #2ed573;
+        }
+        
+        .btn-success:hover {
+            background: #26d065;
+        }
+        
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn-group .btn {
+            flex: 1;
+        }
+        
+        .loading-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #4a6de5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        .loading-message {
+            font-size: 18px;
+            color: #4a6de5;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 400px;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .alert-error {
+            background: #ff4757;
+            color: white;
+        }
+        
+        .alert-success {
+            background: #2ed573;
+            color: white;
+        }
+        
+        .alert-warning {
+            background: #ffa502;
+            color: white;
+        }
+        
+        .alert i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+        
+        .close-alert {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: inherit;
+            font-size: 18px;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+        
+        .close-alert:hover {
+            opacity: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                margin-bottom: 30px;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
-  <header>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-bolt"></i>
+                <span>EasySubscribe</span>
+            </div>
+            <div class="user-info">
+                <div class="wallet-balance">₦<span class="wallet-balance">0.00</span></div>
+                <div class="notification-bell">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">0</span>
+                </div>
+                <div class="user-name">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <span class="user-name">User</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
     <div class="container">
-      <div class="logo">
-        <h1>EasySubscribe</h1>
-      </div>
-      <nav class="desktop-nav">
-        <a href="index.html">Home</a>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="airtime.html">Airtime</a>
-        <a href="data.html">Data</a>
-        <a href="electricity.html">Electricity</a>
-        <a href="tv.html" class="active">TV</a>
-      </nav>
-      <div class="mobile-menu-btn">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
+        <div class="dashboard">
+            <div class="sidebar">
+                <ul class="sidebar-menu">
+                    <li><a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="airtime.html"><i class="fas fa-mobile-alt"></i> Airtime</a></li>
+                    <li><a href="data.html"><i class="fas fa-wifi"></i> Data</a></li>
+                    <li><a href="tv.html" class="active"><i class="fas fa-tv"></i> TV Subscription</a></li>
+                    <li><a href="electricity.html"><i class="fas fa-bolt"></i> Electricity</a></li>
+                    <li><a href="transactions.html"><i class="fas fa-exchange-alt"></i> Transactions</a></li>
+                    <li><a href="fund-wallet.html"><i class="fas fa-wallet"></i> Fund Wallet</a></li>
+                    <li><a href="profile.html"><i class="fas fa-user-cog"></i> Profile</a></li>
+                    <li><a href="#" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </div>
+
+            <div class="main-content">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Confirm TV Subscription</h1>
+                        <div class="breadcrumb">
+                            <a href="dashboard.html">Dashboard</a>
+                            <i class="fas fa-chevron-right"></i>
+                            <a href="tv.html">TV Subscription</a>
+                            <i class="fas fa-chevron-right"></i>
+                            <span>Confirm Subscription</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="service-card">
+                    <div class="confirmation-header">
+                        <div class="confirmation-icon">
+                            <i class="fas fa-tv"></i>
+                        </div>
+                        <h2>Confirm Your TV Subscription</h2>
+                        <p>Please review your subscription details before confirming your purchase</p>
+                    </div>
+
+                    <div class="confirmation-details">
+                        <h3>Subscription Details</h3>
+                        <div class="details-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">Provider</div>
+                                <div id="confirmProvider" class="detail-value">-</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Smartcard Number</div>
+                                <div id="confirmSmartcard" class="detail-value">-</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Subscription Plan</div>
+                                <div id="confirmPlan" class="detail-value">-</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Phone Number</div>
+                                <div id="confirmPhone" class="detail-value">-</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Email Address</div>
+                                <div id="confirmEmail" class="detail-value">-</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Payment Method</div>
+                                <div id="confirmPaymentMethod" class="detail-value">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="payment-summary">
+                        <h3>Payment Summary</h3>
+                        <div class="summary-row">
+                            <div>Subscription Amount</div>
+                            <div id="confirmAmount">₦0.00</div>
+                        </div>
+                        <div class="summary-row">
+                            <div>Service Fee</div>
+                            <div>₦0.00</div>
+                        </div>
+                        <div class="summary-row total">
+                            <div>Total Amount</div>
+                            <div id="confirmTotal">₦0.00</div>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button id="cancelTvSubscription" class="btn btn-secondary">Cancel</button>
+                        <button id="confirmTvSubscription" class="btn btn-success">Confirm Subscription</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </header>
-  
-  <main class="confirmation-page">
-    <div class="container">
-      <div class="confirmation-header">
-        <h2>Confirm Your TV Subscription</h2>
-        <p>Please review your subscription details before confirming</p>
-      </div>
-      
-      <div class="confirmation-container">
-        <div class="confirmation-card">
-          <div class="confirmation-details">
-            <h3>Subscription Details</h3>
-            
-            <div class="detail-row">
-              <div class="detail-label">Provider:</div>
-              <div class="detail-value" id="confirmProvider">-</div>
-            </div>
-            
-            <div class="detail-row">
-              <div class="detail-label">Smart Card / IUC Number:</div>
-              <div class="detail-value" id="confirmSmartcard">-</div>
-            </div>
-            
-            <div class="detail-row">
-              <div class="detail-label">Customer Name:</div>
-              <div class="detail-value" id="confirmCustomerName">-</div>
-            </div>
-            
-            <div class="detail-row">
-              <div class="detail-label">Current Plan:</div>
-              <div class="detail-value" id="confirmCurrentPlan">-</div>
-            </div>
-            
-            <div class="detail-row">
-              <div class="detail-label">Subscription Plan:</div>
-              <div class="detail-value" id="confirmPlan">-</div>
-            </div>
-            
-            <div class="detail-row">
-              <div class="detail-label">Amount:</div>
-              <div class="detail-value" id="confirmAmount">-</div>
-            </div>
-            
-            <div class="detail-row">
-              <div class="detail-label">Phone Number:</div>
-              <div class="detail-value" id="confirmPhone">-</div>
-            </div>
-            
-            <div class="detail-row">
-              <div class="detail-label">Email Address:</div>
-              <div class="detail-value" id="confirmEmail">-</div>
-            </div>
-            
-            <div class="detail-row">
-              <div class="detail-label">Payment Method:</div>
-              <div class="detail-value" id="confirmPaymentMethod">-</div>
-            </div>
-            
-            <div class="detail-row total-row">
-              <div class="detail-label">Total Amount:</div>
-              <div class="detail-value" id="confirmTotal">-</div>
-            </div>
-          </div>
-          
-          <div class="confirmation-actions">
-            <button id="cancelTvSubscription" class="btn secondary">Cancel</button>
-            <button id="confirmTvSubscription" class="btn primary">Confirm Subscription</button>
-          </div>
-        </div>
-        
-        <div class="info-card">
-          <h3>Important Information</h3>
-          <ul>
-            <li>Your subscription will be activated immediately upon confirmation</li>
-            <li>You will receive a confirmation message with transaction details</li>
-            <li>Ensure your smart card number is correct before confirming</li>
-            <li>Keep your transaction reference for future reference</li>
-          </ul>
-        </div>
-      </div>
+
+    <div class="loading-indicator">
+        <div class="loading-spinner"></div>
+        <div class="loading-message">Processing...</div>
     </div>
-  </main>
-  
-  <footer>
-    <div class="container">
-      <div class="footer-content">
-        <div class="footer-logo">
-          <h2>EasySubscribe</h2>
-          <p>Your one-stop solution for bill payments</p>
-        </div>
-        <div class="footer-links">
-          <div class="footer-column">
-            <h4>Company</h4>
-            <a href="#">About Us</a>
-            <a href="#">Careers</a>
-            <a href="#">Contact</a>
-          </div>
-          <div class="footer-column">
-            <h4>Services</h4>
-            <a href="airtime.html">Airtime</a>
-            <a href="data.html">Data</a>
-            <a href="electricity.html">Electricity</a>
-            <a href="tv.html">TV Subscription</a>
-          </div>
-          <div class="footer-column">
-            <h4>Legal</h4>
-            <a href="#">Terms of Service</a>
-            <a href="#">Privacy Policy</a>
-            <a href="#">FAQ</a>
-          </div>
-        </div>
-      </div>
-      <div class="copyright">
-        <p>&copy; 2025 EasySubscribe. All Rights Reserved.</p>
-      </div>
-    </div>
-  </footer>
-  
-  <!-- Alert container for notifications -->
-  <div id="alert-container"></div>
-  
-  <!-- Load main.js for all functionality -->
-  <script src="main.js"></script>
-  
-  <!-- Page-specific JavaScript -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Initialize confirmation page
-      initializeConfirmationPage();
-    });
-    
-    function initializeConfirmationPage() {
-      // Get TV data from sessionStorage
-      const tvData = JSON.parse(sessionStorage.getItem('tvData') || '{}');
-      
-      // Check if we have valid data
-      if (!tvData.provider || !tvData.smartcard || !tvData.plan) {
-        // Redirect back to TV page if no data
-        showAlert('Invalid subscription data. Please start over.', 'error');
-        setTimeout(() => {
-          window.location.href = 'tv.html';
-        }, 2000);
-        return;
-      }
-      
-      // Populate confirmation details
-      document.getElementById('confirmProvider').textContent = tvData.provider.toUpperCase();
-      document.getElementById('confirmSmartcard').textContent = tvData.smartcard;
-      document.getElementById('confirmPhone').textContent = tvData.phone;
-      document.getElementById('confirmEmail').textContent = tvData.email;
-      
-      // Get payment method
-      const paymentMethod = tvData.paymentMethod || 'wallet';
-      document.getElementById('confirmPaymentMethod').textContent = paymentMethod === 'wallet' ? 'Wallet Balance' : 'Debit/Credit Card';
-      
-      // Load plan details
-      loadPlanDetails(tvData.provider, tvData.plan, tvData);
-      
-      // Load customer details
-      loadCustomerDetails(tvData.provider, tvData.smartcard);
-      
-      // Setup event listeners
-      const cancelBtn = document.getElementById('cancelTvSubscription');
-      if (cancelBtn) {
-        cancelBtn.addEventListener('click', function() {
-          // Clear session storage and go back to TV page
-          sessionStorage.removeItem('tvData');
-          window.location.href = 'tv.html';
-        });
-      }
-      
-      const confirmBtn = document.getElementById('confirmTvSubscription');
-      if (confirmBtn) {
-        confirmBtn.addEventListener('click', function() {
-          // Process TV subscription using the function from main.js
-          if (typeof confirmTvSubscription === 'function') {
-            // Get the plan price from the confirmation details
-            const amountText = document.getElementById('confirmAmount').textContent;
-            const amount = parseFloat(amountText.replace('₦', '').replace(',', ''));
-            
-            confirmTvSubscription(tvData, amount);
-          } else {
-            // Fallback to local implementation
-            processTvSubscription();
-          }
-        });
-      }
-    }
-    
-    // Load plan details from API
-    async function loadPlanDetails(provider, planId, tvData) {
-      try {
-        // Show loading state for plan details
-        document.getElementById('confirmPlan').textContent = 'Loading...';
-        document.getElementById('confirmAmount').textContent = 'Loading...';
-        document.getElementById('confirmTotal').textContent = 'Loading...';
-        
-        // Use the global API_BASE if available, otherwise construct it
-        const apiUrl = typeof API_BASE !== 'undefined' ? API_BASE : 
-          (window.location.hostname === 'localhost' ? 'http://localhost:5001' : 'https://easy-subscribe-backend.onrender.com');
-        
-        const response = await fetch(`${apiUrl}/api/services/tv-variations?provider=${provider}`);
-        const data = await response.json();
-        
-        if (data.success) {
-          // Find the selected plan
-          const selectedPlan = data.data.find(plan => plan.variation_id == planId);
-          
-          if (selectedPlan) {
-            document.getElementById('confirmPlan').textContent = selectedPlan.package_bouquet;
-            document.getElementById('confirmAmount').textContent = `₦${Number(selectedPlan.price).toLocaleString()}`;
-            document.getElementById('confirmTotal').textContent = `₦${Number(selectedPlan.price).toLocaleString()}`;
-            
-            // Store plan details in sessionStorage for receipt
-            tvData.planName = selectedPlan.package_bouquet;
-            tvData.planPrice = selectedPlan.price;
-            sessionStorage.setItem('tvData', JSON.stringify(tvData));
-          } else {
-            // Plan not found
-            document.getElementById('confirmPlan').textContent = 'Unknown Plan';
-            document.getElementById('confirmAmount').textContent = '₦0.00';
-            document.getElementById('confirmTotal').textContent = '₦0.00';
-          }
-        } else {
-          // API error
-          console.error('Failed to load TV plans:', data.message);
-          document.getElementById('confirmPlan').textContent = 'Error loading plan';
-          document.getElementById('confirmAmount').textContent = '₦0.00';
-          document.getElementById('confirmTotal').textContent = '₦0.00';
-        }
-      } catch (error) {
-        console.error('Error loading plan details:', error);
-        document.getElementById('confirmPlan').textContent = 'Error loading plan';
-        document.getElementById('confirmAmount').textContent = '₦0.00';
-        document.getElementById('confirmTotal').textContent = '₦0.00';
-      }
-    }
-    
-    // Load customer details from API
-    async function loadCustomerDetails(provider, smartcard) {
-      try {
-        // Show loading state for customer details
-        document.getElementById('confirmCustomerName').textContent = 'Loading...';
-        document.getElementById('confirmCurrentPlan').textContent = 'Loading...';
-        
-        // Use the global API_BASE if available, otherwise construct it
-        const apiUrl = typeof API_BASE !== 'undefined' ? API_BASE : 
-          (window.location.hostname === 'localhost' ? 'http://localhost:5001' : 'https://easy-subscribe-backend.onrender.com');
-        
-        const response = await fetch(`${apiUrl}/api/services/tv-customer?provider=${provider}&smartcard=${smartcard}`);
-        const data = await response.json();
-        
-        if (data.success) {
-          // Display customer details
-          document.getElementById('confirmCustomerName').textContent = data.data.customerName || 'Not available';
-          document.getElementById('confirmCurrentPlan').textContent = data.data.currentPlan || 'Not available';
-        } else {
-          // If no customer details found, show placeholders
-          document.getElementById('confirmCustomerName').textContent = 'Not available';
-          document.getElementById('confirmCurrentPlan').textContent = 'Not available';
-        }
-      } catch (error) {
-        console.error('Error loading customer details:', error);
-        document.getElementById('confirmCustomerName').textContent = 'Not available';
-        document.getElementById('confirmCurrentPlan').textContent = 'Not available';
-      }
-    }
-    
-    // Fallback function to process TV subscription
-    // This will only be used if the function from main.js is not available
-    async function processTvSubscription() {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        showAlert('Please login to confirm TV subscription');
-        return;
-      }
-      
-      // Get TV data from sessionStorage
-      const tvData = JSON.parse(sessionStorage.getItem('tvData') || '{}');
-      
-      try {
-        // Show loading state
-        const confirmBtn = document.getElementById('confirmTvSubscription');
-        const originalText = confirmBtn.textContent;
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = 'Processing...';
-        
-        // API call
-        const apiUrl = typeof API_BASE !== 'undefined' ? API_BASE : 
-          (window.location.hostname === 'localhost' ? 'http://localhost:5001' : 'https://easy-subscribe-backend.onrender.com');
-        
-        const response = await fetch(`${apiUrl}/api/services/tv`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            provider: tvData.provider,
-            smartcard: tvData.smartcard,
-            plan: tvData.plan,
-            phone: tvData.phone,
-            email: tvData.email
-          })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-          // Clear session storage
-          sessionStorage.removeItem('tvData');
-          
-          // Store transaction data in sessionStorage for receipt
-          sessionStorage.setItem('tvTransaction', JSON.stringify(data.data));
-          
-          // Redirect to receipt page
-          window.location.href = 'tvreceipt.html';
-        } else {
-          // Show error message
-          showAlert(data.message || 'TV subscription failed. Please try again.');
-        }
-        
-      } catch (error) {
-        console.error('TV subscription error:', error);
-        
-        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-          showAlert('Unable to connect to the server. Please check your internet connection.');
-        } else {
-          showAlert('TV subscription failed. Please check your connection and try again.');
-        }
-      } finally {
-        // Reset button state
-        const confirmBtn = document.getElementById('confirmTvSubscription');
-        if (confirmBtn) {
-          confirmBtn.disabled = false;
-          confirmBtn.textContent = originalText || 'Confirm Subscription';
-        }
-      }
-    }
-  </script>
+
+    <div id="alert-container" class="alert-container"></div>
+
+    <script src="main.js"></script>
 </body>
 </html>

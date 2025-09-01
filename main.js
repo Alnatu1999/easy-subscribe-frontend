@@ -1,22 +1,26 @@
-// main.js - Main JavaScript file for EasySubscribe website
-// API Configuration - UPDATED FOR PRODUCTION
-// Check if API_BASE is already defined to prevent redeclaration errors
+// main.js - Main JavaScript file for EasySubscribe website (UPDATED)
+// API Configuration
 if (typeof window.API_BASE === 'undefined') {
-  // Try to detect if we're in development or production
   const isLocalhost = window.location.hostname === 'localhost' || 
                      window.location.hostname === '127.0.0.1';
   
   window.API_BASE = isLocalhost 
-    ? 'http://localhost:5001'  // Local development server
-    : 'https://easy-subscribe-backend.onrender.com'; // Production server
+    ? 'http://localhost:5001'  
+    : 'https://easy-subscribe-backend.onrender.com';
 }
-// Use a local reference to API_BASE
+
 const API_BASE = window.API_BASE;
+
+// NEW: Global loading state and request cancellation
+let loadingIndicator = null;
+let activeRequests = {};
+
 // DOM Elements
 const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
 const desktopNav = document.querySelector('.desktop-nav');
 const menuToggle = document.querySelector('.menu-toggle');
 const sidebar = document.querySelector('.sidebar');
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
   initializeApp();
@@ -36,7 +40,21 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.location.pathname.includes('admin-dashboard.html')) {
     setupAdminDashboard();
   }
+  
+  // Add beforeunload event listener to warn about pending TV subscription
+  window.addEventListener('beforeunload', handleBeforeUnload);
 });
+
+// NEW: Handle beforeunload to warn about pending TV subscription
+function handleBeforeUnload(e) {
+  const tvData = JSON.parse(sessionStorage.getItem('tvData') || '{}');
+  if (tvData.provider && tvData.smartcard && tvData.plan) {
+    const message = 'You have a pending TV subscription. Are you sure you want to leave?';
+    e.returnValue = message;
+    return message;
+  }
+}
+
 // Check server connection with fallback
 async function checkServerConnection() {
   try {
@@ -50,15 +68,14 @@ async function checkServerConnection() {
       console.log('Server is running and accessible');
     } else {
       console.error('Server responded with status:', response.status);
-      // Try fallback server if available
       tryFallbackServer();
     }
   } catch (error) {
     console.error('Cannot connect to server:', error.message);
-    // Try fallback server if available
     tryFallbackServer();
   }
 }
+
 // Try fallback server
 function tryFallbackServer() {
   const currentApiBase = API_BASE;
@@ -76,7 +93,6 @@ function tryFallbackServer() {
     .then(response => {
       if (response.ok) {
         console.log('Fallback server is accessible');
-        // Update API_BASE to use fallback
         window.API_BASE = fallbackApiBase;
         showAlert('Using backup server. Some features may be limited.', 'warning');
       } else {
@@ -92,6 +108,51 @@ function tryFallbackServer() {
     showAlert('Unable to connect to the server. Please check your internet connection.', 'error');
   }
 }
+
+// NEW: Show loading indicator
+function showLoading(message = 'Loading...') {
+  if (!loadingIndicator) {
+    loadingIndicator = document.createElement('div');
+    loadingIndicator.className = 'loading-indicator';
+    loadingIndicator.innerHTML = `
+      <div class="loading-spinner"></div>
+      <div class="loading-message">${message}</div>
+    `;
+    document.body.appendChild(loadingIndicator);
+  } else {
+    const messageElement = loadingIndicator.querySelector('.loading-message');
+    if (messageElement) {
+      messageElement.textContent = message;
+    }
+    loadingIndicator.style.display = 'flex';
+  }
+}
+
+// NEW: Hide loading indicator
+function hideLoading() {
+  if (loadingIndicator) {
+    loadingIndicator.style.display = 'none';
+  }
+}
+
+// NEW: AbortController for request cancellation
+function createAbortController(key) {
+  if (activeRequests[key]) {
+    activeRequests[key].abort();
+  }
+  const controller = new AbortController();
+  activeRequests[key] = controller;
+  return controller;
+}
+
+// NEW: Clean up abort controller
+function cleanupAbortController(key) {
+  if (activeRequests[key]) {
+    delete activeRequests[key];
+  }
+}
+
+// Initialize app
 function initializeApp() {
   setupMobileMenu();
   setupSidebarToggle();
@@ -111,10 +172,12 @@ function initializeApp() {
   setupModals();
   setupTransactionsPage();
   setupNotificationsPage();
-  setupTvVariations(); // NEW: Setup TV variations
-  setupWalletFunding(); // NEW: Setup wallet funding
-  setupSmartcardValidation(); // NEW: Setup smartcard validation
+  setupTvVariations();
+  setupWalletFunding();
+  setupSmartcardValidation();
+  setupPagination(); // NEW: Setup pagination
 }
+
 // Mobile Menu Toggle
 function setupMobileMenu() {
   if (mobileMenuBtn && desktopNav) {
@@ -123,6 +186,7 @@ function setupMobileMenu() {
     });
   }
 }
+
 // Sidebar Toggle for Dashboard
 function setupSidebarToggle() {
   if (menuToggle && sidebar) {
@@ -131,6 +195,7 @@ function setupSidebarToggle() {
     });
   }
 }
+
 // Form Handlers
 function setupFormHandlers() {
   // Login Form
@@ -187,27 +252,28 @@ function setupFormHandlers() {
     electricityForm.addEventListener('submit', (e) => handleServiceForm(e, 'electricity'));
   }
   
-  // TV Form - FIXED to properly handle submission
+  // TV Form
   const tvForm = document.getElementById('tvForm');
   if (tvForm) {
     tvForm.addEventListener('submit', (e) => {
-      e.preventDefault(); // Ensure default form submission is prevented
+      e.preventDefault();
       handleServiceForm(e, 'tv');
     });
   }
   
-  // NEW: Wallet Funding Request Form
+  // Wallet Funding Request Form
   const fundRequestForm = document.getElementById('fundRequestForm');
   if (fundRequestForm) {
     fundRequestForm.addEventListener('submit', handleFundRequest);
   }
   
-  // NEW: Admin Fund Wallet Form
+  // Admin Fund Wallet Form
   const adminFundWalletForm = document.getElementById('adminFundWalletForm');
   if (adminFundWalletForm) {
     adminFundWalletForm.addEventListener('submit', handleAdminFundWallet);
   }
 }
+
 // Password Visibility Toggle
 function setupPasswordToggles() {
   const toggleButtons = document.querySelectorAll('.toggle-password');
@@ -228,6 +294,7 @@ function setupPasswordToggles() {
     });
   });
 }
+
 // Quick Amount Buttons for Airtime
 function setupQuickAmountButtons() {
   const amountButtons = document.querySelectorAll('.amount-btn');
@@ -241,13 +308,13 @@ function setupQuickAmountButtons() {
     });
   }
 }
+
 // Plan Selection for Data
 function setupPlanSelection() {
   const planOptions = document.querySelectorAll('.plan-option input[type="radio"]');
   
   planOptions.forEach(option => {
     option.addEventListener('change', () => {
-      // Update UI to show selected plan
       const allPlans = document.querySelectorAll('.plan-option');
       allPlans.forEach(plan => {
         plan.classList.remove('selected');
@@ -259,12 +326,12 @@ function setupPlanSelection() {
     });
   });
 }
-// UPDATED: Provider Selection for TV with VTU integration
+
+// Provider Selection for TV with VTU integration
 function setupProviderSelection() {
   const tvProvider = document.getElementById('tv');
   if (tvProvider) {
     tvProvider.addEventListener('change', () => {
-      // Hide all plan sections
       const dstvPlans = document.getElementById('dstv-plans');
       const gotvPlans = document.getElementById('gotv-plans');
       const startimesPlans = document.getElementById('startimes-plans');
@@ -273,7 +340,6 @@ function setupProviderSelection() {
       if (gotvPlans) gotvPlans.style.display = 'none';
       if (startimesPlans) startimesPlans.style.display = 'none';
       
-      // Show selected provider's plans
       switch (tvProvider.value) {
         case 'dstv':
           if (dstvPlans) dstvPlans.style.display = 'grid';
@@ -286,30 +352,48 @@ function setupProviderSelection() {
           break;
       }
       
-      // Load variations for the selected provider
       loadTvVariations();
-      
-      // Validate smartcard format when provider changes
       validateSmartcardOnInput();
     });
   }
 }
-// NEW: Setup TV variations
+
+// Setup TV variations
 function setupTvVariations() {
   const tvProvider = document.getElementById('tv');
   if (tvProvider && tvProvider.value) {
     loadTvVariations();
   }
 }
-// NEW: Load TV variations from API with better error handling
+
+// Load TV variations from API with caching
 async function loadTvVariations() {
-  try {
-    const provider = document.getElementById('tv')?.value;
-    if (!provider) return;
+  const provider = document.getElementById('tv')?.value;
+  if (!provider) return;
+  
+  // Check cache first
+  const cacheKey = `tvVariations_${provider}`;
+  const cachedData = sessionStorage.getItem(cacheKey);
+  
+  if (cachedData) {
+    const parsedData = JSON.parse(cachedData);
+    const now = new Date().getTime();
     
+    // Check if cache is still valid (1 hour)
+    if (now - parsedData.timestamp < 3600000) {
+      console.log(`Using cached TV variations for ${provider}`);
+      displayTvVariations(parsedData.data, provider);
+      return;
+    }
+  }
+  
+  try {
     console.log(`Loading TV variations for provider: ${provider} from: ${API_BASE}/api/services/tv-variations?provider=${provider}`);
     
-    const response = await fetch(`${API_BASE}/api/services/tv-variations?provider=${provider}`);
+    const controller = createAbortController('tvVariations');
+    const response = await fetch(`${API_BASE}/api/services/tv-variations?provider=${provider}`, {
+      signal: controller.signal
+    });
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -319,42 +403,23 @@ async function loadTvVariations() {
     console.log('TV variations response:', data);
     
     if (data.success) {
-      // Update the UI with the variations
-      const plansContainer = document.getElementById(`${provider}-plans`);
-      if (plansContainer) {
-        plansContainer.innerHTML = '';
-        
-        if (data.data.length === 0) {
-          plansContainer.innerHTML = '<p>No plans available for this provider</p>';
-          return;
-        }
-        
-        data.data.forEach(plan => {
-          const planElement = document.createElement('div');
-          planElement.className = 'plan-option';
-          planElement.innerHTML = `
-            <input type="radio" id="plan-${plan.variation_id}" name="plan" value="${plan.variation_id}" required>
-            <label for="plan-${plan.variation_id}">
-              <div class="plan-name">${plan.package_bouquet}</div>
-              <div class="plan-price">₦${Number(plan.price).toLocaleString()}</div>
-            </label>
-          `;
-          plansContainer.appendChild(planElement);
-        });
-      }
+      // Cache the response
+      sessionStorage.setItem(cacheKey, JSON.stringify({
+        data: data.data,
+        timestamp: new Date().getTime()
+      }));
+      
+      displayTvVariations(data.data, provider);
     } else {
       console.error('Failed to load TV variations:', data.message);
-      const plansContainer = document.getElementById(`${provider}-plans`);
-      if (plansContainer) {
-        plansContainer.innerHTML = `
-          <div class="error-message">
-            <i class="fas fa-exclamation-circle"></i>
-            <p>Failed to load TV variations: ${data.message || 'Unknown error'}</p>
-          </div>
-        `;
-      }
+      displayTvVariationsError(provider, data.message);
     }
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('TV variations request was aborted');
+      return;
+    }
+    
     console.error('Error loading TV variations:', error);
     
     // Try fallback API if available
@@ -373,24 +438,12 @@ async function loadTvVariations() {
           console.log('Fallback TV variations response:', fallbackData);
           
           if (fallbackData.success) {
-            const plansContainer = document.getElementById(`${provider}-plans`);
-            if (plansContainer) {
-              plansContainer.innerHTML = '';
-              
-              fallbackData.data.forEach(plan => {
-                const planElement = document.createElement('div');
-                planElement.className = 'plan-option';
-                planElement.innerHTML = `
-                  <input type="radio" id="plan-${plan.variation_id}" name="plan" value="${plan.variation_id}" required>
-                  <label for="plan-${plan.variation_id}">
-                    <div class="plan-name">${plan.package_bouquet}</div>
-                    <div class="plan-price">₦${Number(plan.price).toLocaleString()}</div>
-                  </label>
-                `;
-                plansContainer.appendChild(planElement);
-              });
-            }
+            sessionStorage.setItem(cacheKey, JSON.stringify({
+              data: fallbackData.data,
+              timestamp: new Date().getTime()
+            }));
             
+            displayTvVariations(fallbackData.data, provider);
             showAlert('Using backup server. Some features may be limited.', 'warning');
             return;
           }
@@ -400,49 +453,79 @@ async function loadTvVariations() {
       }
     }
     
-    // If all APIs fail, show error message
-    const plansContainer = document.getElementById(`${provider}-plans`);
-    if (plansContainer) {
-      plansContainer.innerHTML = `
-        <div class="error-message">
-          <i class="fas fa-exclamation-circle"></i>
-          <p>Failed to load TV variations. Please check your connection.</p>
-          <p class="error-debug">Debug: ${error.message}</p>
-        </div>
-      `;
-    }
+    displayTvVariationsError(provider, 'Failed to load TV variations. Please check your connection.');
+  } finally {
+    cleanupAbortController('tvVariations');
   }
 }
-// NEW: Setup Smartcard Validation
+
+// NEW: Display TV variations
+function displayTvVariations(data, provider) {
+  const plansContainer = document.getElementById(`${provider}-plans`);
+  if (plansContainer) {
+    plansContainer.innerHTML = '';
+    
+    if (data.length === 0) {
+      plansContainer.innerHTML = '<p>No plans available for this provider</p>';
+      return;
+    }
+    
+    data.forEach(plan => {
+      const planElement = document.createElement('div');
+      planElement.className = 'plan-option';
+      planElement.innerHTML = `
+        <input type="radio" id="plan-${plan.variation_id}" name="plan" value="${plan.variation_id}" required>
+        <label for="plan-${plan.variation_id}">
+          <div class="plan-name">${plan.package_bouquet}</div>
+          <div class="plan-price">₦${Number(plan.price).toLocaleString()}</div>
+        </label>
+      `;
+      plansContainer.appendChild(planElement);
+    });
+  }
+}
+
+// NEW: Display TV variations error
+function displayTvVariationsError(provider, message) {
+  const plansContainer = document.getElementById(`${provider}-plans`);
+  if (plansContainer) {
+    plansContainer.innerHTML = `
+      <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        <p>${message}</p>
+      </div>
+    `;
+  }
+}
+
+// Setup Smartcard Validation
 function setupSmartcardValidation() {
   const smartcardInput = document.getElementById('smartcard');
   const tvProvider = document.getElementById('tv');
   
   if (smartcardInput && tvProvider) {
-    // Validate on input with debounce
     let debounceTimer;
     smartcardInput.addEventListener('input', () => {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         validateSmartcardOnInput();
         loadCustomerDetails();
-      }, 500); // Wait 500ms after user stops typing
+      }, 500);
     });
     
-    // Validate on blur (when user leaves the field)
     smartcardInput.addEventListener('blur', () => {
       validateSmartcardOnBlur();
       loadCustomerDetails();
     });
     
-    // Validate when provider changes
     tvProvider.addEventListener('change', () => {
       validateSmartcardOnInput();
       loadCustomerDetails();
     });
   }
 }
-// NEW: Validate smartcard format on input
+
+// Validate smartcard format on input
 function validateSmartcardOnInput() {
   const smartcardInput = document.getElementById('smartcard');
   const tvProvider = document.getElementById('tv');
@@ -453,37 +536,32 @@ function validateSmartcardOnInput() {
   const smartcard = smartcardInput.value.trim();
   const provider = tvProvider.value;
   
-  // Clear previous validation message
   if (smartcardError) {
     smartcardError.textContent = '';
   }
   
-  // Only validate if both fields have values
   if (smartcard && provider) {
     const validation = validateSmartcardFormat(smartcard, provider);
     
     if (!validation.valid) {
-      // Show validation error
       if (smartcardError) {
         smartcardError.textContent = validation.message;
       }
       
-      // Add visual indication of error
       smartcardInput.classList.add('input-error');
       smartcardInput.classList.remove('input-success');
     } else {
-      // Show validation success
       if (smartcardError) {
         smartcardError.textContent = '';
       }
       
-      // Add visual indication of success
       smartcardInput.classList.add('input-success');
       smartcardInput.classList.remove('input-error');
     }
   }
 }
-// NEW: Validate smartcard format on blur
+
+// Validate smartcard format on blur
 function validateSmartcardOnBlur() {
   const smartcardInput = document.getElementById('smartcard');
   const tvProvider = document.getElementById('tv');
@@ -494,7 +572,6 @@ function validateSmartcardOnBlur() {
   const smartcard = smartcardInput.value.trim();
   const provider = tvProvider.value;
   
-  // Only validate if smartcard has a value
   if (smartcard) {
     if (!provider) {
       if (smartcardError) {
@@ -508,27 +585,24 @@ function validateSmartcardOnBlur() {
     const validation = validateSmartcardFormat(smartcard, provider);
     
     if (!validation.valid) {
-      // Show validation error
       if (smartcardError) {
         smartcardError.textContent = validation.message;
       }
       
-      // Add visual indication of error
       smartcardInput.classList.add('input-error');
       smartcardInput.classList.remove('input-success');
     } else {
-      // Show validation success
       if (smartcardError) {
         smartcardError.textContent = '';
       }
       
-      // Add visual indication of success
       smartcardInput.classList.add('input-success');
       smartcardInput.classList.remove('input-error');
     }
   }
 }
-// NEW: Load customer details from API with better error handling
+
+// Load customer details from API with caching
 async function loadCustomerDetails() {
   const smartcardInput = document.getElementById('smartcard');
   const tvProvider = document.getElementById('tv');
@@ -541,16 +615,33 @@ async function loadCustomerDetails() {
   const smartcard = smartcardInput.value.trim();
   const provider = tvProvider.value;
   
-  // Only proceed if both provider and smartcard are provided
   if (provider && smartcard) {
-    // Validate smartcard format first
     const validation = validateSmartcardFormat(smartcard, provider);
     
     if (validation.valid) {
+      // Check cache first
+      const cacheKey = `customerDetails_${provider}_${smartcard}`;
+      const cachedData = sessionStorage.getItem(cacheKey);
+      
+      if (cachedData) {
+        const parsedData = JSON.parse(cachedData);
+        const now = new Date().getTime();
+        
+        // Check if cache is still valid (30 minutes)
+        if (now - parsedData.timestamp < 1800000) {
+          console.log(`Using cached customer details for ${smartcard}`);
+          displayCustomerDetails(parsedData.data);
+          return;
+        }
+      }
+      
       try {
         console.log(`Loading customer details for provider: ${provider}, smartcard: ${smartcard} from: ${API_BASE}/api/services/tv-customer?provider=${provider}&smartcard=${smartcard}`);
         
-        const response = await fetch(`${API_BASE}/api/services/tv-customer?provider=${provider}&smartcard=${smartcard}`);
+        const controller = createAbortController('customerDetails');
+        const response = await fetch(`${API_BASE}/api/services/tv-customer?provider=${provider}&smartcard=${smartcard}`, {
+          signal: controller.signal
+        });
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -560,25 +651,24 @@ async function loadCustomerDetails() {
         console.log('Customer details response:', data);
         
         if (data.success) {
-          // Display customer details
-          if (customerNameElement) {
-            customerNameElement.textContent = data.data.customerName || 'Not available';
-          }
-          if (customerPlanElement) {
-            customerPlanElement.textContent = data.data.currentPlan || 'Not available';
-          }
+          // Cache the response
+          sessionStorage.setItem(cacheKey, JSON.stringify({
+            data: data.data,
+            timestamp: new Date().getTime()
+          }));
           
-          // Show customer details section
-          if (customerDetailsElement) {
-            customerDetailsElement.style.display = 'block';
-          }
+          displayCustomerDetails(data.data);
         } else {
-          // Hide customer details if not found
           if (customerDetailsElement) {
             customerDetailsElement.style.display = 'none';
           }
         }
       } catch (error) {
+        if (error.name === 'AbortError') {
+          console.log('Customer details request was aborted');
+          return;
+        }
+        
         console.error('Error loading customer details:', error);
         
         // Try fallback API if available
@@ -597,17 +687,12 @@ async function loadCustomerDetails() {
               console.log('Fallback customer details response:', fallbackData);
               
               if (fallbackData.success) {
-                if (customerNameElement) {
-                  customerNameElement.textContent = fallbackData.data.customerName || 'Not available';
-                }
-                if (customerPlanElement) {
-                  customerPlanElement.textContent = fallbackData.data.currentPlan || 'Not available';
-                }
+                sessionStorage.setItem(cacheKey, JSON.stringify({
+                  data: fallbackData.data,
+                  timestamp: new Date().getTime()
+                }));
                 
-                if (customerDetailsElement) {
-                  customerDetailsElement.style.display = 'block';
-                }
-                
+                displayCustomerDetails(fallbackData.data);
                 showAlert('Using backup server. Some features may be limited.', 'warning');
                 return;
               }
@@ -617,34 +702,50 @@ async function loadCustomerDetails() {
           }
         }
         
-        // Hide customer details on error
         if (customerDetailsElement) {
           customerDetailsElement.style.display = 'none';
         }
+      } finally {
+        cleanupAbortController('customerDetails');
       }
     } else {
-      // Hide customer details if invalid
       if (customerDetailsElement) {
         customerDetailsElement.style.display = 'none';
       }
     }
   } else {
-    // Hide customer details if missing required fields
     if (customerDetailsElement) {
       customerDetailsElement.style.display = 'none';
     }
   }
 }
-// NEW: Validate smartcard format based on provider
+
+// NEW: Display customer details
+function displayCustomerDetails(data) {
+  const customerNameElement = document.getElementById('customerName');
+  const customerPlanElement = document.getElementById('customerPlan');
+  const customerDetailsElement = document.getElementById('customerDetails');
+  
+  if (customerNameElement) {
+    customerNameElement.textContent = data.customerName || 'Not available';
+  }
+  if (customerPlanElement) {
+    customerPlanElement.textContent = data.currentPlan || 'Not available';
+  }
+  
+  if (customerDetailsElement) {
+    customerDetailsElement.style.display = 'block';
+  }
+}
+
+// Validate smartcard format based on provider
 function validateSmartcardFormat(smartcard, provider) {
   if (!smartcard || typeof smartcard !== 'string') {
     return { valid: false, message: 'Smartcard number is required' };
   }
   
-  // Remove any spaces or dashes
   const cleanCard = smartcard.replace(/[\s-]/g, '');
   
-  // Provider-specific validation
   switch (provider.toLowerCase()) {
     case 'dstv':
       if (!/^\d{10,11}$/.test(cleanCard)) {
@@ -662,7 +763,6 @@ function validateSmartcardFormat(smartcard, provider) {
       }
       break;
     default:
-      // Generic validation for unknown providers
       if (!/^\d{8,15}$/.test(cleanCard)) {
         return { valid: false, message: 'Invalid smartcard number format' };
       }
@@ -670,6 +770,7 @@ function validateSmartcardFormat(smartcard, provider) {
   
   return { valid: true, message: 'Valid format' };
 }
+
 // FAQ Toggle
 function setupFAQToggle() {
   const faqQuestions = document.querySelectorAll('.faq-question');
@@ -685,6 +786,7 @@ function setupFAQToggle() {
     });
   });
 }
+
 // Service Navigation
 function setupServiceNavigation() {
   const viewAllButtons = document.querySelectorAll('.view-all');
@@ -692,11 +794,11 @@ function setupServiceNavigation() {
   viewAllButtons.forEach(button => {
     button.addEventListener('click', (e) => {
       e.preventDefault();
-      // In a real app, this would navigate to a full transactions page
       window.location.href = 'transactions.html';
     });
   });
 }
+
 // Notification Bell
 function setupNotificationBell() {
   const notificationBell = document.querySelector('.notification-bell');
@@ -706,6 +808,7 @@ function setupNotificationBell() {
     });
   }
 }
+
 // Profile Management
 function setupProfileManagement() {
   const editProfileBtn = document.querySelector('.edit-profile-btn');
@@ -715,6 +818,7 @@ function setupProfileManagement() {
     });
   }
 }
+
 // Password Reset
 function setupPasswordReset() {
   const forgotPasswordLink = document.querySelector('.forgot-password');
@@ -725,9 +829,9 @@ function setupPasswordReset() {
     });
   }
 }
+
 // Modals Setup
 function setupModals() {
-  // Close modal when clicking on close button
   const closeButtons = document.querySelectorAll('.close-modal');
   closeButtons.forEach(button => {
     button.addEventListener('click', () => {
@@ -738,48 +842,43 @@ function setupModals() {
     });
   });
   
-  // Close modal when clicking outside of it
   window.addEventListener('click', (e) => {
     if (e.target.classList.contains('modal')) {
       e.target.style.display = 'none';
     }
   });
 }
+
 // Transactions Page Setup
 function setupTransactionsPage() {
   if (!document.querySelector('.transactions-page')) return;
   
   loadTransactions();
   
-  // Setup filter buttons
   const filterButtons = document.querySelectorAll('.filter-btn');
   filterButtons.forEach(button => {
     button.addEventListener('click', () => {
-      // Remove active class from all buttons
       filterButtons.forEach(btn => btn.classList.remove('active'));
-      // Add active class to clicked button
       button.classList.add('active');
-      
-      // Reload transactions with filter
       loadTransactions(button.dataset.type);
     });
   });
 }
+
 // Notifications Page Setup
 function setupNotificationsPage() {
   if (!document.querySelector('.notifications-page')) return;
   
   loadNotificationsList();
   
-  // Setup mark all as read button
   const markAllReadBtn = document.getElementById('markAllRead');
   if (markAllReadBtn) {
     markAllReadBtn.addEventListener('click', markAllNotificationsAsRead);
   }
 }
-// NEW: Wallet Funding Setup
+
+// Wallet Funding Setup
 function setupWalletFunding() {
-  // Setup fund wallet button
   const fundWalletBtn = document.getElementById('fundWalletBtn');
   if (fundWalletBtn) {
     fundWalletBtn.addEventListener('click', () => {
@@ -787,28 +886,25 @@ function setupWalletFunding() {
     });
   }
   
-  // Setup fund requests page
   if (document.querySelector('.fund-requests-page')) {
     loadFundRequests();
   }
   
-  // Setup admin fund requests page
   if (document.querySelector('.admin-fund-requests-page')) {
     loadAdminFundRequests();
     setupAdminFundRequestActions();
   }
   
-  // Setup admin fund wallet form
   const adminFundWalletForm = document.getElementById('adminFundWalletForm');
   if (adminFundWalletForm) {
     setupUserSearch();
   }
 }
+
 // Authentication Check
 function checkAuthentication() {
   const token = localStorage.getItem('accessToken');
   
-  // If not logged in and not on login/signup page, redirect to login
   if (!token && 
       !window.location.pathname.includes('login.html') && 
       !window.location.pathname.includes('signup.html') &&
@@ -818,11 +914,11 @@ function checkAuthentication() {
     window.location.href = 'login.html';
   }
 }
+
 // Load User Data
 function loadUserData() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   
-  // Update UI with user data
   const userNameElements = document.querySelectorAll('.user-name');
   userNameElements.forEach(element => {
     if (user.name) {
@@ -837,6 +933,7 @@ function loadUserData() {
     }
   });
 }
+
 // Load Wallet Balance with better error handling
 async function loadWalletBalance() {
   const token = localStorage.getItem('accessToken');
@@ -845,10 +942,12 @@ async function loadWalletBalance() {
   try {
     console.log(`Loading wallet balance from: ${API_BASE}/api/wallet/balance`);
     
+    const controller = createAbortController('walletBalance');
     const response = await fetch(`${API_BASE}/api/wallet/balance`, {
       headers: {
         'Authorization': `Bearer ${token}`
-      }
+      },
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -864,65 +963,34 @@ async function loadWalletBalance() {
         element.textContent = `₦${Number(data.data.balance).toLocaleString()}`;
       });
     } else if (response.status === 401) {
-      // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
       if (refreshSuccess) {
-        // Retry after refresh
         loadWalletBalance();
       } else {
-        // If refresh fails, redirect to login
         window.location.href = 'login.html';
       }
     }
   } catch (error) {
-    console.error('Error loading wallet balance:', error);
-    
-    // Try fallback API if available
-    const fallbackApiBase = API_BASE.includes('localhost') 
-      ? 'https://easy-subscribe-backend.onrender.com' 
-      : 'http://localhost:5001';
-    
-    if (API_BASE !== fallbackApiBase) {
-      console.log(`Trying fallback API at: ${fallbackApiBase}/api/wallet/balance`);
-      
-      try {
-        const fallbackResponse = await fetch(`${fallbackApiBase}/api/wallet/balance`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (fallbackResponse.ok) {
-          const fallbackData = await fallbackResponse.json();
-          console.log('Fallback wallet balance response:', fallbackData);
-          
-          if (fallbackData.success) {
-            const balanceElements = document.querySelectorAll('.wallet-balance');
-            balanceElements.forEach(element => {
-              element.textContent = `₦${Number(fallbackData.data.balance).toLocaleString()}`;
-            });
-            
-            showAlert('Using backup server. Some features may be limited.', 'warning');
-            return;
-          }
-        }
-      } catch (fallbackError) {
-        console.error('Fallback API also failed:', fallbackError);
-      }
+    if (error.name === 'AbortError') {
+      console.log('Wallet balance request was aborted');
+      return;
     }
     
-    // Show user-friendly error message
+    console.error('Error loading wallet balance:', error);
+    
     const balanceElements = document.querySelectorAll('.wallet-balance');
     balanceElements.forEach(element => {
       element.textContent = '₦0.00';
     });
     
-    // Show error message if on a page that requires server connection
     if (document.querySelector('.auth-page') || document.querySelector('.dashboard-page')) {
       showAlert('Unable to connect to the server. Please make sure the server is running.', 'error');
     }
+  } finally {
+    cleanupAbortController('walletBalance');
   }
 }
+
 // Load Notifications
 async function loadNotifications() {
   const token = localStorage.getItem('accessToken');
@@ -931,10 +999,12 @@ async function loadNotifications() {
   try {
     console.log(`Loading notifications from: ${API_BASE}/api/notifications?unreadOnly=true`);
     
+    const controller = createAbortController('notifications');
     const response = await fetch(`${API_BASE}/api/notifications?unreadOnly=true`, {
       headers: {
         'Authorization': `Bearer ${token}`
-      }
+      },
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -945,27 +1015,31 @@ async function loadNotifications() {
     console.log('Notifications response:', data);
     
     if (data.success) {
-      // Update notification badge
       const notificationBadge = document.querySelector('.notification-badge');
       if (notificationBadge) {
         notificationBadge.textContent = data.data.unreadCount;
         notificationBadge.style.display = data.data.unreadCount > 0 ? 'block' : 'none';
       }
     } else if (response.status === 401) {
-      // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
       if (refreshSuccess) {
-        // Retry after refresh
         loadNotifications();
       } else {
-        // If refresh fails, redirect to login
         window.location.href = 'login.html';
       }
     }
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Notifications request was aborted');
+      return;
+    }
+    
     console.error('Error loading notifications:', error);
+  } finally {
+    cleanupAbortController('notifications');
   }
 }
+
 // Load Notifications List
 async function loadNotificationsList() {
   const token = localStorage.getItem('accessToken');
@@ -977,10 +1051,12 @@ async function loadNotificationsList() {
   try {
     console.log(`Loading notifications list from: ${API_BASE}/api/notifications`);
     
+    const controller = createAbortController('notificationsList');
     const response = await fetch(`${API_BASE}/api/notifications`, {
       headers: {
         'Authorization': `Bearer ${token}`
-      }
+      },
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -991,7 +1067,6 @@ async function loadNotificationsList() {
     console.log('Notifications list response:', data);
     
     if (data.success) {
-      // Clear existing notifications
       notificationsContainer.innerHTML = '';
       
       if (data.data.notifications.length === 0) {
@@ -999,7 +1074,6 @@ async function loadNotificationsList() {
         return;
       }
       
-      // Add notifications to the list
       data.data.notifications.forEach(notification => {
         const notificationElement = document.createElement('div');
         notificationElement.className = `notification-item ${notification.isRead ? 'read' : 'unread'}`;
@@ -1015,7 +1089,6 @@ async function loadNotificationsList() {
         notificationsContainer.appendChild(notificationElement);
       });
       
-      // Add event listeners to mark as read buttons
       const markReadButtons = notificationsContainer.querySelectorAll('.mark-read');
       markReadButtons.forEach(button => {
         button.addEventListener('click', () => {
@@ -1023,21 +1096,26 @@ async function loadNotificationsList() {
         });
       });
     } else if (response.status === 401) {
-      // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
       if (refreshSuccess) {
-        // Retry after refresh
         loadNotificationsList();
       } else {
-        // If refresh fails, redirect to login
         window.location.href = 'login.html';
       }
     }
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Notifications list request was aborted');
+      return;
+    }
+    
     console.error('Error loading notifications list:', error);
     notificationsContainer.innerHTML = '<div class="error">Failed to load notifications</div>';
+  } finally {
+    cleanupAbortController('notificationsList');
   }
 }
+
 // Mark Notification as Read
 async function markNotificationAsRead(notificationId) {
   const token = localStorage.getItem('accessToken');
@@ -1046,11 +1124,13 @@ async function markNotificationAsRead(notificationId) {
   try {
     console.log(`Marking notification as read: ${notificationId} from: ${API_BASE}/api/notifications/${notificationId}/read`);
     
+    const controller = createAbortController('markNotificationRead');
     const response = await fetch(`${API_BASE}/api/notifications/${notificationId}/read`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`
-      }
+      },
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -1058,26 +1138,29 @@ async function markNotificationAsRead(notificationId) {
     }
     
     if (response.ok) {
-      // Reload notifications list
       loadNotificationsList();
-      // Update notification badge
       loadNotifications();
     } else if (response.status === 401) {
-      // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
       if (refreshSuccess) {
-        // Retry after refresh
         markNotificationAsRead(notificationId);
       } else {
-        // If refresh fails, redirect to login
         window.location.href = 'login.html';
       }
     }
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Mark notification read request was aborted');
+      return;
+    }
+    
     console.error('Error marking notification as read:', error);
     showAlert('Failed to mark notification as read');
+  } finally {
+    cleanupAbortController('markNotificationRead');
   }
 }
+
 // Mark All Notifications as Read
 async function markAllNotificationsAsRead() {
   const token = localStorage.getItem('accessToken');
@@ -1086,11 +1169,13 @@ async function markAllNotificationsAsRead() {
   try {
     console.log(`Marking all notifications as read from: ${API_BASE}/api/notifications/read-all`);
     
+    const controller = createAbortController('markAllNotificationsRead');
     const response = await fetch(`${API_BASE}/api/notifications/read-all`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`
-      }
+      },
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -1098,29 +1183,32 @@ async function markAllNotificationsAsRead() {
     }
     
     if (response.ok) {
-      // Reload notifications list
       loadNotificationsList();
-      // Update notification badge
       loadNotifications();
       showAlert('All notifications marked as read', 'success');
     } else if (response.status === 401) {
-      // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
       if (refreshSuccess) {
-        // Retry after refresh
         markAllNotificationsAsRead();
       } else {
-        // If refresh fails, redirect to login
         window.location.href = 'login.html';
       }
     }
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Mark all notifications read request was aborted');
+      return;
+    }
+    
     console.error('Error marking all notifications as read:', error);
     showAlert('Failed to mark notifications as read');
+  } finally {
+    cleanupAbortController('markAllNotificationsRead');
   }
 }
+
 // Load Transactions
-async function loadTransactions(type = '') {
+async function loadTransactions(type = '', page = 1) {
   const token = localStorage.getItem('accessToken');
   if (!token) return;
   
@@ -1128,17 +1216,19 @@ async function loadTransactions(type = '') {
   if (!transactionsContainer) return;
   
   try {
-    let url = `${API_BASE}/api/transactions`;
+    let url = `${API_BASE}/api/transactions?page=${page}`;
     if (type) {
-      url += `?type=${type}`;
+      url += `&type=${type}`;
     }
     
     console.log(`Loading transactions from: ${url}`);
     
+    const controller = createAbortController('transactions');
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${token}`
-      }
+      },
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -1149,7 +1239,6 @@ async function loadTransactions(type = '') {
     console.log('Transactions response:', data);
     
     if (data.success) {
-      // Clear existing transactions
       transactionsContainer.innerHTML = '';
       
       if (data.data.transactions.length === 0) {
@@ -1157,12 +1246,10 @@ async function loadTransactions(type = '') {
         return;
       }
       
-      // Add transactions to the list
       data.data.transactions.forEach(transaction => {
         const transactionElement = document.createElement('div');
         transactionElement.className = `transaction-item ${transaction.status}`;
         
-        // Add funding-specific display
         let transactionInfo = `
           <div class="transaction-info">
             <div class="transaction-type">${transaction.type}</div>
@@ -1173,7 +1260,6 @@ async function loadTransactions(type = '') {
           <div class="transaction-status ${transaction.status}">${transaction.status}</div>
         `;
         
-        // Add payment method for funding transactions
         if (transaction.type === 'funding' && transaction.metadata && transaction.metadata.paymentMethod) {
           transactionInfo = `
             <div class="transaction-info">
@@ -1189,24 +1275,32 @@ async function loadTransactions(type = '') {
         transactionElement.innerHTML = transactionInfo;
         transactionsContainer.appendChild(transactionElement);
       });
+      
+      // Setup pagination
+      setupPaginationControls('transactions', data.data.pagination, type, loadTransactions);
     } else if (response.status === 401) {
-      // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
       if (refreshSuccess) {
-        // Retry after refresh
-        loadTransactions(type);
+        loadTransactions(type, page);
       } else {
-        // If refresh fails, redirect to login
         window.location.href = 'login.html';
       }
     }
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Transactions request was aborted');
+      return;
+    }
+    
     console.error('Error loading transactions:', error);
     transactionsContainer.innerHTML = '<div class="error">Failed to load transactions</div>';
+  } finally {
+    cleanupAbortController('transactions');
   }
 }
-// NEW: Load User Funding Requests
-async function loadFundRequests(status = '') {
+
+// Load User Funding Requests
+async function loadFundRequests(status = '', page = 1) {
   const token = localStorage.getItem('accessToken');
   if (!token) return;
   
@@ -1214,17 +1308,19 @@ async function loadFundRequests(status = '') {
   if (!fundRequestsContainer) return;
   
   try {
-    let url = `${API_BASE}/api/user/fund-requests`;
+    let url = `${API_BASE}/api/user/fund-requests?page=${page}`;
     if (status) {
-      url += `?status=${status}`;
+      url += `&status=${status}`;
     }
     
     console.log(`Loading fund requests from: ${url}`);
     
+    const controller = createAbortController('fundRequests');
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${token}`
-      }
+      },
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -1235,7 +1331,6 @@ async function loadFundRequests(status = '') {
     console.log('Fund requests response:', data);
     
     if (data.success) {
-      // Clear existing fund requests
       fundRequestsContainer.innerHTML = '';
       
       if (data.data.transactions.length === 0) {
@@ -1243,7 +1338,6 @@ async function loadFundRequests(status = '') {
         return;
       }
       
-      // Add fund requests to the list
       data.data.transactions.forEach(transaction => {
         const requestElement = document.createElement('div');
         requestElement.className = `fund-request-item ${transaction.status}`;
@@ -1259,24 +1353,32 @@ async function loadFundRequests(status = '') {
         
         fundRequestsContainer.appendChild(requestElement);
       });
+      
+      // Setup pagination
+      setupPaginationControls('fundRequests', data.data.pagination, status, loadFundRequests);
     } else if (response.status === 401) {
-      // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
       if (refreshSuccess) {
-        // Retry after refresh
-        loadFundRequests(status);
+        loadFundRequests(status, page);
       } else {
-        // If refresh fails, redirect to login
         window.location.href = 'login.html';
       }
     }
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Fund requests request was aborted');
+      return;
+    }
+    
     console.error('Error loading fund requests:', error);
     fundRequestsContainer.innerHTML = '<div class="error">Failed to load funding requests</div>';
+  } finally {
+    cleanupAbortController('fundRequests');
   }
 }
-// NEW: Load Admin Funding Requests
-async function loadAdminFundRequests(status = '') {
+
+// Load Admin Funding Requests
+async function loadAdminFundRequests(status = '', page = 1) {
   const token = localStorage.getItem('accessToken');
   if (!token) return;
   
@@ -1284,17 +1386,19 @@ async function loadAdminFundRequests(status = '') {
   if (!adminFundRequestsContainer) return;
   
   try {
-    let url = `${API_BASE}/api/admin/fund-requests`;
+    let url = `${API_BASE}/api/admin/fund-requests?page=${page}`;
     if (status) {
-      url += `?status=${status}`;
+      url += `&status=${status}`;
     }
     
     console.log(`Loading admin fund requests from: ${url}`);
     
+    const controller = createAbortController('adminFundRequests');
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${token}`
-      }
+      },
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -1305,7 +1409,6 @@ async function loadAdminFundRequests(status = '') {
     console.log('Admin fund requests response:', data);
     
     if (data.success) {
-      // Clear existing fund requests
       adminFundRequestsContainer.innerHTML = '';
       
       if (data.data.transactions.length === 0) {
@@ -1313,12 +1416,10 @@ async function loadAdminFundRequests(status = '') {
         return;
       }
       
-      // Add fund requests to the list
       data.data.transactions.forEach(transaction => {
         const requestElement = document.createElement('div');
         requestElement.className = `admin-fund-request-item ${transaction.status}`;
         
-        // Get user info
         const userName = transaction.userId ? transaction.userId.name : 'Unknown';
         const userEmail = transaction.userId ? transaction.userId.email : 'Unknown';
         
@@ -1342,7 +1443,6 @@ async function loadAdminFundRequests(status = '') {
         adminFundRequestsContainer.appendChild(requestElement);
       });
       
-      // Add event listeners to approve/reject buttons
       const approveButtons = adminFundRequestsContainer.querySelectorAll('.approve-btn');
       approveButtons.forEach(button => {
         button.addEventListener('click', () => {
@@ -1356,39 +1456,43 @@ async function loadAdminFundRequests(status = '') {
           rejectFundRequest(button.dataset.id);
         });
       });
+      
+      // Setup pagination
+      setupPaginationControls('adminFundRequests', data.data.pagination, status, loadAdminFundRequests);
     } else if (response.status === 401) {
-      // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
       if (refreshSuccess) {
-        // Retry after refresh
-        loadAdminFundRequests(status);
+        loadAdminFundRequests(status, page);
       } else {
-        // If refresh fails, redirect to login
         window.location.href = 'login.html';
       }
     }
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Admin fund requests request was aborted');
+      return;
+    }
+    
     console.error('Error loading admin fund requests:', error);
     adminFundRequestsContainer.innerHTML = '<div class="error">Failed to load funding requests</div>';
+  } finally {
+    cleanupAbortController('adminFundRequests');
   }
 }
-// NEW: Setup Admin Fund Request Actions
+
+// Setup Admin Fund Request Actions
 function setupAdminFundRequestActions() {
-  // Setup filter buttons
   const filterButtons = document.querySelectorAll('.admin-filter-btn');
   filterButtons.forEach(button => {
     button.addEventListener('click', () => {
-      // Remove active class from all buttons
       filterButtons.forEach(btn => btn.classList.remove('active'));
-      // Add active class to clicked button
       button.classList.add('active');
-      
-      // Reload fund requests with filter
       loadAdminFundRequests(button.dataset.status);
     });
   });
 }
-// NEW: Setup User Search for Admin Fund Wallet
+
+// Setup User Search for Admin Fund Wallet
 function setupUserSearch() {
   const userSearch = document.getElementById('userSearch');
   if (userSearch) {
@@ -1402,7 +1506,6 @@ function setupUserSearch() {
         if (searchTerm.length >= 3) {
           searchUsers(searchTerm);
         } else {
-          // Clear search results
           const searchResults = document.getElementById('userSearchResults');
           if (searchResults) {
             searchResults.innerHTML = '';
@@ -1413,7 +1516,8 @@ function setupUserSearch() {
     });
   }
 }
-// NEW: Search Users for Admin Fund Wallet
+
+// Search Users for Admin Fund Wallet
 async function searchUsers(searchTerm) {
   const token = localStorage.getItem('accessToken');
   if (!token) return;
@@ -1424,10 +1528,12 @@ async function searchUsers(searchTerm) {
   try {
     console.log(`Searching users from: ${API_BASE}/api/admin/users?search=${searchTerm}`);
     
+    const controller = createAbortController('searchUsers');
     const response = await fetch(`${API_BASE}/api/admin/users?search=${searchTerm}`, {
       headers: {
         'Authorization': `Bearer ${token}`
-      }
+      },
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -1438,13 +1544,11 @@ async function searchUsers(searchTerm) {
     console.log('Search users response:', data);
     
     if (data.success) {
-      // Clear previous results
       searchResults.innerHTML = '';
       
       if (data.data.users.length === 0) {
         searchResults.innerHTML = '<div class="no-users">No users found</div>';
       } else {
-        // Add users to results
         data.data.users.forEach(user => {
           const userElement = document.createElement('div');
           userElement.className = 'user-search-result';
@@ -1460,7 +1564,6 @@ async function searchUsers(searchTerm) {
           searchResults.appendChild(userElement);
         });
         
-        // Add event listeners to select buttons
         const selectButtons = searchResults.querySelectorAll('.select-user');
         selectButtons.forEach(button => {
           button.addEventListener('click', () => {
@@ -1471,23 +1574,28 @@ async function searchUsers(searchTerm) {
       
       searchResults.style.display = 'block';
     } else if (response.status === 401) {
-      // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
       if (refreshSuccess) {
-        // Retry after refresh
         searchUsers(searchTerm);
       } else {
-        // If refresh fails, redirect to login
         window.location.href = 'login.html';
       }
     }
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Search users request was aborted');
+      return;
+    }
+    
     console.error('Error searching users:', error);
     searchResults.innerHTML = '<div class="error">Failed to search users</div>';
     searchResults.style.display = 'block';
+  } finally {
+    cleanupAbortController('searchUsers');
   }
 }
-// NEW: Select User for Funding
+
+// Select User for Funding
 function selectUserForFunding(userId) {
   const userIdInput = document.getElementById('userId');
   const selectedUserInfo = document.getElementById('selectedUserInfo');
@@ -1497,21 +1605,19 @@ function selectUserForFunding(userId) {
     userIdInput.value = userId;
   }
   
-  // Hide search results
   if (userSearchResults) {
     userSearchResults.style.display = 'none';
   }
   
-  // Show selected user info
   if (selectedUserInfo) {
     selectedUserInfo.innerHTML = '<div class="loading">Loading user information...</div>';
     selectedUserInfo.style.display = 'block';
     
-    // Get user details
     fetchUserDetails(userId);
   }
 }
-// NEW: Fetch User Details
+
+// Fetch User Details
 async function fetchUserDetails(userId) {
   const token = localStorage.getItem('accessToken');
   if (!token) return;
@@ -1522,10 +1628,12 @@ async function fetchUserDetails(userId) {
   try {
     console.log(`Fetching user details from: ${API_BASE}/api/user/profile`);
     
+    const controller = createAbortController('fetchUserDetails');
     const response = await fetch(`${API_BASE}/api/user/profile`, {
       headers: {
         'Authorization': `Bearer ${token}`
-      }
+      },
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -1545,22 +1653,27 @@ async function fetchUserDetails(userId) {
         </div>
       `;
     } else if (response.status === 401) {
-      // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
       if (refreshSuccess) {
-        // Retry after refresh
         fetchUserDetails(userId);
       } else {
-        // If refresh fails, redirect to login
         window.location.href = 'login.html';
       }
     }
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Fetch user details request was aborted');
+      return;
+    }
+    
     console.error('Error fetching user details:', error);
     selectedUserInfo.innerHTML = '<div class="error">Failed to load user information</div>';
+  } finally {
+    cleanupAbortController('fetchUserDetails');
   }
 }
-// NEW: Handle Fund Request
+
+// Handle Fund Request
 async function handleFundRequest(e) {
   e.preventDefault();
   
@@ -1575,22 +1688,24 @@ async function handleFundRequest(e) {
   const reference = document.getElementById('reference').value;
   
   try {
-    // Show loading state
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
     
-    // API call
+    showLoading('Submitting funding request...');
+    
     console.log(`Submitting fund request to: ${API_BASE}/api/user/fund-request`);
     
+    const controller = createAbortController('fundRequest');
     const response = await fetch(`${API_BASE}/api/user/fund-request`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ amount, paymentMethod, reference })
+      body: JSON.stringify({ amount, paymentMethod, reference }),
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -1602,34 +1717,39 @@ async function handleFundRequest(e) {
     
     if (response.ok && data.success) {
       showAlert('Funding request submitted successfully!', 'success');
-      // Reset form
       e.target.reset();
-      // Reload fund requests
       loadFundRequests();
     } else {
-      // Show error message
       showAlert(data.message || 'Failed to submit funding request. Please try again.');
     }
     
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Fund request was aborted');
+      return;
+    }
+    
     console.error('Fund request error:', error);
     
-    // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
       showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert('Failed to submit funding request. Please check your connection and try again.');
     }
   } finally {
-    // Reset button state
+    hideLoading();
+    
     const submitBtn = e.target.querySelector('button[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = originalText || 'Submit Request';
     }
+    
+    cleanupAbortController('fundRequest');
   }
 }
-// NEW: Handle Admin Fund Wallet
+
+// Handle Admin Fund Wallet
 async function handleAdminFundWallet(e) {
   e.preventDefault();
   
@@ -1644,22 +1764,24 @@ async function handleAdminFundWallet(e) {
   const note = document.getElementById('note').value;
   
   try {
-    // Show loading state
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
     submitBtn.textContent = 'Processing...';
     
-    // API call
+    showLoading('Funding wallet...');
+    
     console.log(`Admin funding wallet to: ${API_BASE}/api/admin/fund-wallet`);
     
+    const controller = createAbortController('adminFundWallet');
     const response = await fetch(`${API_BASE}/api/admin/fund-wallet`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ userId, amount, note })
+      body: JSON.stringify({ userId, amount, note }),
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -1671,35 +1793,40 @@ async function handleAdminFundWallet(e) {
     
     if (response.ok && data.success) {
       showAlert('Wallet funded successfully!', 'success');
-      // Reset form
       e.target.reset();
       document.getElementById('selectedUserInfo').style.display = 'none';
-      // Reload admin fund requests
       loadAdminFundRequests();
     } else {
-      // Show error message
       showAlert(data.message || 'Failed to fund wallet. Please try again.');
     }
     
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Admin fund wallet was aborted');
+      return;
+    }
+    
     console.error('Admin fund wallet error:', error);
     
-    // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
       showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert('Failed to fund wallet. Please check your connection and try again.');
     }
   } finally {
-    // Reset button state
+    hideLoading();
+    
     const submitBtn = e.target.querySelector('button[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = originalText || 'Fund Wallet';
     }
+    
+    cleanupAbortController('adminFundWallet');
   }
 }
-// NEW: Approve Fund Request
+
+// Approve Fund Request
 async function approveFundRequest(requestId) {
   const token = localStorage.getItem('accessToken');
   if (!token) {
@@ -1708,19 +1835,21 @@ async function approveFundRequest(requestId) {
   }
   
   try {
-    // Show confirmation dialog
     const note = prompt('Enter a note for this approval (optional):');
     
-    // API call
+    showLoading('Approving funding request...');
+    
     console.log(`Approving fund request: ${requestId} from: ${API_BASE}/api/admin/fund-request/${requestId}/approve`);
     
+    const controller = createAbortController('approveFundRequest');
     const response = await fetch(`${API_BASE}/api/admin/fund-request/${requestId}/approve`, {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ note: note || '' })
+      body: JSON.stringify({ note: note || '' }),
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -1732,25 +1861,31 @@ async function approveFundRequest(requestId) {
     
     if (response.ok && data.success) {
       showAlert('Funding request approved successfully!', 'success');
-      // Reload admin fund requests
       loadAdminFundRequests();
     } else {
-      // Show error message
       showAlert(data.message || 'Failed to approve funding request. Please try again.');
     }
     
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Approve fund request was aborted');
+      return;
+    }
+    
     console.error('Approve fund request error:', error);
     
-    // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
       showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert('Failed to approve funding request. Please check your connection and try again.');
     }
+  } finally {
+    hideLoading();
+    cleanupAbortController('approveFundRequest');
   }
 }
-// NEW: Reject Fund Request
+
+// Reject Fund Request
 async function rejectFundRequest(requestId) {
   const token = localStorage.getItem('accessToken');
   if (!token) {
@@ -1759,23 +1894,25 @@ async function rejectFundRequest(requestId) {
   }
   
   try {
-    // Show confirmation dialog
     const reason = prompt('Enter a reason for rejection:');
     if (!reason) {
       showAlert('Reason is required to reject a funding request');
       return;
     }
     
-    // API call
+    showLoading('Rejecting funding request...');
+    
     console.log(`Rejecting fund request: ${requestId} from: ${API_BASE}/api/admin/fund-request/${requestId}/reject`);
     
+    const controller = createAbortController('rejectFundRequest');
     const response = await fetch(`${API_BASE}/api/admin/fund-request/${requestId}/reject`, {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ reason })
+      body: JSON.stringify({ reason }),
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -1787,24 +1924,30 @@ async function rejectFundRequest(requestId) {
     
     if (response.ok && data.success) {
       showAlert('Funding request rejected successfully!', 'success');
-      // Reload admin fund requests
       loadAdminFundRequests();
     } else {
-      // Show error message
       showAlert(data.message || 'Failed to reject funding request. Please try again.');
     }
     
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Reject fund request was aborted');
+      return;
+    }
+    
     console.error('Reject fund request error:', error);
     
-    // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
       showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert('Failed to reject funding request. Please check your connection and try again.');
     }
+  } finally {
+    hideLoading();
+    cleanupAbortController('rejectFundRequest');
   }
 }
+
 // Refresh Token
 async function refreshToken() {
   const refreshToken = localStorage.getItem('refreshToken');
@@ -1816,10 +1959,12 @@ async function refreshToken() {
   try {
     console.log(`Refreshing token from: ${API_BASE}/api/auth/refresh-token`);
     
+    const controller = createAbortController('refreshToken');
     const response = await fetch(`${API_BASE}/api/auth/refresh-token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken })
+      body: JSON.stringify({ refreshToken }),
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -1833,16 +1978,23 @@ async function refreshToken() {
       localStorage.setItem('accessToken', data.data.accessToken);
       return true;
     } else {
-      // Refresh token failed, logout user
       logout();
       return false;
     }
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Refresh token request was aborted');
+      return false;
+    }
+    
     console.error('Error refreshing token:', error);
     logout();
     return false;
+  } finally {
+    cleanupAbortController('refreshToken');
   }
 }
+
 // Show Alert Function
 function showAlert(message, type = 'error') {
   const alertContainer = document.getElementById('alert-container');
@@ -1856,7 +2008,6 @@ function showAlert(message, type = 'error') {
     </div>
   `;
   
-  // Add event listener to close button
   const closeBtn = alertContainer.querySelector('.close-alert');
   if (closeBtn) {
     closeBtn.addEventListener('click', () => {
@@ -1864,26 +2015,23 @@ function showAlert(message, type = 'error') {
     });
   }
   
-  // Auto-hide after 5 seconds
   setTimeout(() => {
     alertContainer.innerHTML = '';
   }, 5000);
 }
+
 // Validate Signup Form
 function validateSignupForm() {
   let isValid = true;
   
-  // Clear previous errors
   document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
   
-  // Validate name
   const name = document.getElementById('name').value.trim();
   if (!name) {
     document.getElementById('name-error').textContent = 'Name is required';
     isValid = false;
   }
   
-  // Validate email
   const email = document.getElementById('email').value.trim();
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!email) {
@@ -1894,7 +2042,6 @@ function validateSignupForm() {
     isValid = false;
   }
   
-  // Validate phone
   const phone = document.getElementById('phone').value.trim();
   const phoneRegex = /^(0|234)(7|8|9)[01]\d{8}$/;
   if (!phone) {
@@ -1905,7 +2052,6 @@ function validateSignupForm() {
     isValid = false;
   }
   
-  // Validate password
   const password = document.getElementById('password').value;
   if (!password) {
     document.getElementById('password-error').textContent = 'Password is required';
@@ -1915,7 +2061,6 @@ function validateSignupForm() {
     isValid = false;
   }
   
-  // Validate confirm password
   const confirmPassword = document.getElementById('confirmPassword').value;
   if (!confirmPassword) {
     document.getElementById('confirmPassword-error').textContent = 'Please confirm your password';
@@ -1925,7 +2070,6 @@ function validateSignupForm() {
     isValid = false;
   }
   
-  // Validate terms
   const terms = document.getElementById('terms').checked;
   if (!terms) {
     document.getElementById('terms-error').textContent = 'You must accept the terms and conditions';
@@ -1934,23 +2078,22 @@ function validateSignupForm() {
   
   return isValid;
 }
-// Signup Handler - FIXED FIELD REFERENCES
+
+// Signup Handler
 async function handleSignup(e) {
   e.preventDefault();
   
-  // Client-side validation
   if (!validateSignupForm()) {
     return;
   }
   
-  const name = document.getElementById('name').value; // FIXED: Changed from fullName
+  const name = document.getElementById('name').value;
   const email = document.getElementById('email').value;
   const phone = document.getElementById('phone').value;
   const password = document.getElementById('password').value;
   const confirmPassword = document.getElementById('confirmPassword').value;
   const termsAccepted = document.getElementById('terms')?.checked || false;
   
-  // Validate passwords match
   if (password !== confirmPassword) {
     showAlert('Passwords do not match!');
     return;
@@ -1962,19 +2105,21 @@ async function handleSignup(e) {
   }
   
   try {
-    // Show loading state
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
     submitBtn.textContent = 'Creating Account...';
     
-    // API call
+    showLoading('Creating account...');
+    
     console.log(`Signing up from: ${API_BASE}/api/auth/register`);
     
+    const controller = createAbortController('signup');
     const response = await fetch(`${API_BASE}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password, phone })
+      body: JSON.stringify({ name, email, password, phone }),
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -1985,48 +2130,51 @@ async function handleSignup(e) {
     console.log('Signup response:', data);
     
     if (response.ok && data.success) {
-      // Save tokens and user data
       localStorage.setItem('accessToken', data.data.accessToken);
       localStorage.setItem('refreshToken', data.data.refreshToken);
       localStorage.setItem('user', JSON.stringify(data.data.user));
       
       showAlert('Account created successfully! Redirecting to dashboard...', 'success');
       
-      // Redirect to dashboard
       setTimeout(() => {
         window.location.href = 'dashboard.html';
       }, 2000);
     } else {
-      // Show error message
       showAlert(data.message || 'Signup failed. Please try again.');
     }
     
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Signup request was aborted');
+      return;
+    }
+    
     console.error('Signup error:', error);
     
-    // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
       showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert('Signup failed. Please check your connection and try again.');
     }
   } finally {
-    // Reset button state
+    hideLoading();
+    
     const submitBtn = e.target.querySelector('button[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Create Account';
     }
+    
+    cleanupAbortController('signup');
   }
 }
+
 // Validate Login Form
 function validateLoginForm() {
   let isValid = true;
   
-  // Clear previous errors
   document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
   
-  // Validate email
   const email = document.getElementById('email').value.trim();
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!email) {
@@ -2037,7 +2185,6 @@ function validateLoginForm() {
     isValid = false;
   }
   
-  // Validate password
   const password = document.getElementById('password').value;
   if (!password) {
     document.getElementById('password-error').textContent = 'Password is required';
@@ -2046,11 +2193,11 @@ function validateLoginForm() {
   
   return isValid;
 }
+
 // Login Handler
 async function handleLogin(e) {
   e.preventDefault();
   
-  // Client-side validation
   if (!validateLoginForm()) {
     return;
   }
@@ -2059,19 +2206,21 @@ async function handleLogin(e) {
   const password = document.getElementById('password').value;
   
   try {
-    // Show loading state
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
     submitBtn.textContent = 'Logging in...';
     
-    // API call
+    showLoading('Logging in...');
+    
     console.log(`Logging in from: ${API_BASE}/api/auth/login`);
     
+    const controller = createAbortController('login');
     const response = await fetch(`${API_BASE}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password }),
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -2082,15 +2231,12 @@ async function handleLogin(e) {
     console.log('Login response:', data);
     
     if (response.ok && data.success) {
-      // Save tokens and user data
       localStorage.setItem('accessToken', data.data.accessToken);
       localStorage.setItem('refreshToken', data.data.refreshToken);
       localStorage.setItem('user', JSON.stringify(data.data.user));
       
-      // Check if "Remember me" is checked
       const rememberMe = document.getElementById('remember').checked;
       if (rememberMe) {
-        // Set tokens to expire in 30 days
         const expiryDate = new Date();
         expiryDate.setDate(expiryDate.getDate() + 30);
         document.cookie = `refreshToken=${data.data.refreshToken}; expires=${expiryDate.toUTCString()}; path=/`;
@@ -2098,33 +2244,39 @@ async function handleLogin(e) {
       
       showAlert('Login successful! Redirecting to dashboard...', 'success');
       
-      // Redirect to dashboard
       setTimeout(() => {
         window.location.href = 'dashboard.html';
       }, 2000);
     } else {
-      // Show error message
       showAlert(data.message || 'Login failed. Please check your credentials and try again.');
     }
     
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Login request was aborted');
+      return;
+    }
+    
     console.error('Login error:', error);
     
-    // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
       showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert('Login failed. Please check your connection and try again.');
     }
   } finally {
-    // Reset button state
+    hideLoading();
+    
     const submitBtn = e.target.querySelector('button[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Login';
     }
+    
+    cleanupAbortController('login');
   }
 }
+
 // Forgot Password Handler
 async function handleForgotPassword(e) {
   e.preventDefault();
@@ -2132,19 +2284,21 @@ async function handleForgotPassword(e) {
   const email = document.getElementById('email').value;
   
   try {
-    // Show loading state
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
     submitBtn.textContent = 'Sending...';
     
-    // API call
+    showLoading('Sending reset link...');
+    
     console.log(`Forgot password from: ${API_BASE}/api/auth/forgot-password`);
     
+    const controller = createAbortController('forgotPassword');
     const response = await fetch(`${API_BASE}/api/auth/forgot-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ email }),
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -2156,33 +2310,39 @@ async function handleForgotPassword(e) {
     
     if (response.ok) {
       showAlert(data.message, 'success');
-      // Redirect to login page
       setTimeout(() => {
         window.location.href = 'login.html';
       }, 2000);
     } else {
-      // Show error message
       showAlert(data.message || 'Failed to process request. Please try again.');
     }
     
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Forgot password request was aborted');
+      return;
+    }
+    
     console.error('Forgot password error:', error);
     
-    // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
       showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert('Failed to process request. Please check your connection and try again.');
     }
   } finally {
-    // Reset button state
+    hideLoading();
+    
     const submitBtn = e.target.querySelector('button[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Reset Password';
     }
+    
+    cleanupAbortController('forgotPassword');
   }
 }
+
 // Reset Password Handler
 async function handleResetPassword(e) {
   e.preventDefault();
@@ -2191,26 +2351,27 @@ async function handleResetPassword(e) {
   const password = document.getElementById('password').value;
   const confirmPassword = document.getElementById('confirmPassword').value;
   
-  // Validate passwords match
   if (password !== confirmPassword) {
     showAlert('Passwords do not match!');
     return;
   }
   
   try {
-    // Show loading state
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
     submitBtn.textContent = 'Resetting...';
     
-    // API call
+    showLoading('Resetting password...');
+    
     console.log(`Reset password from: ${API_BASE}/api/auth/reset-password`);
     
+    const controller = createAbortController('resetPassword');
     const response = await fetch(`${API_BASE}/api/auth/reset-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, password })
+      body: JSON.stringify({ token, password }),
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -2222,33 +2383,39 @@ async function handleResetPassword(e) {
     
     if (response.ok) {
       showAlert(data.message, 'success');
-      // Redirect to login page
       setTimeout(() => {
         window.location.href = 'login.html';
       }, 2000);
     } else {
-      // Show error message
       showAlert(data.message || 'Failed to reset password. Please try again.');
     }
     
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Reset password request was aborted');
+      return;
+    }
+    
     console.error('Reset password error:', error);
     
-    // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
       showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert('Failed to reset password. Please check your connection and try again.');
     }
   } finally {
-    // Reset button state
+    hideLoading();
+    
     const submitBtn = e.target.querySelector('button[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Reset Password';
     }
+    
+    cleanupAbortController('resetPassword');
   }
 }
+
 // Update Profile Handler
 async function handleUpdateProfile(e) {
   e.preventDefault();
@@ -2263,22 +2430,24 @@ async function handleUpdateProfile(e) {
   const phone = document.getElementById('phone').value;
   
   try {
-    // Show loading state
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
     submitBtn.textContent = 'Updating...';
     
-    // API call
+    showLoading('Updating profile...');
+    
     console.log(`Updating profile from: ${API_BASE}/api/user/profile`);
     
+    const controller = createAbortController('updateProfile');
     const response = await fetch(`${API_BASE}/api/user/profile`, {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ name, phone })
+      body: JSON.stringify({ name, phone }),
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -2289,37 +2458,42 @@ async function handleUpdateProfile(e) {
     console.log('Update profile response:', data);
     
     if (response.ok && data.success) {
-      // Update user data in localStorage
       localStorage.setItem('user', JSON.stringify(data.data.user));
       
       showAlert(data.message, 'success');
-      // Redirect to dashboard
       setTimeout(() => {
         window.location.href = 'dashboard.html';
       }, 2000);
     } else {
-      // Show error message
       showAlert(data.message || 'Failed to update profile. Please try again.');
     }
     
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Update profile request was aborted');
+      return;
+    }
+    
     console.error('Update profile error:', error);
     
-    // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
       showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert('Failed to update profile. Please check your connection and try again.');
     }
   } finally {
-    // Reset button state
+    hideLoading();
+    
     const submitBtn = e.target.querySelector('button[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Update Profile';
     }
+    
+    cleanupAbortController('updateProfile');
   }
 }
+
 // Change Password Handler
 async function handleChangePassword(e) {
   e.preventDefault();
@@ -2334,29 +2508,30 @@ async function handleChangePassword(e) {
   const newPassword = document.getElementById('newPassword').value;
   const confirmPassword = document.getElementById('confirmPassword').value;
   
-  // Validate passwords match
   if (newPassword !== confirmPassword) {
     showAlert('New passwords do not match!');
     return;
   }
   
   try {
-    // Show loading state
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
     submitBtn.textContent = 'Changing...';
     
-    // API call
+    showLoading('Changing password...');
+    
     console.log(`Changing password from: ${API_BASE}/api/user/change-password`);
     
+    const controller = createAbortController('changePassword');
     const response = await fetch(`${API_BASE}/api/user/change-password`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ currentPassword, newPassword })
+      body: JSON.stringify({ currentPassword, newPassword }),
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -2368,34 +2543,40 @@ async function handleChangePassword(e) {
     
     if (response.ok && data.success) {
       showAlert(data.message, 'success');
-      // Redirect to dashboard
       setTimeout(() => {
         window.location.href = 'dashboard.html';
       }, 2000);
     } else {
-      // Show error message
       showAlert(data.message || 'Failed to change password. Please try again.');
     }
     
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Change password request was aborted');
+      return;
+    }
+    
     console.error('Change password error:', error);
     
-    // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
       showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert('Failed to change password. Please check your connection and try again.');
     }
   } finally {
-    // Reset button state
+    hideLoading();
+    
     const submitBtn = e.target.querySelector('button[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Change Password';
     }
+    
+    cleanupAbortController('changePassword');
   }
 }
-// Service Form Handler (Airtime, Data, Electricity, TV) - UPDATED TO REMOVE PAYSTACK
+
+// Service Form Handler
 async function handleServiceForm(e, serviceType) {
   e.preventDefault();
   
@@ -2405,7 +2586,6 @@ async function handleServiceForm(e, serviceType) {
     return;
   }
   
-  // Get form data based on service type
   let formData = {};
   
   switch (serviceType) {
@@ -2437,7 +2617,6 @@ async function handleServiceForm(e, serviceType) {
       break;
       
     case 'tv':
-      // Validate smartcard before processing
       const smartcardInput = document.getElementById('smartcard');
       const tvProvider = document.getElementById('tv');
       const smartcardError = document.getElementById('smartcard-error');
@@ -2450,7 +2629,6 @@ async function handleServiceForm(e, serviceType) {
       const smartcard = smartcardInput.value.trim();
       const provider = tvProvider.value;
       
-      // Validate smartcard format
       if (!smartcard) {
         if (smartcardError) {
           smartcardError.textContent = 'Smartcard number is required';
@@ -2474,7 +2652,6 @@ async function handleServiceForm(e, serviceType) {
         return;
       }
       
-      // For TV, we'll store the data in sessionStorage and redirect to confirmation page
       const plan = document.querySelector('input[name="plan"]:checked')?.value;
       if (!plan) {
         showAlert('Please select a subscription plan');
@@ -2484,7 +2661,6 @@ async function handleServiceForm(e, serviceType) {
       const phone = document.getElementById('phone').value.trim();
       const email = document.getElementById('email').value.trim();
       
-      // Validate required fields
       if (!phone) {
         showAlert('Phone number is required');
         return;
@@ -2495,10 +2671,8 @@ async function handleServiceForm(e, serviceType) {
         return;
       }
       
-      // Get payment method
       const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value || 'wallet';
       
-      // Store form data in sessionStorage
       const tvData = {
         provider,
         smartcard,
@@ -2510,28 +2684,29 @@ async function handleServiceForm(e, serviceType) {
       
       sessionStorage.setItem('tvData', JSON.stringify(tvData));
       
-      // Navigate to confirmation page
       window.location.href = 'tvconfirm.html';
-      return; // Return early since we're redirecting
+      return;
   }
   
   try {
-    // Show loading state
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
     submitBtn.textContent = 'Processing...';
     
-    // API call
+    showLoading(`Processing ${serviceType}...`);
+    
     console.log(`Processing ${serviceType} service from: ${API_BASE}/api/services/${serviceType}`);
     
+    const controller = createAbortController(serviceType);
     const response = await fetch(`${API_BASE}/api/services/${serviceType}`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(formData)
+      body: JSON.stringify(formData),
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -2542,45 +2717,49 @@ async function handleServiceForm(e, serviceType) {
     console.log(`${serviceType} service response:`, data);
     
     if (response.ok && data.success) {
-      // For electricity, show token if available
       if (serviceType === 'electricity' && data.data.token) {
         showAlert(`${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} payment successful! Token: ${data.data.token}`, 'success');
       } else {
         showAlert(`${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} purchase successful!`, 'success');
       }
       
-      // Store transaction reference if available
       if (data.data.reference) {
         sessionStorage.setItem('tvTransactionRef', data.data.reference);
       }
       
-      // Redirect to dashboard
       setTimeout(() => {
         window.location.href = 'dashboard.html';
       }, 2000);
     } else {
-      // Show error message
       showAlert(data.message || `${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} purchase failed. Please try again.`);
     }
     
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log(`${serviceType} request was aborted`);
+      return;
+    }
+    
     console.error(`${serviceType} purchase error:`, error);
     
-    // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
       showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert(`${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} purchase failed. Please check your connection and try again.`);
     }
   } finally {
-    // Reset button state
+    hideLoading();
+    
     const submitBtn = e.target.querySelector('button[type="submit"]');
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = originalText || 'Submit';
     }
+    
+    cleanupAbortController(serviceType);
   }
 }
+
 // Password Strength Meter
 function setupPasswordStrength() {
   const passwordInput = document.getElementById('password');
@@ -2592,16 +2771,13 @@ function setupPasswordStrength() {
       const password = passwordInput.value;
       let strength = 0;
       
-      // Check password strength
       if (password.length >= 8) strength += 25;
       if (password.match(/[a-z]+/)) strength += 25;
       if (password.match(/[A-Z]+/)) strength += 25;
       if (password.match(/[0-9]+/)) strength += 25;
       
-      // Update strength meter
       strengthFill.style.width = strength + '%';
       
-      // Update strength text and color
       if (strength <= 25) {
         strengthText.textContent = 'Weak';
         strengthFill.style.backgroundColor = '#ff4d4d';
@@ -2618,15 +2794,16 @@ function setupPasswordStrength() {
     });
   }
 }
-// Initialize password strength meter if on signup page
+
 if (document.getElementById('signupForm')) {
   setupPasswordStrength();
 }
-// Load notifications if on dashboard
+
 if (document.querySelector('.notification-badge')) {
   loadNotifications();
 }
-// Utility function to format currency
+
+// Utility functions
 function formatCurrency(amount) {
   return new Intl.NumberFormat('en-NG', {
     style: 'currency',
@@ -2634,19 +2811,19 @@ function formatCurrency(amount) {
     minimumFractionDigits: 2
   }).format(amount);
 }
-// Utility function to format date
+
 function formatDate(dateString) {
   const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
   return new Date(dateString).toLocaleDateString('en-NG', options);
 }
-// Logout function
+
 function logout() {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
   localStorage.removeItem('user');
   window.location.href = 'index.html';
 }
-// Add logout event listener to logout button
+
 const logoutBtn = document.querySelector('.logout-btn');
 if (logoutBtn) {
   logoutBtn.addEventListener('click', (e) => {
@@ -2654,6 +2831,7 @@ if (logoutBtn) {
     logout();
   });
 }
+
 // Download statement function
 async function downloadStatement() {
   const token = localStorage.getItem('accessToken');
@@ -2665,10 +2843,12 @@ async function downloadStatement() {
   try {
     console.log(`Downloading statement from: ${API_BASE}/api/wallet/transactions`);
     
+    const controller = createAbortController('downloadStatement');
     const response = await fetch(`${API_BASE}/api/wallet/transactions`, {
       headers: {
         'Authorization': `Bearer ${token}`
-      }
+      },
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -2679,14 +2859,12 @@ async function downloadStatement() {
     console.log('Download statement response:', data);
     
     if (data.success) {
-      // Create CSV content
       let csvContent = "Reference,Type,Amount,Status,Date\n";
       
       data.data.transactions.forEach(transaction => {
         csvContent += `${transaction.reference},${transaction.type},${transaction.amount},${transaction.status},${new Date(transaction.createdAt).toLocaleString()}\n`;
       });
       
-      // Create download link
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -2697,51 +2875,53 @@ async function downloadStatement() {
       link.click();
       document.body.removeChild(link);
     } else if (response.status === 401) {
-      // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
       if (refreshSuccess) {
-        // Retry after refresh
         downloadStatement();
       } else {
-        // If refresh fails, redirect to login
         window.location.href = 'login.html';
       }
     }
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Download statement request was aborted');
+      return;
+    }
+    
     console.error('Error downloading statement:', error);
     
-    // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
       showAlert('Unable to connect to the server. Please check your internet connection.');
     } else {
       showAlert('Failed to download statement. Please try again.');
     }
+  } finally {
+    cleanupAbortController('downloadStatement');
   }
 }
-// Add event listener to download statement button
+
 const downloadStatementBtn = document.querySelector('.wallet-buttons .btn.secondary');
 if (downloadStatementBtn) {
   downloadStatementBtn.addEventListener('click', downloadStatement);
 }
+
 // Referral program function
 function startReferring() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   if (user.email) {
-    // In a real app, this would open a referral modal or navigate to a referral page
     showAlert(`Your referral code is: ${user.email}\nShare this code with friends to earn rewards!`, 'success');
   } else {
     showAlert('Please login to access the referral program');
   }
 }
-// Add event listener to referral button
+
 const referralBtn = document.querySelector('.promo-section .btn');
 if (referralBtn) {
   referralBtn.addEventListener('click', startReferring);
 }
 
-// NEW: Setup TV Confirmation Page
+// Setup TV Confirmation Page
 function setupTvConfirmationPage() {
-  // Get TV data from sessionStorage
   const tvData = JSON.parse(sessionStorage.getItem('tvData') || '{}');
   
   if (!tvData.provider || !tvData.smartcard || !tvData.plan) {
@@ -2752,7 +2932,6 @@ function setupTvConfirmationPage() {
     return;
   }
   
-  // Display TV subscription details
   const providerElement = document.getElementById('confirmProvider');
   const smartcardElement = document.getElementById('confirmSmartcard');
   const planElement = document.getElementById('confirmPlan');
@@ -2768,7 +2947,6 @@ function setupTvConfirmationPage() {
   if (emailElement) emailElement.textContent = tvData.email;
   if (paymentMethodElement) paymentMethodElement.textContent = tvData.paymentMethod;
   
-  // Get plan details for amount display
   const planOptions = document.querySelectorAll(`#${tvData.provider}-plans .plan-option input`);
   let planPrice = 0;
   let planName = '';
@@ -2783,7 +2961,6 @@ function setupTvConfirmationPage() {
   
   if (amountElement) amountElement.textContent = `₦${planPrice.toLocaleString()}`;
   
-  // Setup confirm button
   const confirmBtn = document.getElementById('confirmTvSubscription');
   if (confirmBtn) {
     confirmBtn.addEventListener('click', () => {
@@ -2791,7 +2968,6 @@ function setupTvConfirmationPage() {
     });
   }
   
-  // Setup cancel button
   const cancelBtn = document.getElementById('cancelTvSubscription');
   if (cancelBtn) {
     cancelBtn.addEventListener('click', () => {
@@ -2801,7 +2977,7 @@ function setupTvConfirmationPage() {
   }
 }
 
-// NEW: Confirm TV Subscription
+// Confirm TV Subscription
 async function confirmTvSubscription(tvData, amount) {
   const token = localStorage.getItem('accessToken');
   if (!token) {
@@ -2810,15 +2986,16 @@ async function confirmTvSubscription(tvData, amount) {
   }
   
   try {
-    // Show loading state
     const confirmBtn = document.getElementById('confirmTvSubscription');
     const originalText = confirmBtn.textContent;
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Processing...';
     
-    // API call
+    showLoading('Confirming subscription...');
+    
     console.log(`Confirming TV subscription to: ${API_BASE}/api/services/tv`);
     
+    const controller = createAbortController('confirmTvSubscription');
     const response = await fetch(`${API_BASE}/api/services/tv`, {
       method: 'POST',
       headers: { 
@@ -2831,7 +3008,8 @@ async function confirmTvSubscription(tvData, amount) {
         plan: tvData.plan,
         phone: tvData.phone,
         email: tvData.email
-      })
+      }),
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -2842,50 +3020,51 @@ async function confirmTvSubscription(tvData, amount) {
     console.log('TV subscription response:', data);
     
     if (response.ok && data.success) {
-      // Clear session storage
       sessionStorage.removeItem('tvData');
       
-      // Store transaction reference
       if (data.data.reference) {
         sessionStorage.setItem('tvTransactionRef', data.data.reference);
       }
       
       showAlert('TV subscription successful!', 'success');
       
-      // Redirect to dashboard
       setTimeout(() => {
         window.location.href = 'dashboard.html';
       }, 2000);
     } else {
-      // Show error message
       showAlert(data.message || 'TV subscription failed. Please try again.', 'error');
     }
     
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('TV subscription confirmation was aborted');
+      return;
+    }
+    
     console.error('TV subscription error:', error);
     
-    // More specific error message for network issues
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
       showAlert('Unable to connect to the server. Please check your internet connection.', 'error');
     } else {
       showAlert('TV subscription failed. Please check your connection and try again.', 'error');
     }
   } finally {
-    // Reset button state
+    hideLoading();
+    
     const confirmBtn = document.getElementById('confirmTvSubscription');
     if (confirmBtn) {
       confirmBtn.disabled = false;
       confirmBtn.textContent = originalText || 'Confirm Subscription';
     }
+    
+    cleanupAbortController('confirmTvSubscription');
   }
 }
 
-// NEW: Setup Admin Dashboard
+// Setup Admin Dashboard
 function setupAdminDashboard() {
-  // Load admin stats
   loadAdminStats();
   
-  // Setup navigation to admin pages
   const adminNavItems = document.querySelectorAll('.admin-nav-item');
   adminNavItems.forEach(item => {
     item.addEventListener('click', (e) => {
@@ -2898,7 +3077,7 @@ function setupAdminDashboard() {
   });
 }
 
-// NEW: Load Admin Stats
+// Load Admin Stats
 async function loadAdminStats() {
   const token = localStorage.getItem('accessToken');
   if (!token) return;
@@ -2906,10 +3085,12 @@ async function loadAdminStats() {
   try {
     console.log(`Loading admin stats from: ${API_BASE}/api/admin/stats`);
     
+    const controller = createAbortController('adminStats');
     const response = await fetch(`${API_BASE}/api/admin/stats`, {
       headers: {
         'Authorization': `Bearer ${token}`
-      }
+      },
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -2920,7 +3101,6 @@ async function loadAdminStats() {
     console.log('Admin stats response:', data);
     
     if (data.success) {
-      // Update UI with stats
       const totalUsersElement = document.getElementById('totalUsers');
       const totalTransactionsElement = document.getElementById('totalTransactions');
       const totalVolumeElement = document.getElementById('totalVolume');
@@ -2931,20 +3111,21 @@ async function loadAdminStats() {
       if (totalVolumeElement) totalVolumeElement.textContent = `₦${Number(data.data.totalVolume).toLocaleString()}`;
       if (verificationRateElement) verificationRateElement.textContent = `${data.data.verificationRate}%`;
     } else if (response.status === 401) {
-      // Token expired, try to refresh
       const refreshSuccess = await refreshToken();
       if (refreshSuccess) {
-        // Retry after refresh
         loadAdminStats();
       } else {
-        // If refresh fails, redirect to login
         window.location.href = 'login.html';
       }
     }
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Admin stats request was aborted');
+      return;
+    }
+    
     console.error('Error loading admin stats:', error);
     
-    // Try fallback API if available
     const fallbackApiBase = API_BASE.includes('localhost') 
       ? 'https://easy-subscribe-backend.onrender.com' 
       : 'http://localhost:5001';
@@ -2962,7 +3143,7 @@ async function loadAdminStats() {
         if (fallbackResponse.ok) {
           const fallbackData = await fallbackResponse.json();
           console.log('Fallback admin stats response:', fallbackData);
-          
+           
           if (fallbackData.success) {
             const totalUsersElement = document.getElementById('totalUsers');
             const totalTransactionsElement = document.getElementById('totalTransactions');
@@ -2983,10 +3164,69 @@ async function loadAdminStats() {
       }
     }
     
-    // Show error message
     const statsContainer = document.querySelector('.admin-stats-container');
     if (statsContainer) {
       statsContainer.innerHTML = '<div class="error">Failed to load admin statistics</div>';
     }
+  } finally {
+    cleanupAbortController('adminStats');
   }
+}
+
+// NEW: Setup pagination
+function setupPagination() {
+  // Pagination will be set up individually for each list view
+}
+
+// NEW: Setup pagination controls
+function setupPaginationControls(containerId, paginationData, filter, loadFunction) {
+  const container = document.getElementById(containerId);
+  if (!container || !paginationData) return;
+  
+  // Check if pagination controls already exist
+  let paginationControls = container.querySelector('.pagination-controls');
+  
+  if (!paginationControls) {
+    paginationControls = document.createElement('div');
+    paginationControls.className = 'pagination-controls';
+    container.appendChild(paginationControls);
+  } else {
+    paginationControls.innerHTML = '';
+  }
+  
+  const { page, limit, pages, total } = paginationData;
+  
+  if (pages <= 1) {
+    paginationControls.style.display = 'none';
+    return;
+  }
+  
+  paginationControls.style.display = 'flex';
+  
+  // Previous button
+  const prevButton = document.createElement('button');
+  prevButton.className = 'pagination-btn prev';
+  prevButton.textContent = 'Previous';
+  prevButton.disabled = page <= 1;
+  prevButton.addEventListener('click', () => {
+    loadFunction(filter, page - 1);
+  });
+  
+  // Next button
+  const nextButton = document.createElement('button');
+  nextButton.className = 'pagination-btn next';
+  nextButton.textContent = 'Next';
+  nextButton.disabled = page >= pages;
+  nextButton.addEventListener('click', () => {
+    loadFunction(filter, page + 1);
+  });
+  
+  // Page info
+  const pageInfo = document.createElement('div');
+  pageInfo.className = 'pagination-info';
+  pageInfo.textContent = `Page ${page} of ${pages} (${total} items)`;
+  
+  paginationControls.appendChild(prevButton);
+  paginationControls.appendChild(pageInfo);
+  paginationControls.appendChild(nextButton);
 }

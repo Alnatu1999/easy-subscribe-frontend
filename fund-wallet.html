@@ -1,868 +1,803 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fund Wallet - EasySubscribe</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    /* Fund Wallet Page Specific Styles */
-    .fund-page {
-      padding: 2rem 0 4rem;
-      min-height: calc(100vh - 200px);
-    }
-    
-    .fund-container {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 20px;
-    }
-    
-    .fund-header {
-      grid-column: 1 / -1;
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-    
-    .fund-header h2 {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-      color: var(--primary);
-    }
-    
-    .fund-header p {
-      font-size: 1.1rem;
-      color: var(--gray);
-      max-width: 700px;
-      margin: 0 auto;
-    }
-    
-    .fund-form-container {
-      background: var(--white);
-      border-radius: 15px;
-      padding: 2rem;
-      box-shadow: var(--shadow-lg);
-    }
-    
-    .form-card {
-      margin-bottom: 2rem;
-    }
-    
-    .form-card h3 {
-      font-size: 1.5rem;
-      margin-bottom: 1.5rem;
-      color: var(--dark);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    
-    .form-card h3 i {
-      color: var(--primary);
-    }
-    
-    .info-message {
-      background: rgba(30, 144, 255, 0.1);
-      border-left: 4px solid var(--primary);
-      padding: 1rem;
-      border-radius: 4px;
-      margin-bottom: 1.5rem;
-    }
-    
-    .info-message p {
-      margin: 0;
-      color: var(--dark);
-    }
-    
-    .info-message p strong {
-      color: var(--primary);
-    }
-    
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-    
-    .form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-      color: var(--dark);
-    }
-    
-    .form-group input,
-    .form-group select {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      border: 1px solid var(--light-gray);
-      border-radius: 8px;
-      font-size: 1rem;
-      transition: var(--transition);
-    }
-    
-    .form-group input:focus,
-    .form-group select:focus {
-      border-color: var(--primary);
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.1);
-    }
-    
-    .form-group input.error,
-    .form-group select.error {
-      border-color: var(--danger);
-    }
-    
-    .error-message {
-      color: var(--danger);
-      font-size: 0.8rem;
-      margin-top: 0.3rem;
-    }
-    
-    .form-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 2rem;
-    }
-    
-    .back-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: var(--primary);
-      font-weight: 500;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    
-    .back-btn:hover {
-      color: var(--primary-dark);
-    }
-    
-    .fund-info-container {
-      display: flex;
-      flex-direction: column;
-      gap: 2rem;
-    }
-    
-    .info-card {
-      background: var(--white);
-      border-radius: 15px;
-      padding: 2rem;
-      box-shadow: var(--shadow);
-    }
-    
-    .info-card h3 {
-      font-size: 1.3rem;
-      margin-bottom: 1.5rem;
-      color: var(--dark);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    
-    .info-card h3 i {
-      color: var(--primary);
-    }
-    
-    .benefits-list {
-      list-style: none;
-    }
-    
-    .benefits-list li {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.8rem;
-      margin-bottom: 1rem;
-    }
-    
-    .benefits-list li i {
-      color: var(--success);
-      margin-top: 0.2rem;
-    }
-    
-    .security-features {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1.5rem;
-    }
-    
-    .security-feature {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      background: var(--light);
-      border-radius: 10px;
-    }
-    
-    .security-feature i {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: rgba(30, 144, 255, 0.1);
-      color: var(--primary);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    
-    .security-feature p {
-      margin: 0;
-      font-weight: 500;
-    }
-    
-    .recent-funding {
-      margin-top: 1rem;
-    }
-    
-    .recent-funding h4 {
-      font-size: 1.1rem;
-      margin-bottom: 1rem;
-      color: var(--dark);
-    }
-    
-    .funding-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-    
-    .funding-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem;
-      background: var(--light);
-      border-radius: 8px;
-    }
-    
-    .funding-details {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-    
-    .funding-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 1rem;
-      color: var(--white);
-    }
-    
-    .funding-icon.admin {
-      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    }
-    
-    .funding-icon.transfer {
-      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    }
-    
-    .funding-info p {
-      margin: 0;
-    }
-    
-    .funding-info .funding-method {
-      font-weight: 500;
-    }
-    
-    .funding-info .funding-date {
-      font-size: 0.8rem;
-      color: var(--gray);
-    }
-    
-    .funding-amount {
-      font-weight: 600;
-      color: var(--success);
-    }
-    
-    .promo-banner {
-      background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
-      border-radius: 15px;
-      padding: 1.5rem;
-      color: var(--white);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
-    .promo-content h3 {
-      font-size: 1.2rem;
-      margin-bottom: 0.5rem;
-      color: var(--white);
-    }
-    
-    .promo-content p {
-      margin: 0;
-      opacity: 0.9;
-    }
-    
-    .promo-icon {
-      font-size: 3rem;
-      opacity: 0.8;
-    }
-    
-    /* Alert container */
-    .alert-container {
-      margin-bottom: 1.5rem;
-    }
-    
-    .loading-spinner {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      border-top-color: #fff;
-      animation: spin 1s ease-in-out infinite;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    .skeleton {
-      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-      background-size: 200% 100%;
-      animation: loading 1.5s infinite;
-    }
-    
-    @keyframes loading {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-    
-    .skeleton-text {
-      height: 1rem;
-      margin-bottom: 0.5rem;
-      border-radius: 4px;
-    }
-    
-    .skeleton-item {
-      height: 60px;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-    }
-    
-    @media (max-width: 992px) {
-      .fund-container {
-        grid-template-columns: 1fr;
-      }
-      
-      .security-features {
-        grid-template-columns: 1fr;
-      }
-    }
-    
-    @media (max-width: 576px) {
-      .fund-header h2 {
-        font-size: 2rem;
-      }
-      
-      .promo-banner {
-        flex-direction: column;
-        text-align: center;
-        gap: 1rem;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fund Wallet - EasySubscribe</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #4a6de5, #6a11cb);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            margin-right: 10px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .wallet-balance {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            margin-right: 15px;
+        }
+        
+        .notification-bell {
+            position: relative;
+            margin-right: 20px;
+            cursor: pointer;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .user-name {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+        
+        .dashboard {
+            display: flex;
+            margin-top: 30px;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            height: fit-content;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+        }
+        
+        .sidebar-menu li {
+            margin-bottom: 10px;
+        }
+        
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: #555;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background: #f0f3ff;
+            color: #4a6de5;
+        }
+        
+        .sidebar-menu i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 30px;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            color: #777;
+        }
+        
+        .breadcrumb a {
+            color: #4a6de5;
+            text-decoration: none;
+        }
+        
+        .breadcrumb i {
+            margin: 0 10px;
+            color: #ccc;
+        }
+        
+        .wallet-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .wallet-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #4a6de5, #6a11cb);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 36px;
+            margin: 0 auto 20px;
+        }
+        
+        .wallet-card h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .wallet-card p {
+            color: #777;
+            margin-bottom: 20px;
+        }
+        
+        .balance-amount {
+            font-size: 36px;
+            font-weight: 700;
+            color: #4a6de5;
+            margin-bottom: 20px;
+        }
+        
+        .fund-form {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .form-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .form-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #4a6de5, #6a11cb);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin-right: 15px;
+        }
+        
+        .form-title h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .form-title p {
+            color: #777;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: #4a6de5;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 109, 229, 0.2);
+        }
+        
+        .form-control.input-error {
+            border-color: #ff4757;
+        }
+        
+        .error-message {
+            color: #ff4757;
+            font-size: 14px;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .error-message i {
+            margin-right: 5px;
+        }
+        
+        .quick-amounts {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .amount-btn {
+            padding: 8px 15px;
+            background: #f0f3ff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            color: #4a6de5;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .amount-btn:hover {
+            background: #4a6de5;
+            color: white;
+        }
+        
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .payment-option {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .payment-option:hover {
+            border-color: #4a6de5;
+        }
+        
+        .payment-option.selected {
+            border-color: #4a6de5;
+            background: #f0f3ff;
+        }
+        
+        .payment-option i {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #4a6de5;
+        }
+        
+        .payment-option h3 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .payment-option p {
+            color: #777;
+            font-size: 14px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: #4a6de5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background: #3a5bd0;
+        }
+        
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+        
+        .btn-success {
+            background: #2ed573;
+        }
+        
+        .btn-success:hover {
+            background: #26d065;
+        }
+        
+        .requests-section {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .section-header h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .filter-btn {
+            padding: 8px 15px;
+            background: #f0f3ff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            color: #4a6de5;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-btn:hover, .filter-btn.active {
+            background: #4a6de5;
+            color: white;
+        }
+        
+        .requests-list {
+            margin-top: 20px;
+        }
+        
+        .request-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .request-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .request-amount {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .request-method {
+            color: #777;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .request-reference {
+            color: #777;
+            font-size: 14px;
+        }
+        
+        .request-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .no-requests {
+            text-align: center;
+            padding: 40px 0;
+            color: #777;
+        }
+        
+        .no-requests i {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+        
+        .loading-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #4a6de5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        .loading-message {
+            font-size: 18px;
+            color: #4a6de5;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 400px;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .alert-error {
+            background: #ff4757;
+            color: white;
+        }
+        
+        .alert-success {
+            background: #2ed573;
+            color: white;
+        }
+        
+        .alert-warning {
+            background: #ffa502;
+            color: white;
+        }
+        
+        .alert i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+        
+        .close-alert {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: inherit;
+            font-size: 18px;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+        
+        .close-alert:hover {
+            opacity: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                margin-bottom: 30px;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .payment-methods {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-amounts {
+                justify-content: center;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .filter-buttons {
+                margin-top: 15px;
+                width: 100%;
+                overflow-x: auto;
+            }
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <div class="container">
-      <div class="logo">
-        <h1>EasySubscribe</h1>
-      </div>
-      <nav class="desktop-nav">
-        <a href="index.html">Home</a>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="fund-wallet.html" class="active">Fund Wallet</a>
-        <a href="fund-requests.html">Funding Requests</a>
-        <a href="airtime.html">Airtime</a>
-        <a href="data.html">Data</a>
-        <a href="electricity.html">Electricity</a>
-        <a href="tv.html">TV</a>
-      </nav>
-      <div class="mobile-menu-btn">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-    </div>
-  </header>
-  
-  <main class="fund-page">
-    <div class="fund-container">
-      <div class="fund-header">
-        <h2>Fund Your Wallet</h2>
-        <p>Add money to your wallet to enjoy seamless bill payments and exclusive benefits</p>
-      </div>
-      
-      <div class="fund-form-container">
-        <!-- Alert container for messages -->
-        <div id="alert-container" class="alert-container"></div>
-        
-        <!-- Back to dashboard button -->
-        <a href="dashboard.html" class="back-btn">
-          <i class="fas fa-arrow-left"></i> Back to Dashboard
-        </a>
-        
-        <div class="form-card">
-          <h3><i class="fas fa-info-circle"></i> Request Wallet Funding</h3>
-          
-          <div class="info-message">
-            <p><strong>Important:</strong> Submit a funding request and our admin will credit your wallet after payment verification.</p>
-          </div>
-          
-          <form id="fundRequestForm">
-            <div class="form-group">
-              <label for="amount">Amount (₦)</label>
-              <input type="number" id="amount" name="amount" min="100" step="100" placeholder="Enter amount" required>
-              <div class="error-message" id="amount-error"></div>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-bolt"></i>
+                <span>EasySubscribe</span>
             </div>
-            
-            <div class="form-group">
-              <label for="paymentMethod">Payment Method</label>
-              <select id="paymentMethod" name="paymentMethod" required>
-                <option value="">Select payment method</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="cash">Cash Deposit</option>
-                <option value="other">Other</option>
-              </select>
-              <div class="error-message" id="paymentMethod-error"></div>
-            </div>
-            
-            <div class="form-group">
-              <label for="reference">Payment Reference (Optional)</label>
-              <input type="text" id="reference" name="reference" placeholder="Enter payment reference if available">
-              <div class="error-message" id="reference-error"></div>
-            </div>
-            
-            <div class="form-actions">
-              <button type="submit" class="btn primary" id="submit-btn">Submit Request</button>
-            </div>
-          </form>
-        </div>
-        
-        <div class="contact-admin">
-          <h4><i class="fas fa-headset"></i> Contact Administrator</h4>
-          
-          <div class="contact-methods">
-            <div class="contact-method">
-              <i class="fas fa-phone"></i>
-              <p>Call: +234 800 123 4567</p>
-            </div>
-            
-            <div class="contact-method">
-              <i class="fas fa-envelope"></i>
-              <p>Email: support@easysubscribe.com</p>
-            </div>
-            
-            <div class="contact-method">
-              <i class="fab fa-whatsapp"></i>
-              <p>WhatsApp: +234 800 123 4567</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="fund-info-container">
-        <div class="info-card">
-          <h3><i class="fas fa-gift"></i> Wallet Benefits</h3>
-          
-          <ul class="benefits-list">
-            <li>
-              <i class="fas fa-check-circle"></i>
-              <div>
-                <strong>Seamless Payments</strong>
-                <p>Pay bills in one click without entering card details</p>
-              </div>
-            </li>
-            <li>
-              <i class="fas fa-check-circle"></i>
-              <div>
-                <strong>Budget Management</strong>
-                <p>Control your spending with a dedicated wallet balance</p>
-              </div>
-            </li>
-            <li>
-              <i class="fas fa-check-circle"></i>
-              <div>
-                <strong>Transaction History</strong>
-                <p>Track all your payments in one place</p>
-              </div>
-            </li>
-            <li>
-              <i class="fas fa-check-circle"></i>
-              <div>
-                <strong>Exclusive Offers</strong>
-                <p>Get access to special promotions and discounts</p>
-              </div>
-            </li>
-          </ul>
-        </div>
-        
-        <div class="info-card">
-          <h3><i class="fas fa-shield-alt"></i> Security & Privacy</h3>
-          
-          <div class="security-features">
-            <div class="security-feature">
-              <i class="fas fa-lock"></i>
-              <p>Bank-Level Encryption</p>
-            </div>
-            <div class="security-feature">
-              <i class="fas fa-user-shield"></i>
-              <p>Secure Authentication</p>
-            </div>
-            <div class="security-feature">
-              <i class="fas fa-fingerprint"></i>
-              <p>Biometric Login</p>
-            </div>
-            <div class="security-feature">
-              <i class="fas fa-history"></i>
-              <p>Transaction History</p>
-            </div>
-          </div>
-        </div>
-        
-        <div class="info-card">
-          <h3><i class="fas fa-history"></i> Recent Funding</h3>
-          
-          <div class="recent-funding">
-            <div class="funding-list" id="recent-funding-list">
-              <!-- Recent funding will be loaded here -->
-              <div class="skeleton skeleton-item"></div>
-              <div class="skeleton skeleton-item"></div>
-              <div class="skeleton skeleton-item"></div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="promo-banner">
-          <div class="promo-content">
-            <h3>Referral Bonus</h3>
-            <p>Refer a friend and get bonus credits added to your wallet</p>
-          </div>
-          <div class="promo-icon">
-            <i class="fas fa-user-friends"></i>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-  
-  <footer>
-    <div class="container">
-      <div class="footer-content">
-        <div class="footer-logo">
-          <h2>EasySubscribe</h2>
-          <p>Your one-stop solution for bill payments</p>
-        </div>
-        <div class="footer-links">
-          <div class="footer-column">
-            <h4>Company</h4>
-            <a href="#">About Us</a>
-            <a href="#">Careers</a>
-            <a href="#">Contact</a>
-          </div>
-          <div class="footer-column">
-            <h4>Services</h4>
-            <a href="airtime.html">Airtime</a>
-            <a href="data.html">Data</a>
-            <a href="electricity.html">Electricity</a>
-            <a href="tv.html">TV Subscription</a>
-          </div>
-          <div class="footer-column">
-            <h4>Legal</h4>
-            <a href="#">Terms of Service</a>
-            <a href="#">Privacy Policy</a>
-            <a href="#">FAQ</a>
-          </div>
-        </div>
-      </div>
-      <div class="copyright">
-        <p>&copy; 2025 EasySubscribe. All Rights Reserved.</p>
-      </div>
-    </div>
-  </footer>
-  
-  <!-- Reference the main.js file -->
-  <script src="main.js"></script>
-  
-  <script>
-    // API Configuration
-    const API_BASE = window.location.hostname === 'localhost' 
-      ? 'http://localhost:5001'  // Changed from 5000 to 5001 to match server
-      : 'https://easy-subscribe-backend.onrender.com'; // Updated with actual backend URL
-    
-    // Mobile menu toggle
-    document.addEventListener('DOMContentLoaded', function() {
-      const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-      const desktopNav = document.querySelector('.desktop-nav');
-      
-      if (mobileMenuBtn && desktopNav) {
-        mobileMenuBtn.addEventListener('click', function() {
-          desktopNav.classList.toggle('active');
-        });
-      }
-      
-      // Check authentication
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        window.location.href = 'login.html';
-      }
-      
-      // Load recent funding requests
-      loadRecentFunding();
-      
-      // Setup form submission
-      const fundRequestForm = document.getElementById('fundRequestForm');
-      if (fundRequestForm) {
-        fundRequestForm.addEventListener('submit', handleFundRequest);
-      }
-    });
-    
-    // Load recent funding requests
-    function loadRecentFunding() {
-      const token = localStorage.getItem('accessToken');
-      const container = document.getElementById('recent-funding-list');
-      
-      if (!token) return;
-      
-      fetch(`${API_BASE}/api/user/fund-requests?limit=3`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      .then(response => {
-        if (!response.ok) {
-          if (response.status === 401) {
-            // Token expired, try to refresh
-            return refreshToken().then(success => {
-              if (success) {
-                return loadRecentFunding();
-              } else {
-                // If refresh fails, redirect to login
-                window.location.href = 'login.html';
-              }
-            });
-          }
-          throw new Error('Failed to fetch funding requests');
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data && data.success && data.data && data.data.transactions.length > 0) {
-          container.innerHTML = '';
-          
-          data.data.transactions.forEach(transaction => {
-            const fundingItem = document.createElement('div');
-            fundingItem.className = 'funding-item';
-            
-            // Format date
-            const date = new Date(transaction.createdAt);
-            const formattedDate = date.toLocaleDateString('en-NG', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric'
-                });
-            
-            // Determine icon based on payment method
-            const iconClass = transaction.metadata.paymentMethod === 'bank_transfer' || 
-                             transaction.metadata.paymentMethod === 'cash' ? 'transfer' : 'admin';
-            
-            fundingItem.innerHTML = `
-              <div class="funding-details">
-                <div class="funding-icon ${iconClass}"></div>
-                <div class="funding-info">
-                  <p class="funding-method">${transaction.metadata.paymentMethod}</p>
-                  <p class="funding-date">${formattedDate}</p>
+            <div class="user-info">
+                <div class="wallet-balance">₦<span class="wallet-balance">0.00</span></div>
+                <div class="notification-bell">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">0</span>
                 </div>
-              </div>
-              <div class="funding-amount">₦${Number(transaction.amount).toLocaleString()}</div>
-            `;
-            
-            container.appendChild(fundingItem);
-          });
-        } else {
-          container.innerHTML = '<p style="text-align: center; color: var(--gray);">No recent funding activity</p>';
-        }
-      })
-      .catch(error => {
-        console.error('Error loading recent funding:', error);
-        container.innerHTML = '<p style="text-align: center; color: var(--danger);">Failed to load funding history</p>';
-      });
-    }
-    
-    // Handle fund request form submission
-    function handleFundRequest(e) {
-      e.preventDefault();
-      
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        showAlert('Please login to request funding');
-        return;
-      }
-      
-      // Clear previous error messages
-      document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
-      
-      // Get form values
-      const amount = document.getElementById('amount').value;
-      const paymentMethod = document.getElementById('paymentMethod').value;
-      const reference = document.getElementById('reference').value;
-      
-      // Validate form
-      let isValid = true;
-      
-      if (!amount || amount < 100) {
-        document.getElementById('amount-error').textContent = 'Amount must be at least ₦100';
-        isValid = false;
-      }
-      
-      if (!paymentMethod) {
-        document.getElementById('paymentMethod-error').textContent = 'Please select a payment method';
-        isValid = false;
-      }
-      
-      if (!isValid) return;
-      
-      // Show loading state
-      const submitBtn = document.getElementById('submit-btn');
-      const originalText = submitBtn.textContent;
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span class="loading-spinner"></span> Processing...';
-      
-      // Submit request
-      fetch(`${API_BASE}/api/user/fund-request`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ amount, paymentMethod, reference })
-      })
-      .then(response => {
-        if (!response.ok) {
-          if (response.status === 401) {
-            // Token expired, try to refresh
-            return refreshToken().then(success => {
-              if (success) {
-                return handleFundRequest(e);
-              } else {
-                // If refresh fails, redirect to login
-                window.location.href = 'login.html';
-              }
-            });
-          }
-          throw new Error('Failed to submit funding request');
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data && data.success) {
-          showAlert('Funding request submitted successfully!', 'success');
-          // Reset form
-          e.target.reset();
-          // Reload recent funding
-          loadRecentFunding();
-        } else {
-          showAlert(data.message || 'Failed to submit funding request. Please try again.');
-        }
-      })
-      .catch(error => {
-        console.error('Fund request error:', error);
-        
-        // More specific error message for network issues
-        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-          showAlert('Unable to connect to the server. Please check your internet connection.');
-        } else {
-          showAlert('Failed to submit funding request. Please check your connection and try again.');
-        }
-      })
-      .finally(() => {
-        // Reset button state
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-      });
-    }
-    
-    // Show alert function
-    function showAlert(message, type = 'error') {
-      const alertContainer = document.getElementById('alert-container');
-      
-      // Clear previous alerts
-      alertContainer.innerHTML = '';
-      
-      // Create alert element
-      const alert = document.createElement('div');
-      alert.className = `alert alert-${type === 'success' ? 'success' : 'error'}`;
-      alert.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-        <span>${message}</span>
-      `;
-      
-      alertContainer.appendChild(alert);
-      
-      // Auto-hide after 5 seconds
-      setTimeout(() => {
-        alertContainer.innerHTML = '';
-      }, 5000);
-    }
-    
-    // Refresh token function
-    function refreshToken() {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) {
-        logout();
-        return Promise.resolve(false);
-      }
-      
-      return fetch(`${API_BASE}/api/auth/refresh-token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken })
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to refresh token');
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data && data.success) {
-          localStorage.setItem('accessToken', data.data.accessToken);
-          return Promise.resolve(true);
-        } else {
-          // Refresh token failed, logout user
-          logout();
-          return Promise.resolve(false);
-        }
-      })
-      .catch(error => {
-        console.error('Error refreshing token:', error);
-        logout();
-        return Promise.resolve(false);
-      });
-    }
-    
-    // Logout function
-    function logout() {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      window.location.href = 'index.html';
-    }
-  </script>
+                <div class="user-name">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <span class="user-name">User</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="dashboard">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <ul class="sidebar-menu">
+                    <li><a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="airtime.html"><i class="fas fa-mobile-alt"></i> Airtime</a></li>
+                    <li><a href="data.html"><i class="fas fa-wifi"></i> Data</a></li>
+                    <li><a href="tv.html"><i class="fas fa-tv"></i> TV Subscription</a></li>
+                    <li><a href="electricity.html"><i class="fas fa-bolt"></i> Electricity</a></li>
+                    <li><a href="transactions.html"><i class="fas fa-exchange-alt"></i> Transactions</a></li>
+                    <li><a href="fund-wallet.html" class="active"><i class="fas fa-wallet"></i> Fund Wallet</a></li>
+                    <li><a href="profile.html"><i class="fas fa-user-cog"></i> Profile</a></li>
+                    <li><a href="#" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Fund Wallet</h1>
+                        <div class="breadcrumb">
+                            <a href="dashboard.html">Dashboard</a>
+                            <i class="fas fa-chevron-right"></i>
+                            <span>Fund Wallet</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wallet Balance Card -->
+                <div class="wallet-card">
+                    <div class="wallet-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <h2>Current Wallet Balance</h2>
+                    <p>Your available balance for transactions</p>
+                    <div class="balance-amount">₦<span class="wallet-balance">0.00</span></div>
+                </div>
+
+                <!-- Funding Request Form -->
+                <div class="fund-form">
+                    <div class="form-header">
+                        <div class="form-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <div class="form-title">
+                            <h2>Request Funding</h2>
+                            <p>Submit a request to fund your wallet</p>
+                        </div>
+                    </div>
+
+                    <form id="fundRequestForm">
+                        <div class="form-group">
+                            <label for="amount">Amount (₦)</label>
+                            <input type="number" id="amount" class="form-control" placeholder="Enter amount" min="100" required>
+                            <div id="amount-error" class="error-message" style="display: none;">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Quick Amounts</label>
+                            <div class="quick-amounts">
+                                <button type="button" class="amount-btn" data-amount="1000">₦1,000</button>
+                                <button type="button" class="amount-btn" data-amount="5000">₦5,000</button>
+                                <button type="button" class="amount-btn" data-amount="10000">₦10,000</button>
+                                <button type="button" class="amount-btn" data-amount="20000">₦20,000</button>
+                                <button type="button" class="amount-btn" data-amount="50000">₦50,000</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Payment Method</label>
+                            <div class="payment-methods">
+                                <div class="payment-option selected" data-method="bank_transfer">
+                                    <i class="fas fa-university"></i>
+                                    <h3>Bank Transfer</h3>
+                                    <p>Transfer from your bank account</p>
+                                </div>
+                                <div class="payment-option" data-method="cash">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    <h3>Cash Deposit</h3>
+                                    <p>Pay cash at our office</p>
+                                </div>
+                                <div class="payment-option" data-method="other">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                    <h3>Other</h3>
+                                    <p>Other payment methods</p>
+                                </div>
+                            </div>
+                            <input type="hidden" id="paymentMethod" name="paymentMethod" value="bank_transfer" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reference">Reference (Optional)</label>
+                            <input type="text" id="reference" class="form-control" placeholder="Enter payment reference">
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-block">Submit Funding Request</button>
+                    </form>
+                </div>
+
+                <!-- Funding Requests Section -->
+                <div class="requests-section">
+                    <div class="section-header">
+                        <h2>Funding Requests</h2>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-status="">All</button>
+                            <button class="filter-btn" data-status="pending">Pending</button>
+                            <button class="filter-btn" data-status="successful">Approved</button>
+                            <button class="filter-btn" data-status="failed">Rejected</button>
+                        </div>
+                    </div>
+
+                    <div class="requests-list" id="fundRequestsList">
+                        <div class="no-requests">
+                            <i class="fas fa-receipt"></i>
+                            <p>No funding requests found</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div class="loading-indicator">
+        <div class="loading-spinner"></div>
+        <div class="loading-message">Loading...</div>
+    </div>
+
+    <!-- Alert Container -->
+    <div id="alert-container" class="alert-container"></div>
+
+    <script src="main.js"></script>
 </body>
 </html>

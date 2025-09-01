@@ -9,14 +9,17 @@ if (typeof window.API_BASE === 'undefined') {
     : 'https://easy-subscribe-backend.onrender.com';
 }
 const API_BASE = window.API_BASE;
+
 // NEW: Global loading state and request cancellation
 let loadingIndicator = null;
 let activeRequests = {};
+
 // DOM Elements
 const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
 const desktopNav = document.querySelector('.desktop-nav');
 const menuToggle = document.querySelector('.menu-toggle');
 const sidebar = document.querySelector('.sidebar');
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
   initializeApp();
@@ -37,9 +40,15 @@ document.addEventListener('DOMContentLoaded', () => {
     setupAdminDashboard();
   }
   
+  // Handle admin commissions page
+  if (window.location.pathname.includes('admin-commissions.html')) {
+    setupAdminCommissionsPage();
+  }
+  
   // Add beforeunload event listener to warn about pending TV subscription
   window.addEventListener('beforeunload', handleBeforeUnload);
 });
+
 // NEW: Handle beforeunload to warn about pending TV subscription
 function handleBeforeUnload(e) {
   const tvData = JSON.parse(sessionStorage.getItem('tvData') || '{}');
@@ -49,6 +58,7 @@ function handleBeforeUnload(e) {
     return message;
   }
 }
+
 // Check server connection with fallback
 async function checkServerConnection() {
   try {
@@ -69,6 +79,7 @@ async function checkServerConnection() {
     tryFallbackServer();
   }
 }
+
 // Try fallback server
 function tryFallbackServer() {
   const currentApiBase = API_BASE;
@@ -101,6 +112,7 @@ function tryFallbackServer() {
     showAlert('Unable to connect to the server. Please check your internet connection.', 'error');
   }
 }
+
 // NEW: Show loading indicator
 function showLoading(message = 'Loading...') {
   if (!loadingIndicator) {
@@ -119,12 +131,14 @@ function showLoading(message = 'Loading...') {
     loadingIndicator.style.display = 'flex';
   }
 }
+
 // NEW: Hide loading indicator
 function hideLoading() {
   if (loadingIndicator) {
     loadingIndicator.style.display = 'none';
   }
 }
+
 // NEW: AbortController for request cancellation
 function createAbortController(key) {
   if (activeRequests[key]) {
@@ -134,12 +148,14 @@ function createAbortController(key) {
   activeRequests[key] = controller;
   return controller;
 }
+
 // NEW: Clean up abort controller
 function cleanupAbortController(key) {
   if (activeRequests[key]) {
     delete activeRequests[key];
   }
 }
+
 // Initialize app
 function initializeApp() {
   setupMobileMenu();
@@ -161,10 +177,12 @@ function initializeApp() {
   setupTransactionsPage();
   setupNotificationsPage();
   setupTvVariations();
+  setupDataVariations(); // NEW: Setup data variations
   setupWalletFunding();
   setupSmartcardValidation();
-  setupPagination(); // NEW: Setup pagination
+  setupPagination();
 }
+
 // Mobile Menu Toggle
 function setupMobileMenu() {
   if (mobileMenuBtn && desktopNav) {
@@ -173,6 +191,7 @@ function setupMobileMenu() {
     });
   }
 }
+
 // Sidebar Toggle for Dashboard
 function setupSidebarToggle() {
   if (menuToggle && sidebar) {
@@ -181,6 +200,7 @@ function setupSidebarToggle() {
     });
   }
 }
+
 // Form Handlers
 function setupFormHandlers() {
   // Login Form
@@ -258,6 +278,7 @@ function setupFormHandlers() {
     adminFundWalletForm.addEventListener('submit', handleAdminFundWallet);
   }
 }
+
 // Password Visibility Toggle
 function setupPasswordToggles() {
   const toggleButtons = document.querySelectorAll('.toggle-password');
@@ -278,6 +299,7 @@ function setupPasswordToggles() {
     });
   });
 }
+
 // Quick Amount Buttons for Airtime
 function setupQuickAmountButtons() {
   const amountButtons = document.querySelectorAll('.amount-btn');
@@ -291,6 +313,7 @@ function setupQuickAmountButtons() {
     });
   }
 }
+
 // Plan Selection for Data
 function setupPlanSelection() {
   const planOptions = document.querySelectorAll('.plan-option input[type="radio"]');
@@ -308,6 +331,7 @@ function setupPlanSelection() {
     });
   });
 }
+
 // Provider Selection for TV with VTU integration
 function setupProviderSelection() {
   const tvProvider = document.getElementById('tv');
@@ -338,6 +362,7 @@ function setupProviderSelection() {
     });
   }
 }
+
 // Setup TV variations
 function setupTvVariations() {
   const tvProvider = document.getElementById('tv');
@@ -345,6 +370,22 @@ function setupTvVariations() {
     loadTvVariations();
   }
 }
+
+// NEW: Setup data variations
+function setupDataVariations() {
+  const network = document.getElementById('network');
+  if (network) {
+    network.addEventListener('change', () => {
+      loadDataVariations();
+    });
+    
+    // Load variations if network is already selected
+    if (network.value) {
+      loadDataVariations();
+    }
+  }
+}
+
 // Load TV variations from API with caching
 async function loadTvVariations() {
   const provider = document.getElementById('tv')?.value;
@@ -437,7 +478,101 @@ async function loadTvVariations() {
     cleanupAbortController('tvVariations');
   }
 }
-// NEW: Display TV variations
+
+// NEW: Load data variations from API with caching
+async function loadDataVariations() {
+  const network = document.getElementById('network')?.value;
+  if (!network) return;
+  
+  // Check cache first
+  const cacheKey = `dataVariations_${network}`;
+  const cachedData = sessionStorage.getItem(cacheKey);
+  
+  if (cachedData) {
+    const parsedData = JSON.parse(cachedData);
+    const now = new Date().getTime();
+    
+    // Check if cache is still valid (1 hour)
+    if (now - parsedData.timestamp < 3600000) {
+      console.log(`Using cached data variations for ${network}`);
+      displayDataVariations(parsedData.data, network);
+      return;
+    }
+  }
+  
+  try {
+    console.log(`Loading data variations for network: ${network} from: ${API_BASE}/api/services/data-variations?network=${network}`);
+    
+    const controller = createAbortController('dataVariations');
+    const response = await fetch(`${API_BASE}/api/services/data-variations?network=${network}`, {
+      signal: controller.signal
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Data variations response:', data);
+    
+    if (data.success) {
+      // Cache the response
+      sessionStorage.setItem(cacheKey, JSON.stringify({
+        data: data.data,
+        timestamp: new Date().getTime()
+      }));
+      
+      displayDataVariations(data.data, network);
+    } else {
+      console.error('Failed to load data variations:', data.message);
+      displayDataVariationsError(network, data.message);
+    }
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Data variations request was aborted');
+      return;
+    }
+    
+    console.error('Error loading data variations:', error);
+    
+    // Try fallback API if available
+    const fallbackApiBase = API_BASE.includes('localhost') 
+      ? 'https://easy-subscribe-backend.onrender.com' 
+      : 'http://localhost:5001';
+    
+    if (API_BASE !== fallbackApiBase) {
+      console.log(`Trying fallback API at: ${fallbackApiBase}/api/services/data-variations?network=${network}`);
+      
+      try {
+        const fallbackResponse = await fetch(`${fallbackApiBase}/api/services/data-variations?network=${network}`);
+        
+        if (fallbackResponse.ok) {
+          const fallbackData = await fallbackResponse.json();
+          console.log('Fallback data variations response:', fallbackData);
+          
+          if (fallbackData.success) {
+            sessionStorage.setItem(cacheKey, JSON.stringify({
+              data: fallbackData.data,
+              timestamp: new Date().getTime()
+            }));
+            
+            displayDataVariations(fallbackData.data, network);
+            showAlert('Using backup server. Some features may be limited.', 'warning');
+            return;
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Fallback API also failed:', fallbackError);
+      }
+    }
+    
+    displayDataVariationsError(network, 'Failed to load data variations. Please check your connection.');
+  } finally {
+    cleanupAbortController('dataVariations');
+  }
+}
+
+// Display TV variations
 function displayTvVariations(data, provider) {
   const plansContainer = document.getElementById(`${provider}-plans`);
   if (plansContainer) {
@@ -462,7 +597,8 @@ function displayTvVariations(data, provider) {
     });
   }
 }
-// NEW: Display TV variations error
+
+// Display TV variations error
 function displayTvVariationsError(provider, message) {
   const plansContainer = document.getElementById(`${provider}-plans`);
   if (plansContainer) {
@@ -474,6 +610,46 @@ function displayTvVariationsError(provider, message) {
     `;
   }
 }
+
+// NEW: Display data variations
+function displayDataVariations(data, network) {
+  const plansContainer = document.getElementById(`${network}-plans`);
+  if (plansContainer) {
+    plansContainer.innerHTML = '';
+    
+    if (data.length === 0) {
+      plansContainer.innerHTML = '<p>No plans available for this network</p>';
+      return;
+    }
+    
+    data.forEach(plan => {
+      const planElement = document.createElement('div');
+      planElement.className = 'plan-option';
+      planElement.innerHTML = `
+        <input type="radio" id="plan-${plan.variation_id}" name="plan" value="${plan.variation_id}" required>
+        <label for="plan-${plan.variation_id}">
+          <div class="plan-name">${plan.package_bouquet}</div>
+          <div class="plan-price">₦${Number(plan.price).toLocaleString()}</div>
+        </label>
+      `;
+      plansContainer.appendChild(planElement);
+    });
+  }
+}
+
+// NEW: Display data variations error
+function displayDataVariationsError(network, message) {
+  const plansContainer = document.getElementById(`${network}-plans`);
+  if (plansContainer) {
+    plansContainer.innerHTML = `
+      <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        <p>${message}</p>
+      </div>
+    `;
+  }
+}
+
 // Setup Smartcard Validation
 function setupSmartcardValidation() {
   const smartcardInput = document.getElementById('smartcard');
@@ -510,6 +686,7 @@ function setupSmartcardValidation() {
     });
   }
 }
+
 // Validate smartcard format on input
 function validateSmartcardOnInput() {
   const smartcardInput = document.getElementById('smartcard');
@@ -545,6 +722,7 @@ function validateSmartcardOnInput() {
     }
   }
 }
+
 // Validate smartcard format on blur
 function validateSmartcardOnBlur() {
   const smartcardInput = document.getElementById('smartcard');
@@ -585,6 +763,7 @@ function validateSmartcardOnBlur() {
     }
   }
 }
+
 // Load customer details from API with caching
 async function loadCustomerDetails() {
   const smartcardInput = document.getElementById('smartcard');
@@ -780,7 +959,8 @@ async function loadCustomerDetails() {
     }
   }
 }
-// NEW: Display customer details
+
+// Display customer details
 function displayCustomerDetails(data) {
   const customerNameElement = document.getElementById('customerName');
   const customerPlanElement = document.getElementById('customerPlan');
@@ -803,6 +983,7 @@ function displayCustomerDetails(data) {
     proceedBtn.disabled = false;
   }
 }
+
 // Validate smartcard format based on provider
 function validateSmartcardFormat(smartcard, provider) {
   if (!smartcard || typeof smartcard !== 'string') {
@@ -840,6 +1021,7 @@ function validateSmartcardFormat(smartcard, provider) {
   
   return { valid: true, message: 'Valid format' };
 }
+
 // FAQ Toggle
 function setupFAQToggle() {
   const faqQuestions = document.querySelectorAll('.faq-question');
@@ -855,6 +1037,7 @@ function setupFAQToggle() {
     });
   });
 }
+
 // Service Navigation
 function setupServiceNavigation() {
   const viewAllButtons = document.querySelectorAll('.view-all');
@@ -866,6 +1049,7 @@ function setupServiceNavigation() {
     });
   });
 }
+
 // Notification Bell
 function setupNotificationBell() {
   const notificationBell = document.querySelector('.notification-bell');
@@ -875,6 +1059,7 @@ function setupNotificationBell() {
     });
   }
 }
+
 // Profile Management
 function setupProfileManagement() {
   const editProfileBtn = document.querySelector('.edit-profile-btn');
@@ -884,6 +1069,7 @@ function setupProfileManagement() {
     });
   }
 }
+
 // Password Reset
 function setupPasswordReset() {
   const forgotPasswordLink = document.querySelector('.forgot-password');
@@ -894,6 +1080,7 @@ function setupPasswordReset() {
     });
   }
 }
+
 // Modals Setup
 function setupModals() {
   const closeButtons = document.querySelectorAll('.close-modal');
@@ -912,6 +1099,7 @@ function setupModals() {
     }
   });
 }
+
 // Transactions Page Setup
 function setupTransactionsPage() {
   if (!document.querySelector('.transactions-page')) return;
@@ -927,6 +1115,7 @@ function setupTransactionsPage() {
     });
   });
 }
+
 // Notifications Page Setup
 function setupNotificationsPage() {
   if (!document.querySelector('.notifications-page')) return;
@@ -938,6 +1127,7 @@ function setupNotificationsPage() {
     markAllReadBtn.addEventListener('click', markAllNotificationsAsRead);
   }
 }
+
 // Wallet Funding Setup
 function setupWalletFunding() {
   const fundWalletBtn = document.getElementById('fundWalletBtn');
@@ -961,6 +1151,7 @@ function setupWalletFunding() {
     setupUserSearch();
   }
 }
+
 // Authentication Check
 function checkAuthentication() {
   const token = localStorage.getItem('accessToken');
@@ -974,6 +1165,7 @@ function checkAuthentication() {
     window.location.href = 'login.html';
   }
 }
+
 // Load User Data
 function loadUserData() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -992,6 +1184,7 @@ function loadUserData() {
     }
   });
 }
+
 // Load Wallet Balance with better error handling
 async function loadWalletBalance() {
   const token = localStorage.getItem('accessToken');
@@ -1048,6 +1241,7 @@ async function loadWalletBalance() {
     cleanupAbortController('walletBalance');
   }
 }
+
 // Load Notifications
 async function loadNotifications() {
   const token = localStorage.getItem('accessToken');
@@ -1096,6 +1290,7 @@ async function loadNotifications() {
     cleanupAbortController('notifications');
   }
 }
+
 // Load Notifications List
 async function loadNotificationsList() {
   const token = localStorage.getItem('accessToken');
@@ -1171,6 +1366,7 @@ async function loadNotificationsList() {
     cleanupAbortController('notificationsList');
   }
 }
+
 // Mark Notification as Read
 async function markNotificationAsRead(notificationId) {
   const token = localStorage.getItem('accessToken');
@@ -1215,6 +1411,7 @@ async function markNotificationAsRead(notificationId) {
     cleanupAbortController('markNotificationRead');
   }
 }
+
 // Mark All Notifications as Read
 async function markAllNotificationsAsRead() {
   const token = localStorage.getItem('accessToken');
@@ -1260,6 +1457,7 @@ async function markAllNotificationsAsRead() {
     cleanupAbortController('markAllNotificationsRead');
   }
 }
+
 // Load Transactions
 async function loadTransactions(type = '', page = 1) {
   const token = localStorage.getItem('accessToken');
@@ -1351,6 +1549,7 @@ async function loadTransactions(type = '', page = 1) {
     cleanupAbortController('transactions');
   }
 }
+
 // Load User Funding Requests
 async function loadFundRequests(status = '', page = 1) {
   const token = localStorage.getItem('accessToken');
@@ -1428,6 +1627,7 @@ async function loadFundRequests(status = '', page = 1) {
     cleanupAbortController('fundRequests');
   }
 }
+
 // Load Admin Funding Requests
 async function loadAdminFundRequests(status = '', page = 1) {
   const token = localStorage.getItem('accessToken');
@@ -1530,6 +1730,7 @@ async function loadAdminFundRequests(status = '', page = 1) {
     cleanupAbortController('adminFundRequests');
   }
 }
+
 // Setup Admin Fund Request Actions
 function setupAdminFundRequestActions() {
   const filterButtons = document.querySelectorAll('.admin-filter-btn');
@@ -1541,6 +1742,7 @@ function setupAdminFundRequestActions() {
     });
   });
 }
+
 // Setup User Search for Admin Fund Wallet
 function setupUserSearch() {
   const userSearch = document.getElementById('userSearch');
@@ -1565,6 +1767,7 @@ function setupUserSearch() {
     });
   }
 }
+
 // Search Users for Admin Fund Wallet
 async function searchUsers(searchTerm) {
   const token = localStorage.getItem('accessToken');
@@ -1642,6 +1845,7 @@ async function searchUsers(searchTerm) {
     cleanupAbortController('searchUsers');
   }
 }
+
 // Select User for Funding
 function selectUserForFunding(userId) {
   const userIdInput = document.getElementById('userId');
@@ -1663,6 +1867,7 @@ function selectUserForFunding(userId) {
     fetchUserDetails(userId);
   }
 }
+
 // Fetch User Details
 async function fetchUserDetails(userId) {
   const token = localStorage.getItem('accessToken');
@@ -1718,6 +1923,7 @@ async function fetchUserDetails(userId) {
     cleanupAbortController('fetchUserDetails');
   }
 }
+
 // Handle Fund Request
 async function handleFundRequest(e) {
   e.preventDefault();
@@ -1793,6 +1999,7 @@ async function handleFundRequest(e) {
     cleanupAbortController('fundRequest');
   }
 }
+
 // Handle Admin Fund Wallet
 async function handleAdminFundWallet(e) {
   e.preventDefault();
@@ -1869,6 +2076,7 @@ async function handleAdminFundWallet(e) {
     cleanupAbortController('adminFundWallet');
   }
 }
+
 // Approve Fund Request
 async function approveFundRequest(requestId) {
   const token = localStorage.getItem('accessToken');
@@ -1927,6 +2135,7 @@ async function approveFundRequest(requestId) {
     cleanupAbortController('approveFundRequest');
   }
 }
+
 // Reject Fund Request
 async function rejectFundRequest(requestId) {
   const token = localStorage.getItem('accessToken');
@@ -1989,6 +2198,7 @@ async function rejectFundRequest(requestId) {
     cleanupAbortController('rejectFundRequest');
   }
 }
+
 // Refresh Token
 async function refreshToken() {
   const refreshToken = localStorage.getItem('refreshToken');
@@ -2035,6 +2245,7 @@ async function refreshToken() {
     cleanupAbortController('refreshToken');
   }
 }
+
 // Show Alert Function
 function showAlert(message, type = 'error') {
   const alertContainer = document.getElementById('alert-container');
@@ -2059,6 +2270,7 @@ function showAlert(message, type = 'error') {
     alertContainer.innerHTML = '';
   }, 5000);
 }
+
 // Validate Signup Form
 function validateSignupForm() {
   let isValid = true;
@@ -2117,6 +2329,7 @@ function validateSignupForm() {
   
   return isValid;
 }
+
 // Signup Handler
 async function handleSignup(e) {
   e.preventDefault();
@@ -2206,6 +2419,7 @@ async function handleSignup(e) {
     cleanupAbortController('signup');
   }
 }
+
 // Validate Login Form
 function validateLoginForm() {
   let isValid = true;
@@ -2230,6 +2444,7 @@ function validateLoginForm() {
   
   return isValid;
 }
+
 // Login Handler
 async function handleLogin(e) {
   e.preventDefault();
@@ -2312,6 +2527,7 @@ async function handleLogin(e) {
     cleanupAbortController('login');
   }
 }
+
 // Forgot Password Handler
 async function handleForgotPassword(e) {
   e.preventDefault();
@@ -2377,6 +2593,7 @@ async function handleForgotPassword(e) {
     cleanupAbortController('forgotPassword');
   }
 }
+
 // Reset Password Handler
 async function handleResetPassword(e) {
   e.preventDefault();
@@ -2449,6 +2666,7 @@ async function handleResetPassword(e) {
     cleanupAbortController('resetPassword');
   }
 }
+
 // Update Profile Handler
 async function handleUpdateProfile(e) {
   e.preventDefault();
@@ -2526,6 +2744,7 @@ async function handleUpdateProfile(e) {
     cleanupAbortController('updateProfile');
   }
 }
+
 // Change Password Handler
 async function handleChangePassword(e) {
   e.preventDefault();
@@ -2607,6 +2826,7 @@ async function handleChangePassword(e) {
     cleanupAbortController('changePassword');
   }
 }
+
 // Service Form Handler
 async function handleServiceForm(e, serviceType) {
   e.preventDefault();
@@ -2803,6 +3023,7 @@ async function handleServiceForm(e, serviceType) {
     cleanupAbortController(serviceType);
   }
 }
+
 // Password Strength Meter
 function setupPasswordStrength() {
   const passwordInput = document.getElementById('password');
@@ -2837,12 +3058,15 @@ function setupPasswordStrength() {
     });
   }
 }
+
 if (document.getElementById('signupForm')) {
   setupPasswordStrength();
 }
+
 if (document.querySelector('.notification-badge')) {
   loadNotifications();
 }
+
 // Utility functions
 function formatCurrency(amount) {
   return new Intl.NumberFormat('en-NG', {
@@ -2851,16 +3075,19 @@ function formatCurrency(amount) {
     minimumFractionDigits: 2
   }).format(amount);
 }
+
 function formatDate(dateString) {
   const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
   return new Date(dateString).toLocaleDateString('en-NG', options);
 }
+
 function logout() {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
   localStorage.removeItem('user');
   window.location.href = 'index.html';
 }
+
 const logoutBtn = document.querySelector('.logout-btn');
 if (logoutBtn) {
   logoutBtn.addEventListener('click', (e) => {
@@ -2868,6 +3095,7 @@ if (logoutBtn) {
     logout();
   });
 }
+
 // Download statement function
 async function downloadStatement() {
   const token = localStorage.getItem('accessToken');
@@ -2935,10 +3163,12 @@ async function downloadStatement() {
     cleanupAbortController('downloadStatement');
   }
 }
+
 const downloadStatementBtn = document.querySelector('.wallet-buttons .btn.secondary');
 if (downloadStatementBtn) {
   downloadStatementBtn.addEventListener('click', downloadStatement);
 }
+
 // Referral program function
 function startReferring() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -2948,10 +3178,12 @@ function startReferring() {
     showAlert('Please login to access the referral program');
   }
 }
+
 const referralBtn = document.querySelector('.promo-section .btn');
 if (referralBtn) {
   referralBtn.addEventListener('click', startReferring);
 }
+
 // Setup TV Confirmation Page
 function setupTvConfirmationPage() {
   const tvData = JSON.parse(sessionStorage.getItem('tvData') || '{}');
@@ -3008,6 +3240,7 @@ function setupTvConfirmationPage() {
     });
   }
 }
+
 // Confirm TV Subscription
 async function confirmTvSubscription(tvData, amount) {
   const token = localStorage.getItem('accessToken');
@@ -3091,6 +3324,7 @@ async function confirmTvSubscription(tvData, amount) {
     cleanupAbortController('confirmTvSubscription');
   }
 }
+
 // Setup Admin Dashboard
 function setupAdminDashboard() {
   loadAdminStats();
@@ -3106,6 +3340,7 @@ function setupAdminDashboard() {
     });
   });
 }
+
 // Load Admin Stats
 async function loadAdminStats() {
   const token = localStorage.getItem('accessToken');
@@ -3134,11 +3369,13 @@ async function loadAdminStats() {
       const totalTransactionsElement = document.getElementById('totalTransactions');
       const totalVolumeElement = document.getElementById('totalVolume');
       const verificationRateElement = document.getElementById('verificationRate');
+      const totalCommissionsElement = document.getElementById('totalCommissions'); // NEW
       
       if (totalUsersElement) totalUsersElement.textContent = data.data.totalUsers.toLocaleString();
       if (totalTransactionsElement) totalTransactionsElement.textContent = data.data.totalTransactions.toLocaleString();
       if (totalVolumeElement) totalVolumeElement.textContent = `₦${Number(data.data.totalVolume).toLocaleString()}`;
       if (verificationRateElement) verificationRateElement.textContent = `${data.data.verificationRate}%`;
+      if (totalCommissionsElement) totalCommissionsElement.textContent = `₦${Number(data.data.totalCommissions).toLocaleString()}`; // NEW
     } else if (response.status === 401) {
       const refreshSuccess = await refreshToken();
       if (refreshSuccess) {
@@ -3178,11 +3415,13 @@ async function loadAdminStats() {
             const totalTransactionsElement = document.getElementById('totalTransactions');
             const totalVolumeElement = document.getElementById('totalVolume');
             const verificationRateElement = document.getElementById('verificationRate');
+            const totalCommissionsElement = document.getElementById('totalCommissions'); // NEW
             
             if (totalUsersElement) totalUsersElement.textContent = fallbackData.data.totalUsers.toLocaleString();
             if (totalTransactionsElement) totalTransactionsElement.textContent = fallbackData.data.totalTransactions.toLocaleString();
             if (totalVolumeElement) totalVolumeElement.textContent = `₦${Number(fallbackData.data.totalVolume).toLocaleString()}`;
             if (verificationRateElement) verificationRateElement.textContent = `${fallbackData.data.verificationRate}%`;
+            if (totalCommissionsElement) totalCommissionsElement.textContent = `₦${Number(fallbackData.data.totalCommissions).toLocaleString()}`; // NEW
             
             showAlert('Using backup server. Some features may be limited.', 'warning');
             return;
@@ -3201,11 +3440,178 @@ async function loadAdminStats() {
     cleanupAbortController('adminStats');
   }
 }
-// NEW: Setup pagination
+
+// NEW: Setup Admin Commissions Page
+function setupAdminCommissionsPage() {
+  loadAdminCommissions();
+  
+  const filterButtons = document.querySelectorAll('.commission-filter-btn');
+  filterButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      filterButtons.forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+      loadAdminCommissions(button.dataset.status);
+    });
+  });
+}
+
+// NEW: Load Admin Commissions
+async function loadAdminCommissions(status = '', page = 1) {
+  const token = localStorage.getItem('accessToken');
+  if (!token) return;
+  
+  const commissionsContainer = document.getElementById('adminCommissionsList');
+  if (!commissionsContainer) return;
+  
+  try {
+    let url = `${API_BASE}/api/admin/commissions?page=${page}`;
+    if (status) {
+      url += `&status=${status}`;
+    }
+    
+    console.log(`Loading admin commissions from: ${url}`);
+    
+    const controller = createAbortController('adminCommissions');
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      signal: controller.signal
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Admin commissions response:', data);
+    
+    if (data.success) {
+      commissionsContainer.innerHTML = '';
+      
+      if (data.data.commissions.length === 0) {
+        commissionsContainer.innerHTML = '<div class="no-commissions">No commissions found</div>';
+        return;
+      }
+      
+      data.data.commissions.forEach(commission => {
+        const commissionElement = document.createElement('div');
+        commissionElement.className = `admin-commission-item ${commission.status}`;
+        
+        const userName = commission.userId ? commission.userId.name : 'Unknown';
+        const userEmail = commission.userId ? commission.userId.email : 'Unknown';
+        const transactionRef = commission.transactionId ? commission.transactionId.reference : 'Unknown';
+        
+        commissionElement.innerHTML = `
+          <div class="admin-commission-info">
+            <div class="admin-commission-user">${userName} (${userEmail})</div>
+            <div class="admin-commission-amount">₦${Number(commission.amount).toLocaleString()}</div>
+            <div class="admin-commission-transaction">${transactionRef}</div>
+            <div class="admin-commission-date">${formatDate(commission.createdAt)}</div>
+          </div>
+          <div class="admin-commission-actions">
+            <div class="admin-commission-status ${commission.status}">${commission.status}</div>
+            ${commission.status === 'pending' ? `
+              <button class="btn btn-sm pay-commission-btn" data-id="${commission._id}">Mark as Paid</button>
+            ` : ''}
+          </div>
+        `;
+        
+        commissionsContainer.appendChild(commissionElement);
+      });
+      
+      const payCommissionButtons = commissionsContainer.querySelectorAll('.pay-commission-btn');
+      payCommissionButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          payCommission(button.dataset.id);
+        });
+      });
+      
+      // Setup pagination
+      setupPaginationControls('adminCommissions', data.data.pagination, status, loadAdminCommissions);
+    } else if (response.status === 401) {
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        loadAdminCommissions(status, page);
+      } else {
+        window.location.href = 'login.html';
+      }
+    }
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Admin commissions request was aborted');
+      return;
+    }
+    
+    console.error('Error loading admin commissions:', error);
+    commissionsContainer.innerHTML = '<div class="error">Failed to load commissions</div>';
+  } finally {
+    cleanupAbortController('adminCommissions');
+  }
+}
+
+// NEW: Pay Commission
+async function payCommission(commissionId) {
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    showAlert('Please login to pay commissions');
+    return;
+  }
+  
+  try {
+    showLoading('Processing commission payment...');
+    
+    console.log(`Paying commission: ${commissionId} from: ${API_BASE}/api/admin/commissions/pay/${commissionId}`);
+    
+    const controller = createAbortController('payCommission');
+    const response = await fetch(`${API_BASE}/api/admin/commissions/pay/${commissionId}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      signal: controller.signal
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Pay commission response:', data);
+    
+    if (response.ok && data.success) {
+      showAlert('Commission marked as paid successfully!', 'success');
+      loadAdminCommissions();
+    } else {
+      showAlert(data.message || 'Failed to pay commission. Please try again.');
+    }
+    
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Pay commission request was aborted');
+      return;
+    }
+    
+    console.error('Pay commission error:', error);
+    
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      showAlert('Unable to connect to the server. Please check your internet connection.');
+    } else {
+      showAlert('Failed to pay commission. Please check your connection and try again.');
+    }
+  } finally {
+    hideLoading();
+    cleanupAbortController('payCommission');
+  }
+}
+
+// Setup pagination
 function setupPagination() {
   // Pagination will be set up individually for each list view
 }
-// NEW: Setup pagination controls
+
+// Setup pagination controls
 function setupPaginationControls(containerId, paginationData, filter, loadFunction) {
   const container = document.getElementById(containerId);
   if (!container || !paginationData) return;

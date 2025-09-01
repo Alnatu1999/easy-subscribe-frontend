@@ -102,6 +102,17 @@
             margin-right: 10px;
         }
         
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            margin-right: 15px;
+        }
+        
         /* Dashboard Layout */
         .dashboard {
             display: flex;
@@ -117,6 +128,7 @@
             height: fit-content;
             position: sticky;
             top: 20px;
+            transition: transform 0.3s ease;
         }
         
         .sidebar-menu {
@@ -778,6 +790,10 @@
         
         /* Responsive Styles */
         @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
             .dashboard {
                 flex-direction: column;
             }
@@ -785,7 +801,34 @@
             .sidebar {
                 width: 100%;
                 margin-bottom: 30px;
-                position: static;
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                z-index: 999;
+                transform: translateX(-100%);
+                overflow-y: auto;
+                border-radius: 0;
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 998;
+            }
+            
+            .sidebar-overlay.active {
+                display: block;
             }
             
             .main-content {
@@ -820,9 +863,14 @@
     <!-- Header -->
     <header>
         <div class="header-content">
-            <div class="logo">
-                <i class="fas fa-bolt"></i>
-                <span>EasySubscribe</span>
+            <div style="display: flex; align-items: center;">
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="logo">
+                    <i class="fas fa-bolt"></i>
+                    <span>EasySubscribe</span>
+                </div>
             </div>
             <div class="user-info">
                 <div class="wallet-balance">₦<span class="wallet-balance">0.00</span></div>
@@ -839,10 +887,19 @@
             </div>
         </div>
     </header>
+    
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
     <div class="container">
         <div class="dashboard">
             <!-- Sidebar -->
-            <div class="sidebar">
+            <div class="sidebar" id="sidebar">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
+                    <button class="mobile-menu-toggle" id="closeSidebar" style="color: #555;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
                 <ul class="sidebar-menu">
                     <li><a href="#" data-page="overview" class="active"><i class="fas fa-home"></i> Overview</a></li>
                     
@@ -1468,10 +1525,35 @@
     </div>
     <!-- Alert Container -->
     <div id="alert-container" class="alert-container"></div>
-    <script src="main.js"></script>
     <script>
-        // Dashboard navigation functionality
+        // Mobile menu toggle functionality
         document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            const closeSidebar = document.getElementById('closeSidebar');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            
+            // Toggle sidebar when hamburger icon is clicked
+            mobileMenuToggle.addEventListener('click', function() {
+                sidebar.classList.add('active');
+                sidebarOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Prevent scrolling when sidebar is open
+            });
+            
+            // Close sidebar when close button is clicked
+            closeSidebar.addEventListener('click', function() {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                document.body.style.overflow = ''; // Restore scrolling
+            });
+            
+            // Close sidebar when overlay is clicked
+            sidebarOverlay.addEventListener('click', function() {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                document.body.style.overflow = ''; // Restore scrolling
+            });
+            
             // Get all menu links and content sections
             const menuLinks = document.querySelectorAll('.sidebar-menu a[data-page]');
             const contentSections = document.querySelectorAll('.content-section');
@@ -1495,6 +1577,13 @@
                     const targetSection = document.getElementById(targetPage);
                     if (targetSection) {
                         targetSection.classList.add('active');
+                    }
+                    
+                    // Close sidebar on mobile after navigation
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('active');
+                        sidebarOverlay.classList.remove('active');
+                        document.body.style.overflow = ''; // Restore scrolling
                     }
                     
                     // Load page-specific content

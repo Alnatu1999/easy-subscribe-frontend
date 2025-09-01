@@ -1,5 +1,4 @@
-// main.js - Updated to fix server connection and 403 errors
-
+// main.js - Main JavaScript file for EasySubscribe website (UPDATED)
 // API Configuration
 if (typeof window.API_BASE === 'undefined') {
   const isLocalhost = window.location.hostname === 'localhost' || 
@@ -10,18 +9,14 @@ if (typeof window.API_BASE === 'undefined') {
     : 'https://easy-subscribe-backend.onrender.com';
 }
 const API_BASE = window.API_BASE;
-
-// NEW: Global state for server connection
-let serverConnectionRetries = 0;
-const MAX_SERVER_RETRIES = 3;
-let serverConnectionStatus = 'unknown'; // 'unknown', 'connected', 'failed'
-
+// NEW: Global loading state and request cancellation
+let loadingIndicator = null;
+let activeRequests = {};
 // DOM Elements
 const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
 const desktopNav = document.querySelector('.desktop-nav');
 const menuToggle = document.querySelector('.menu-toggle');
 const sidebar = document.querySelector('.sidebar');
-
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
   initializeApp();
@@ -45,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Add beforeunload event listener to warn about pending TV subscription
   window.addEventListener('beforeunload', handleBeforeUnload);
 });
-
 // NEW: Handle beforeunload to warn about pending TV subscription
 function handleBeforeUnload(e) {
   const tvData = JSON.parse(sessionStorage.getItem('tvData') || '{}');
@@ -55,29 +49,17 @@ function handleBeforeUnload(e) {
     return message;
   }
 }
-
-// Check server connection with improved error handling
+// Check server connection with fallback
 async function checkServerConnection() {
-  // If we've already tried too many times, stop trying
-  if (serverConnectionRetries >= MAX_SERVER_RETRIES) {
-    console.log('Max server connection retries reached. Stopping attempts.');
-    showAlert('Unable to connect to the server. Please check your internet connection and try again later.', 'error');
-    return;
-  }
-  
   try {
     console.log(`Checking server connection at: ${API_BASE}/health`);
     const response = await fetch(`${API_BASE}/health`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      // Add timeout to prevent hanging
-      signal: AbortSignal.timeout(5000)
+      headers: { 'Content-Type': 'application/json' }
     });
     
     if (response.ok) {
       console.log('Server is running and accessible');
-      serverConnectionStatus = 'connected';
-      serverConnectionRetries = 0;
     } else {
       console.error('Server responded with status:', response.status);
       tryFallbackServer();
@@ -87,54 +69,38 @@ async function checkServerConnection() {
     tryFallbackServer();
   }
 }
-
-// Try fallback server with retry limit
+// Try fallback server
 function tryFallbackServer() {
-  serverConnectionRetries++;
-  
   const currentApiBase = API_BASE;
   const fallbackApiBase = currentApiBase.includes('localhost') 
     ? 'https://easy-subscribe-backend.onrender.com' 
     : 'http://localhost:5001';
   
-  if (currentApiBase !== fallbackApiBase && serverConnectionRetries < MAX_SERVER_RETRIES) {
-    console.log(`Trying fallback server at: ${fallbackApiBase}/health (attempt ${serverConnectionRetries}/${MAX_SERVER_RETRIES})`);
+  if (currentApiBase !== fallbackApiBase) {
+    console.log(`Trying fallback server at: ${fallbackApiBase}/health`);
     
     fetch(`${fallbackApiBase}/health`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      signal: AbortSignal.timeout(5000)
+      headers: { 'Content-Type': 'application/json' }
     })
     .then(response => {
       if (response.ok) {
         console.log('Fallback server is accessible');
         window.API_BASE = fallbackApiBase;
-        serverConnectionStatus = 'connected';
-        serverConnectionRetries = 0;
         showAlert('Using backup server. Some features may be limited.', 'warning');
       } else {
         console.error('Fallback server responded with status:', response.status);
-        serverConnectionStatus = 'failed';
-        if (serverConnectionRetries >= MAX_SERVER_RETRIES) {
-          showAlert('Unable to connect to any server. Please check your internet connection.', 'error');
-        }
+        showAlert('Unable to connect to the server. Please check your internet connection.', 'error');
       }
     })
     .catch(error => {
       console.error('Cannot connect to fallback server:', error.message);
-      serverConnectionStatus = 'failed';
-      if (serverConnectionRetries >= MAX_SERVER_RETRIES) {
-        showAlert('Unable to connect to any server. Please check your internet connection.', 'error');
-      }
+      showAlert('Unable to connect to the server. Please check your internet connection.', 'error');
     });
   } else {
-    serverConnectionStatus = 'failed';
-    if (serverConnectionRetries >= MAX_SERVER_RETRIES) {
-      showAlert('Unable to connect to any server. Please check your internet connection.', 'error');
-    }
+    showAlert('Unable to connect to the server. Please check your internet connection.', 'error');
   }
 }
-
 // NEW: Show loading indicator
 function showLoading(message = 'Loading...') {
   if (!loadingIndicator) {
@@ -153,14 +119,12 @@ function showLoading(message = 'Loading...') {
     loadingIndicator.style.display = 'flex';
   }
 }
-
 // NEW: Hide loading indicator
 function hideLoading() {
   if (loadingIndicator) {
     loadingIndicator.style.display = 'none';
   }
 }
-
 // NEW: AbortController for request cancellation
 function createAbortController(key) {
   if (activeRequests[key]) {
@@ -170,14 +134,12 @@ function createAbortController(key) {
   activeRequests[key] = controller;
   return controller;
 }
-
 // NEW: Clean up abort controller
 function cleanupAbortController(key) {
   if (activeRequests[key]) {
     delete activeRequests[key];
   }
 }
-
 // Initialize app
 function initializeApp() {
   setupMobileMenu();
@@ -203,7 +165,6 @@ function initializeApp() {
   setupSmartcardValidation();
   setupPagination(); // NEW: Setup pagination
 }
-
 // Mobile Menu Toggle
 function setupMobileMenu() {
   if (mobileMenuBtn && desktopNav) {
@@ -212,7 +173,6 @@ function setupMobileMenu() {
     });
   }
 }
-
 // Sidebar Toggle for Dashboard
 function setupSidebarToggle() {
   if (menuToggle && sidebar) {
@@ -221,7 +181,6 @@ function setupSidebarToggle() {
     });
   }
 }
-
 // Form Handlers
 function setupFormHandlers() {
   // Login Form
@@ -299,7 +258,6 @@ function setupFormHandlers() {
     adminFundWalletForm.addEventListener('submit', handleAdminFundWallet);
   }
 }
-
 // Password Visibility Toggle
 function setupPasswordToggles() {
   const toggleButtons = document.querySelectorAll('.toggle-password');
@@ -320,7 +278,6 @@ function setupPasswordToggles() {
     });
   });
 }
-
 // Quick Amount Buttons for Airtime
 function setupQuickAmountButtons() {
   const amountButtons = document.querySelectorAll('.amount-btn');
@@ -334,7 +291,6 @@ function setupQuickAmountButtons() {
     });
   }
 }
-
 // Plan Selection for Data
 function setupPlanSelection() {
   const planOptions = document.querySelectorAll('.plan-option input[type="radio"]');
@@ -352,7 +308,6 @@ function setupPlanSelection() {
     });
   });
 }
-
 // Provider Selection for TV with VTU integration
 function setupProviderSelection() {
   const tvProvider = document.getElementById('tv');
@@ -383,7 +338,6 @@ function setupProviderSelection() {
     });
   }
 }
-
 // Setup TV variations
 function setupTvVariations() {
   const tvProvider = document.getElementById('tv');
@@ -391,15 +345,8 @@ function setupTvVariations() {
     loadTvVariations();
   }
 }
-
 // Load TV variations from API with caching
 async function loadTvVariations() {
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping TV variations load due to server connection failure');
-    return;
-  }
-  
   const provider = document.getElementById('tv')?.value;
   if (!provider) return;
   
@@ -424,8 +371,7 @@ async function loadTvVariations() {
     
     const controller = createAbortController('tvVariations');
     const response = await fetch(`${API_BASE}/api/services/tv-variations?provider=${provider}`, {
-      signal: controller.signal,
-      timeout: 10000 // 10 second timeout
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -464,9 +410,7 @@ async function loadTvVariations() {
       console.log(`Trying fallback API at: ${fallbackApiBase}/api/services/tv-variations?provider=${provider}`);
       
       try {
-        const fallbackResponse = await fetch(`${fallbackApiBase}/api/services/tv-variations?provider=${provider}`, {
-          timeout: 10000
-        });
+        const fallbackResponse = await fetch(`${fallbackApiBase}/api/services/tv-variations?provider=${provider}`);
         
         if (fallbackResponse.ok) {
           const fallbackData = await fallbackResponse.json();
@@ -493,7 +437,6 @@ async function loadTvVariations() {
     cleanupAbortController('tvVariations');
   }
 }
-
 // NEW: Display TV variations
 function displayTvVariations(data, provider) {
   const plansContainer = document.getElementById(`${provider}-plans`);
@@ -519,7 +462,6 @@ function displayTvVariations(data, provider) {
     });
   }
 }
-
 // NEW: Display TV variations error
 function displayTvVariationsError(provider, message) {
   const plansContainer = document.getElementById(`${provider}-plans`);
@@ -532,7 +474,6 @@ function displayTvVariationsError(provider, message) {
     `;
   }
 }
-
 // Setup Smartcard Validation
 function setupSmartcardValidation() {
   const smartcardInput = document.getElementById('smartcard');
@@ -569,7 +510,6 @@ function setupSmartcardValidation() {
     });
   }
 }
-
 // Validate smartcard format on input
 function validateSmartcardOnInput() {
   const smartcardInput = document.getElementById('smartcard');
@@ -605,7 +545,6 @@ function validateSmartcardOnInput() {
     }
   }
 }
-
 // Validate smartcard format on blur
 function validateSmartcardOnBlur() {
   const smartcardInput = document.getElementById('smartcard');
@@ -646,15 +585,8 @@ function validateSmartcardOnBlur() {
     }
   }
 }
-
 // Load customer details from API with caching
 async function loadCustomerDetails() {
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping customer details load due to server connection failure');
-    return;
-  }
-  
   const smartcardInput = document.getElementById('smartcard');
   const tvProvider = document.getElementById('tv');
   const customerNameElement = document.getElementById('customerName');
@@ -738,8 +670,7 @@ async function loadCustomerDetails() {
         signal: controller.signal,
         headers: {
           'Content-Type': 'application/json'
-        },
-        timeout: 10000
+        }
       });
       
       if (!response.ok) {
@@ -797,7 +728,7 @@ async function loadCustomerDetails() {
         
         try {
           const fallbackResponse = await fetch(`${fallbackApiBase}/api/services/tv-customer?provider=${provider}&smartcard=${smartcard}`, {
-            timeout: 10000
+            signal: controller.signal
           });
           
           if (fallbackResponse.ok) {
@@ -849,7 +780,6 @@ async function loadCustomerDetails() {
     }
   }
 }
-
 // NEW: Display customer details
 function displayCustomerDetails(data) {
   const customerNameElement = document.getElementById('customerName');
@@ -873,7 +803,6 @@ function displayCustomerDetails(data) {
     proceedBtn.disabled = false;
   }
 }
-
 // Validate smartcard format based on provider
 function validateSmartcardFormat(smartcard, provider) {
   if (!smartcard || typeof smartcard !== 'string') {
@@ -911,7 +840,6 @@ function validateSmartcardFormat(smartcard, provider) {
   
   return { valid: true, message: 'Valid format' };
 }
-
 // FAQ Toggle
 function setupFAQToggle() {
   const faqQuestions = document.querySelectorAll('.faq-question');
@@ -927,7 +855,6 @@ function setupFAQToggle() {
     });
   });
 }
-
 // Service Navigation
 function setupServiceNavigation() {
   const viewAllButtons = document.querySelectorAll('.view-all');
@@ -939,7 +866,6 @@ function setupServiceNavigation() {
     });
   });
 }
-
 // Notification Bell
 function setupNotificationBell() {
   const notificationBell = document.querySelector('.notification-bell');
@@ -949,7 +875,6 @@ function setupNotificationBell() {
     });
   }
 }
-
 // Profile Management
 function setupProfileManagement() {
   const editProfileBtn = document.querySelector('.edit-profile-btn');
@@ -959,7 +884,6 @@ function setupProfileManagement() {
     });
   }
 }
-
 // Password Reset
 function setupPasswordReset() {
   const forgotPasswordLink = document.querySelector('.forgot-password');
@@ -970,7 +894,6 @@ function setupPasswordReset() {
     });
   }
 }
-
 // Modals Setup
 function setupModals() {
   const closeButtons = document.querySelectorAll('.close-modal');
@@ -989,7 +912,6 @@ function setupModals() {
     }
   });
 }
-
 // Transactions Page Setup
 function setupTransactionsPage() {
   if (!document.querySelector('.transactions-page')) return;
@@ -1005,7 +927,6 @@ function setupTransactionsPage() {
     });
   });
 }
-
 // Notifications Page Setup
 function setupNotificationsPage() {
   if (!document.querySelector('.notifications-page')) return;
@@ -1017,7 +938,6 @@ function setupNotificationsPage() {
     markAllReadBtn.addEventListener('click', markAllNotificationsAsRead);
   }
 }
-
 // Wallet Funding Setup
 function setupWalletFunding() {
   const fundWalletBtn = document.getElementById('fundWalletBtn');
@@ -1041,44 +961,19 @@ function setupWalletFunding() {
     setupUserSearch();
   }
 }
-
 // Authentication Check
 function checkAuthentication() {
   const token = localStorage.getItem('accessToken');
-  const user = localStorage.getItem('user');
   
-  if (!token || !user) {
-    // Clear any partial auth data
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-    
-    // Only redirect if not on an auth-related page
-    if (!window.location.pathname.includes('login.html') && 
-        !window.location.pathname.includes('signup.html') &&
-        !window.location.pathname.includes('index.html') &&
-        !window.location.pathname.includes('forgot-password.html') &&
-        !window.location.pathname.includes('reset-password.html')) {
-      window.location.href = 'login.html';
-    }
-    return;
-  }
-  
-  // Verify user object is valid
-  try {
-    const parsedUser = JSON.parse(user);
-    if (!parsedUser.id || !parsedUser.email) {
-      throw new Error('Invalid user data');
-    }
-  } catch (e) {
-    console.error('Invalid user data in localStorage:', e);
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
+  if (!token && 
+      !window.location.pathname.includes('login.html') && 
+      !window.location.pathname.includes('signup.html') &&
+      !window.location.pathname.includes('index.html') &&
+      !window.location.pathname.includes('forgot-password.html') &&
+      !window.location.pathname.includes('reset-password.html')) {
     window.location.href = 'login.html';
   }
 }
-
 // Load User Data
 function loadUserData() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -1097,25 +992,10 @@ function loadUserData() {
     }
   });
 }
-
 // Load Wallet Balance with better error handling
 async function loadWalletBalance() {
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping wallet balance load due to server connection failure');
-    const balanceElements = document.querySelectorAll('.wallet-balance');
-    balanceElements.forEach(element => {
-      element.textContent = '₦0.00';
-    });
-    return;
-  }
-  
   const token = localStorage.getItem('accessToken');
-  if (!token) {
-    // If no token, redirect to login
-    window.location.href = 'login.html';
-    return;
-  }
+  if (!token) return;
   
   try {
     console.log(`Loading wallet balance from: ${API_BASE}/api/wallet/balance`);
@@ -1123,42 +1003,10 @@ async function loadWalletBalance() {
     const controller = createAbortController('walletBalance');
     const response = await fetch(`${API_BASE}/api/wallet/balance`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        'Authorization': `Bearer ${token}`
       },
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
-    
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return loadWalletBalance();
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
-    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -1172,8 +1020,13 @@ async function loadWalletBalance() {
       balanceElements.forEach(element => {
         element.textContent = `₦${Number(data.data.balance).toLocaleString()}`;
       });
-    } else {
-      throw new Error(data.message || 'Failed to load wallet balance');
+    } else if (response.status === 401) {
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        loadWalletBalance();
+      } else {
+        window.location.href = 'login.html';
+      }
     }
   } catch (error) {
     if (error.name === 'AbortError') {
@@ -1188,38 +1041,15 @@ async function loadWalletBalance() {
       element.textContent = '₦0.00';
     });
     
-    // Show more specific error message based on the error
-    let errorMessage = 'Unable to load wallet balance. Please try again later.';
-    
-    if (error.message.includes('Failed to fetch')) {
-      errorMessage = 'Unable to connect to the server. Please check your internet connection.';
-    } else if (error.message.includes('403')) {
-      errorMessage = 'Access denied. Please login again.';
-      // Clear invalid tokens
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-    }
-    
     if (document.querySelector('.auth-page') || document.querySelector('.dashboard-page')) {
-      showAlert(errorMessage, 'error');
+      showAlert('Unable to connect to the server. Please make sure the server is running.', 'error');
     }
   } finally {
     cleanupAbortController('walletBalance');
   }
 }
-
-// Load Notifications with improved error handling
+// Load Notifications
 async function loadNotifications() {
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping notifications load due to server connection failure');
-    return;
-  }
-  
   const token = localStorage.getItem('accessToken');
   if (!token) return;
   
@@ -1231,39 +1061,8 @@ async function loadNotifications() {
       headers: {
         'Authorization': `Bearer ${token}`
       },
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
-    
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return loadNotifications();
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
-    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -1278,6 +1077,13 @@ async function loadNotifications() {
         notificationBadge.textContent = data.data.unreadCount;
         notificationBadge.style.display = data.data.unreadCount > 0 ? 'block' : 'none';
       }
+    } else if (response.status === 401) {
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        loadNotifications();
+      } else {
+        window.location.href = 'login.html';
+      }
     }
   } catch (error) {
     if (error.name === 'AbortError') {
@@ -1286,59 +1092,12 @@ async function loadNotifications() {
     }
     
     console.error('Error loading notifications:', error);
-    
-    // Try fallback API if available
-    const fallbackApiBase = API_BASE.includes('localhost') 
-      ? 'https://easy-subscribe-backend.onrender.com' 
-      : 'http://localhost:5001';
-    
-    if (API_BASE !== fallbackApiBase) {
-      console.log(`Trying fallback API at: ${fallbackApiBase}/api/notifications?unreadOnly=true`);
-      
-      try {
-        const fallbackResponse = await fetch(`${fallbackApiBase}/api/notifications?unreadOnly=true`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          timeout: 10000
-        });
-        
-        if (fallbackResponse.ok) {
-          const fallbackData = await fallbackResponse.json();
-          console.log('Fallback notifications response:', fallbackData);
-           
-          if (fallbackData.success) {
-            const notificationBadge = document.querySelector('.notification-badge');
-            if (notificationBadge) {
-              notificationBadge.textContent = fallbackData.data.unreadCount;
-              notificationBadge.style.display = fallbackData.data.unreadCount > 0 ? 'block' : 'none';
-            }
-            
-            showAlert('Using backup server. Some features may be limited.', 'warning');
-            return;
-          }
-        }
-      } catch (fallbackError) {
-        console.error('Fallback API also failed:', fallbackError);
-      }
-    }
   } finally {
     cleanupAbortController('notifications');
   }
 }
-
 // Load Notifications List
 async function loadNotificationsList() {
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping notifications list load due to server connection failure');
-    const notificationsContainer = document.getElementById('notificationsList');
-    if (notificationsContainer) {
-      notificationsContainer.innerHTML = '<div class="error">Failed to load notifications. Server connection failed.</div>';
-    }
-    return;
-  }
-  
   const token = localStorage.getItem('accessToken');
   if (!token) return;
   
@@ -1353,39 +1112,8 @@ async function loadNotificationsList() {
       headers: {
         'Authorization': `Bearer ${token}`
       },
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
-    
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return loadNotificationsList();
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
-    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -1423,6 +1151,13 @@ async function loadNotificationsList() {
           markNotificationAsRead(button.dataset.id);
         });
       });
+    } else if (response.status === 401) {
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        loadNotificationsList();
+      } else {
+        window.location.href = 'login.html';
+      }
     }
   } catch (error) {
     if (error.name === 'AbortError') {
@@ -1436,15 +1171,8 @@ async function loadNotificationsList() {
     cleanupAbortController('notificationsList');
   }
 }
-
 // Mark Notification as Read
 async function markNotificationAsRead(notificationId) {
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping mark notification as read due to server connection failure');
-    return;
-  }
-  
   const token = localStorage.getItem('accessToken');
   if (!token) return;
   
@@ -1457,43 +1185,23 @@ async function markNotificationAsRead(notificationId) {
       headers: {
         'Authorization': `Bearer ${token}`
       },
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
     
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return markNotificationAsRead(notificationId);
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     if (response.ok) {
       loadNotificationsList();
       loadNotifications();
+    } else if (response.status === 401) {
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        markNotificationAsRead(notificationId);
+      } else {
+        window.location.href = 'login.html';
+      }
     }
   } catch (error) {
     if (error.name === 'AbortError') {
@@ -1507,15 +1215,8 @@ async function markNotificationAsRead(notificationId) {
     cleanupAbortController('markNotificationRead');
   }
 }
-
 // Mark All Notifications as Read
 async function markAllNotificationsAsRead() {
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping mark all notifications as read due to server connection failure');
-    return;
-  }
-  
   const token = localStorage.getItem('accessToken');
   if (!token) return;
   
@@ -1528,44 +1229,24 @@ async function markAllNotificationsAsRead() {
       headers: {
         'Authorization': `Bearer ${token}`
       },
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
     
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return markAllNotificationsAsRead();
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     if (response.ok) {
       loadNotificationsList();
       loadNotifications();
       showAlert('All notifications marked as read', 'success');
+    } else if (response.status === 401) {
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        markAllNotificationsAsRead();
+      } else {
+        window.location.href = 'login.html';
+      }
     }
   } catch (error) {
     if (error.name === 'AbortError') {
@@ -1579,19 +1260,8 @@ async function markAllNotificationsAsRead() {
     cleanupAbortController('markAllNotificationsRead');
   }
 }
-
 // Load Transactions
 async function loadTransactions(type = '', page = 1) {
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping transactions load due to server connection failure');
-    const transactionsContainer = document.getElementById('transactionsList');
-    if (transactionsContainer) {
-      transactionsContainer.innerHTML = '<div class="error">Failed to load transactions. Server connection failed.</div>';
-    }
-    return;
-  }
-  
   const token = localStorage.getItem('accessToken');
   if (!token) return;
   
@@ -1611,39 +1281,8 @@ async function loadTransactions(type = '', page = 1) {
       headers: {
         'Authorization': `Bearer ${token}`
       },
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
-    
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return loadTransactions(type, page);
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
-    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -1692,6 +1331,13 @@ async function loadTransactions(type = '', page = 1) {
       
       // Setup pagination
       setupPaginationControls('transactions', data.data.pagination, type, loadTransactions);
+    } else if (response.status === 401) {
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        loadTransactions(type, page);
+      } else {
+        window.location.href = 'login.html';
+      }
     }
   } catch (error) {
     if (error.name === 'AbortError') {
@@ -1705,19 +1351,8 @@ async function loadTransactions(type = '', page = 1) {
     cleanupAbortController('transactions');
   }
 }
-
 // Load User Funding Requests
 async function loadFundRequests(status = '', page = 1) {
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping fund requests load due to server connection failure');
-    const fundRequestsContainer = document.getElementById('fundRequestsList');
-    if (fundRequestsContainer) {
-      fundRequestsContainer.innerHTML = '<div class="error">Failed to load funding requests. Server connection failed.</div>';
-    }
-    return;
-  }
-  
   const token = localStorage.getItem('accessToken');
   if (!token) return;
   
@@ -1737,39 +1372,8 @@ async function loadFundRequests(status = '', page = 1) {
       headers: {
         'Authorization': `Bearer ${token}`
       },
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
-    
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return loadFundRequests(status, page);
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
-    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -1804,6 +1408,13 @@ async function loadFundRequests(status = '', page = 1) {
       
       // Setup pagination
       setupPaginationControls('fundRequests', data.data.pagination, status, loadFundRequests);
+    } else if (response.status === 401) {
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        loadFundRequests(status, page);
+      } else {
+        window.location.href = 'login.html';
+      }
     }
   } catch (error) {
     if (error.name === 'AbortError') {
@@ -1817,19 +1428,8 @@ async function loadFundRequests(status = '', page = 1) {
     cleanupAbortController('fundRequests');
   }
 }
-
 // Load Admin Funding Requests
 async function loadAdminFundRequests(status = '', page = 1) {
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping admin fund requests load due to server connection failure');
-    const adminFundRequestsContainer = document.getElementById('adminFundRequestsList');
-    if (adminFundRequestsContainer) {
-      adminFundRequestsContainer.innerHTML = '<div class="error">Failed to load funding requests. Server connection failed.</div>';
-    }
-    return;
-  }
-  
   const token = localStorage.getItem('accessToken');
   if (!token) return;
   
@@ -1849,39 +1449,8 @@ async function loadAdminFundRequests(status = '', page = 1) {
       headers: {
         'Authorization': `Bearer ${token}`
       },
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
-    
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return loadAdminFundRequests(status, page);
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
-    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -1941,6 +1510,13 @@ async function loadAdminFundRequests(status = '', page = 1) {
       
       // Setup pagination
       setupPaginationControls('adminFundRequests', data.data.pagination, status, loadAdminFundRequests);
+    } else if (response.status === 401) {
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        loadAdminFundRequests(status, page);
+      } else {
+        window.location.href = 'login.html';
+      }
     }
   } catch (error) {
     if (error.name === 'AbortError') {
@@ -1954,7 +1530,6 @@ async function loadAdminFundRequests(status = '', page = 1) {
     cleanupAbortController('adminFundRequests');
   }
 }
-
 // Setup Admin Fund Request Actions
 function setupAdminFundRequestActions() {
   const filterButtons = document.querySelectorAll('.admin-filter-btn');
@@ -1966,7 +1541,6 @@ function setupAdminFundRequestActions() {
     });
   });
 }
-
 // Setup User Search for Admin Fund Wallet
 function setupUserSearch() {
   const userSearch = document.getElementById('userSearch');
@@ -1991,15 +1565,8 @@ function setupUserSearch() {
     });
   }
 }
-
 // Search Users for Admin Fund Wallet
 async function searchUsers(searchTerm) {
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping user search due to server connection failure');
-    return;
-  }
-  
   const token = localStorage.getItem('accessToken');
   if (!token) return;
   
@@ -2014,39 +1581,8 @@ async function searchUsers(searchTerm) {
       headers: {
         'Authorization': `Bearer ${token}`
       },
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
-    
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return searchUsers(searchTerm);
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
-    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -2085,6 +1621,13 @@ async function searchUsers(searchTerm) {
       }
       
       searchResults.style.display = 'block';
+    } else if (response.status === 401) {
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        searchUsers(searchTerm);
+      } else {
+        window.location.href = 'login.html';
+      }
     }
   } catch (error) {
     if (error.name === 'AbortError') {
@@ -2099,7 +1642,6 @@ async function searchUsers(searchTerm) {
     cleanupAbortController('searchUsers');
   }
 }
-
 // Select User for Funding
 function selectUserForFunding(userId) {
   const userIdInput = document.getElementById('userId');
@@ -2121,19 +1663,8 @@ function selectUserForFunding(userId) {
     fetchUserDetails(userId);
   }
 }
-
 // Fetch User Details
 async function fetchUserDetails(userId) {
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping user details fetch due to server connection failure');
-    const selectedUserInfo = document.getElementById('selectedUserInfo');
-    if (selectedUserInfo) {
-      selectedUserInfo.innerHTML = '<div class="error">Failed to load user information. Server connection failed.</div>';
-    }
-    return;
-  }
-  
   const token = localStorage.getItem('accessToken');
   if (!token) return;
   
@@ -2148,39 +1679,8 @@ async function fetchUserDetails(userId) {
       headers: {
         'Authorization': `Bearer ${token}`
       },
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
-    
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return fetchUserDetails(userId);
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
-    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -2198,6 +1698,13 @@ async function fetchUserDetails(userId) {
           <div class="user-balance">Current Balance: ₦${Number(user.walletBalance).toLocaleString()}</div>
         </div>
       `;
+    } else if (response.status === 401) {
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        fetchUserDetails(userId);
+      } else {
+        window.location.href = 'login.html';
+      }
     }
   } catch (error) {
     if (error.name === 'AbortError') {
@@ -2211,17 +1718,9 @@ async function fetchUserDetails(userId) {
     cleanupAbortController('fetchUserDetails');
   }
 }
-
 // Handle Fund Request
 async function handleFundRequest(e) {
   e.preventDefault();
-  
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping fund request due to server connection failure');
-    showAlert('Unable to connect to the server. Please try again later.', 'error');
-    return;
-  }
   
   const token = localStorage.getItem('accessToken');
   if (!token) {
@@ -2251,39 +1750,8 @@ async function handleFundRequest(e) {
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({ amount, paymentMethod, reference }),
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
-    
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return handleFundRequest(e);
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
-    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -2325,17 +1793,9 @@ async function handleFundRequest(e) {
     cleanupAbortController('fundRequest');
   }
 }
-
 // Handle Admin Fund Wallet
 async function handleAdminFundWallet(e) {
   e.preventDefault();
-  
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping admin fund wallet due to server connection failure');
-    showAlert('Unable to connect to the server. Please try again later.', 'error');
-    return;
-  }
   
   const token = localStorage.getItem('accessToken');
   if (!token) {
@@ -2365,39 +1825,8 @@ async function handleAdminFundWallet(e) {
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({ userId, amount, note }),
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
-    
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return handleAdminFundWallet(e);
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
-    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -2440,16 +1869,8 @@ async function handleAdminFundWallet(e) {
     cleanupAbortController('adminFundWallet');
   }
 }
-
 // Approve Fund Request
 async function approveFundRequest(requestId) {
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping approve fund request due to server connection failure');
-    showAlert('Unable to connect to the server. Please try again later.', 'error');
-    return;
-  }
-  
   const token = localStorage.getItem('accessToken');
   if (!token) {
     showAlert('Please login to approve funding requests');
@@ -2471,39 +1892,8 @@ async function approveFundRequest(requestId) {
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({ note: note || '' }),
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
-    
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return approveFundRequest(requestId);
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
-    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -2537,16 +1927,8 @@ async function approveFundRequest(requestId) {
     cleanupAbortController('approveFundRequest');
   }
 }
-
 // Reject Fund Request
 async function rejectFundRequest(requestId) {
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping reject fund request due to server connection failure');
-    showAlert('Unable to connect to the server. Please try again later.', 'error');
-    return;
-  }
-  
   const token = localStorage.getItem('accessToken');
   if (!token) {
     showAlert('Please login to reject funding requests');
@@ -2572,39 +1954,8 @@ async function rejectFundRequest(requestId) {
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({ reason }),
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
-    
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return rejectFundRequest(requestId);
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
-    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -2638,7 +1989,6 @@ async function rejectFundRequest(requestId) {
     cleanupAbortController('rejectFundRequest');
   }
 }
-
 // Refresh Token
 async function refreshToken() {
   const refreshToken = localStorage.getItem('refreshToken');
@@ -2653,20 +2003,10 @@ async function refreshToken() {
     const controller = createAbortController('refreshToken');
     const response = await fetch(`${API_BASE}/api/auth/refresh-token`, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
-    
-    // Handle 403 Forbidden
-    if (response.status === 403) {
-      console.error('Refresh token forbidden. User may need to login again.');
-      logout();
-      return false;
-    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -2675,7 +2015,7 @@ async function refreshToken() {
     const data = await response.json();
     console.log('Refresh token response:', data);
     
-    if (data.success) {
+    if (response.ok && data.success) {
       localStorage.setItem('accessToken', data.data.accessToken);
       return true;
     } else {
@@ -2695,7 +2035,6 @@ async function refreshToken() {
     cleanupAbortController('refreshToken');
   }
 }
-
 // Show Alert Function
 function showAlert(message, type = 'error') {
   const alertContainer = document.getElementById('alert-container');
@@ -2720,7 +2059,6 @@ function showAlert(message, type = 'error') {
     alertContainer.innerHTML = '';
   }, 5000);
 }
-
 // Validate Signup Form
 function validateSignupForm() {
   let isValid = true;
@@ -2779,17 +2117,9 @@ function validateSignupForm() {
   
   return isValid;
 }
-
 // Signup Handler
 async function handleSignup(e) {
   e.preventDefault();
-  
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping signup due to server connection failure');
-    showAlert('Unable to connect to the server. Please try again later.', 'error');
-    return;
-  }
   
   if (!validateSignupForm()) {
     return;
@@ -2827,8 +2157,7 @@ async function handleSignup(e) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password, phone }),
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -2877,7 +2206,6 @@ async function handleSignup(e) {
     cleanupAbortController('signup');
   }
 }
-
 // Validate Login Form
 function validateLoginForm() {
   let isValid = true;
@@ -2902,17 +2230,9 @@ function validateLoginForm() {
   
   return isValid;
 }
-
 // Login Handler
 async function handleLogin(e) {
   e.preventDefault();
-  
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping login due to server connection failure');
-    showAlert('Unable to connect to the server. Please try again later.', 'error');
-    return;
-  }
   
   if (!validateLoginForm()) {
     return;
@@ -2936,8 +2256,7 @@ async function handleLogin(e) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -2993,17 +2312,9 @@ async function handleLogin(e) {
     cleanupAbortController('login');
   }
 }
-
 // Forgot Password Handler
 async function handleForgotPassword(e) {
   e.preventDefault();
-  
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping forgot password due to server connection failure');
-    showAlert('Unable to connect to the server. Please try again later.', 'error');
-    return;
-  }
   
   const email = document.getElementById('email').value;
   
@@ -3022,8 +2333,7 @@ async function handleForgotPassword(e) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -3067,17 +2377,9 @@ async function handleForgotPassword(e) {
     cleanupAbortController('forgotPassword');
   }
 }
-
 // Reset Password Handler
 async function handleResetPassword(e) {
   e.preventDefault();
-  
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping reset password due to server connection failure');
-    showAlert('Unable to connect to the server. Please try again later.', 'error');
-    return;
-  }
   
   const token = new URLSearchParams(window.location.search).get('token');
   const password = document.getElementById('password').value;
@@ -3103,8 +2405,7 @@ async function handleResetPassword(e) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, password }),
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
     
     if (!response.ok) {
@@ -3148,17 +2449,9 @@ async function handleResetPassword(e) {
     cleanupAbortController('resetPassword');
   }
 }
-
 // Update Profile Handler
 async function handleUpdateProfile(e) {
   e.preventDefault();
-  
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping update profile due to server connection failure');
-    showAlert('Unable to connect to the server. Please try again later.', 'error');
-    return;
-  }
   
   const token = localStorage.getItem('accessToken');
   if (!token) {
@@ -3187,39 +2480,8 @@ async function handleUpdateProfile(e) {
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({ name, phone }),
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
-    
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return handleUpdateProfile(e);
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
-    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -3264,17 +2526,9 @@ async function handleUpdateProfile(e) {
     cleanupAbortController('updateProfile');
   }
 }
-
 // Change Password Handler
 async function handleChangePassword(e) {
   e.preventDefault();
-  
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping change password due to server connection failure');
-    showAlert('Unable to connect to the server. Please try again later.', 'error');
-    return;
-  }
   
   const token = localStorage.getItem('accessToken');
   if (!token) {
@@ -3309,39 +2563,8 @@ async function handleChangePassword(e) {
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({ currentPassword, newPassword }),
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
-    
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return handleChangePassword(e);
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
-    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -3384,17 +2607,9 @@ async function handleChangePassword(e) {
     cleanupAbortController('changePassword');
   }
 }
-
 // Service Form Handler
 async function handleServiceForm(e, serviceType) {
   e.preventDefault();
-  
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log(`Skipping ${serviceType} service due to server connection failure`);
-    showAlert('Unable to connect to the server. Please try again later.', 'error');
-    return;
-  }
   
   const token = localStorage.getItem('accessToken');
   if (!token) {
@@ -3535,39 +2750,8 @@ async function handleServiceForm(e, serviceType) {
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(formData),
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
-    
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return handleServiceForm(e, serviceType);
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
-    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -3619,7 +2803,6 @@ async function handleServiceForm(e, serviceType) {
     cleanupAbortController(serviceType);
   }
 }
-
 // Password Strength Meter
 function setupPasswordStrength() {
   const passwordInput = document.getElementById('password');
@@ -3687,13 +2870,6 @@ if (logoutBtn) {
 }
 // Download statement function
 async function downloadStatement() {
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping download statement due to server connection failure');
-    showAlert('Unable to connect to the server. Please try again later.', 'error');
-    return;
-  }
-  
   const token = localStorage.getItem('accessToken');
   if (!token) {
     showAlert('Please login to download your statement');
@@ -3708,39 +2884,8 @@ async function downloadStatement() {
       headers: {
         'Authorization': `Bearer ${token}`
       },
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
-    
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return downloadStatement();
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
-    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -3765,6 +2910,13 @@ async function downloadStatement() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    } else if (response.status === 401) {
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        downloadStatement();
+      } else {
+        window.location.href = 'login.html';
+      }
     }
   } catch (error) {
     if (error.name === 'AbortError') {
@@ -3856,16 +3008,8 @@ function setupTvConfirmationPage() {
     });
   }
 }
-
 // Confirm TV Subscription
 async function confirmTvSubscription(tvData, amount) {
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping confirm TV subscription due to server connection failure');
-    showAlert('Unable to connect to the server. Please try again later.', 'error');
-    return;
-  }
-  
   const token = localStorage.getItem('accessToken');
   if (!token) {
     showAlert('Please login to confirm your subscription', 'error');
@@ -3896,39 +3040,8 @@ async function confirmTvSubscription(tvData, amount) {
         phone: tvData.phone,
         email: tvData.email
       }),
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
-    
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return confirmTvSubscription(tvData, amount);
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
-    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -3978,7 +3091,6 @@ async function confirmTvSubscription(tvData, amount) {
     cleanupAbortController('confirmTvSubscription');
   }
 }
-
 // Setup Admin Dashboard
 function setupAdminDashboard() {
   loadAdminStats();
@@ -3994,19 +3106,8 @@ function setupAdminDashboard() {
     });
   });
 }
-
 // Load Admin Stats
 async function loadAdminStats() {
-  // Skip if server connection has failed
-  if (serverConnectionStatus === 'failed') {
-    console.log('Skipping admin stats load due to server connection failure');
-    const statsContainer = document.querySelector('.admin-stats-container');
-    if (statsContainer) {
-      statsContainer.innerHTML = '<div class="error">Failed to load admin statistics. Server connection failed.</div>';
-    }
-    return;
-  }
-  
   const token = localStorage.getItem('accessToken');
   if (!token) return;
   
@@ -4018,39 +3119,8 @@ async function loadAdminStats() {
       headers: {
         'Authorization': `Bearer ${token}`
       },
-      signal: controller.signal,
-      timeout: 10000
+      signal: controller.signal
     });
-    
-    // Handle 401 Unauthorized - try to refresh token
-    if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        // Retry with new token
-        return loadAdminStats();
-      } else {
-        // If refresh fails, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
-        return;
-      }
-    }
-    
-    // Handle 403 Forbidden - token might be invalid or user lacks permissions
-    if (response.status === 403) {
-      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      showAlert('Your session has expired. Please login again.', 'error');
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
-      return;
-    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -4069,6 +3139,13 @@ async function loadAdminStats() {
       if (totalTransactionsElement) totalTransactionsElement.textContent = data.data.totalTransactions.toLocaleString();
       if (totalVolumeElement) totalVolumeElement.textContent = `₦${Number(data.data.totalVolume).toLocaleString()}`;
       if (verificationRateElement) verificationRateElement.textContent = `${data.data.verificationRate}%`;
+    } else if (response.status === 401) {
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        loadAdminStats();
+      } else {
+        window.location.href = 'login.html';
+      }
     }
   } catch (error) {
     if (error.name === 'AbortError') {
@@ -4089,8 +3166,7 @@ async function loadAdminStats() {
         const fallbackResponse = await fetch(`${fallbackApiBase}/api/admin/stats`, {
           headers: {
             'Authorization': `Bearer ${token}`
-          },
-          timeout: 10000
+          }
         });
         
         if (fallbackResponse.ok) {
@@ -4125,12 +3201,10 @@ async function loadAdminStats() {
     cleanupAbortController('adminStats');
   }
 }
-
 // NEW: Setup pagination
 function setupPagination() {
   // Pagination will be set up individually for each list view
 }
-
 // NEW: Setup pagination controls
 function setupPaginationControls(containerId, paginationData, filter, loadFunction) {
   const container = document.getElementById(containerId);

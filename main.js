@@ -964,13 +964,36 @@ function setupWalletFunding() {
 // Authentication Check
 function checkAuthentication() {
   const token = localStorage.getItem('accessToken');
+  const user = localStorage.getItem('user');
   
-  if (!token && 
-      !window.location.pathname.includes('login.html') && 
-      !window.location.pathname.includes('signup.html') &&
-      !window.location.pathname.includes('index.html') &&
-      !window.location.pathname.includes('forgot-password.html') &&
-      !window.location.pathname.includes('reset-password.html')) {
+  if (!token || !user) {
+    // Clear any partial auth data
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    
+    // Only redirect if not on an auth-related page
+    if (!window.location.pathname.includes('login.html') && 
+        !window.location.pathname.includes('signup.html') &&
+        !window.location.pathname.includes('index.html') &&
+        !window.location.pathname.includes('forgot-password.html') &&
+        !window.location.pathname.includes('reset-password.html')) {
+      window.location.href = 'login.html';
+    }
+    return;
+  }
+  
+  // Verify user object is valid
+  try {
+    const parsedUser = JSON.parse(user);
+    if (!parsedUser.id || !parsedUser.email) {
+      throw new Error('Invalid user data');
+    }
+  } catch (e) {
+    console.error('Invalid user data in localStorage:', e);
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
     window.location.href = 'login.html';
   }
 }
@@ -995,7 +1018,11 @@ function loadUserData() {
 // Load Wallet Balance with better error handling
 async function loadWalletBalance() {
   const token = localStorage.getItem('accessToken');
-  if (!token) return;
+  if (!token) {
+    // If no token, redirect to login
+    window.location.href = 'login.html';
+    return;
+  }
   
   try {
     console.log(`Loading wallet balance from: ${API_BASE}/api/wallet/balance`);
@@ -1003,10 +1030,41 @@ async function loadWalletBalance() {
     const controller = createAbortController('walletBalance');
     const response = await fetch(`${API_BASE}/api/wallet/balance`, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
       },
       signal: controller.signal
     });
+    
+    // Handle 401 Unauthorized - try to refresh token
+    if (response.status === 401) {
+      console.log('Token expired, attempting refresh...');
+      const refreshSuccess = await refreshToken();
+      if (refreshSuccess) {
+        // Retry with new token
+        return loadWalletBalance();
+      } else {
+        // If refresh fails, redirect to login
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        window.location.href = 'login.html';
+        return;
+      }
+    }
+    
+    // Handle 403 Forbidden - token might be invalid or user lacks permissions
+    if (response.status === 403) {
+      console.error('Access forbidden. Token may be invalid or user lacks permissions.');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      showAlert('Your session has expired. Please login again.', 'error');
+      setTimeout(() => {
+        window.location.href = 'login.html';
+      }, 2000);
+      return;
+    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -1020,13 +1078,8 @@ async function loadWalletBalance() {
       balanceElements.forEach(element => {
         element.textContent = `₦${Number(data.data.balance).toLocaleString()}`;
       });
-    } else if (response.status === 401) {
-      const refreshSuccess = await refreshToken();
-      if (refreshSuccess) {
-        loadWalletBalance();
-      } else {
-        window.location.href = 'login.html';
-      }
+    } else {
+      throw new Error(data.message || 'Failed to load wallet balance');
     }
   } catch (error) {
     if (error.name === 'AbortError') {
@@ -1041,8 +1094,24 @@ async function loadWalletBalance() {
       element.textContent = '₦0.00';
     });
     
+    // Show more specific error message based on the error
+    let errorMessage = 'Unable to load wallet balance. Please try again later.';
+    
+    if (error.message.includes('Failed to fetch')) {
+      errorMessage = 'Unable to connect to the server. Please check your internet connection.';
+    } else if (error.message.includes('403')) {
+      errorMessage = 'Access denied. Please login again.';
+      // Clear invalid tokens
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      setTimeout(() => {
+        window.location.href = 'login.html';
+      }, 2000);
+    }
+    
     if (document.querySelector('.auth-page') || document.querySelector('.dashboard-page')) {
-      showAlert('Unable to connect to the server. Please make sure the server is running.', 'error');
+      showAlert(errorMessage, 'error');
     }
   } finally {
     cleanupAbortController('walletBalance');
@@ -2003,10 +2072,19 @@ async function refreshToken() {
     const controller = createAbortController('refreshToken');
     const response = await fetch(`${API_BASE}/api/auth/refresh-token`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ refreshToken }),
       signal: controller.signal
     });
+    
+    // Handle 403 Forbidden
+    if (response.status === 403) {
+      console.error('Refresh token forbidden. User may need to login again.');
+      logout();
+      return false;
+    }
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -2015,7 +2093,7 @@ async function refreshToken() {
     const data = await response.json();
     console.log('Refresh token response:', data);
     
-    if (response.ok && data.success) {
+    if (data.success) {
       localStorage.setItem('accessToken', data.data.accessToken);
       return true;
     } else {

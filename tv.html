@@ -826,23 +826,63 @@
             // Initialize app functionality from main.js
             initializeApp();
             
-            // Provider selection
+            // Provider selection - Fixed implementation
             const providerItems = document.querySelectorAll('.provider-list-item');
             const tvProviderInput = document.getElementById('tv');
             
+            // Function to handle provider selection
+            function selectProvider(provider) {
+                // Remove selected class from all items
+                providerItems.forEach(item => {
+                    item.classList.remove('selected');
+                });
+                
+                // Add selected class to clicked item
+                const selectedItem = document.querySelector(`.provider-list-item[data-provider="${provider}"]`);
+                if (selectedItem) {
+                    selectedItem.classList.add('selected');
+                }
+                
+                // Update hidden input
+                tvProviderInput.value = provider;
+                
+                // Show/hide plan containers based on selected provider
+                const dstvPlans = document.getElementById('dstv-plans');
+                const gotvPlans = document.getElementById('gotv-plans');
+                const startimesPlans = document.getElementById('startimes-plans');
+                
+                // Hide all plan containers first
+                if (dstvPlans) dstvPlans.style.display = 'none';
+                if (gotvPlans) gotvPlans.style.display = 'none';
+                if (startimesPlans) startimesPlans.style.display = 'none';
+                
+                // Show the selected provider's plan container
+                switch (provider) {
+                    case 'dstv':
+                        if (dstvPlans) dstvPlans.style.display = 'grid';
+                        break;
+                    case 'gotv':
+                        if (gotvPlans) gotvPlans.style.display = 'grid';
+                        break;
+                    case 'startimes':
+                        if (startimesPlans) startimesPlans.style.display = 'grid';
+                        break;
+                }
+                
+                // Load TV variations for the selected provider
+                loadTvVariations();
+                
+                // Validate smartcard if there's a value
+                if (document.getElementById('smartcard').value.trim() !== '') {
+                    validateSmartcardOnInput();
+                }
+            }
+            
+            // Add click event listeners to provider items
             providerItems.forEach(item => {
                 item.addEventListener('click', function() {
-                    // Remove selected class from all items
-                    providerItems.forEach(i => i.classList.remove('selected'));
-                    
-                    // Add selected class to clicked item
-                    this.classList.add('selected');
-                    
-                    // Update hidden input
-                    tvProviderInput.value = this.dataset.provider;
-                    
-                    // Trigger provider change event to load plans
-                    tvProviderInput.dispatchEvent(new Event('change'));
+                    const provider = this.dataset.provider;
+                    selectProvider(provider);
                 });
             });
             
@@ -880,6 +920,41 @@
                         document.getElementById('proceedBtn').disabled = true;
                     }
                 }
+            });
+            
+            // Form submission
+            const tvForm = document.getElementById('tvForm');
+            tvForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Check if all required fields are filled
+                if (!tvProviderInput.value) {
+                    showAlert('Please select a TV provider', 'error');
+                    return;
+                }
+                
+                if (!smartcardInput.value.trim()) {
+                    showAlert('Please enter a smartcard number', 'error');
+                    return;
+                }
+                
+                if (!document.querySelector('input[name="plan"]:checked')) {
+                    showAlert('Please select a subscription plan', 'error');
+                    return;
+                }
+                
+                if (!document.getElementById('phone').value.trim()) {
+                    showAlert('Please enter your phone number', 'error');
+                    return;
+                }
+                
+                if (!document.getElementById('email').value.trim()) {
+                    showAlert('Please enter your email address', 'error');
+                    return;
+                }
+                
+                // If all validations pass, proceed with form submission
+                handleServiceForm(e, 'tv');
             });
         });
     </script>

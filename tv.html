@@ -289,92 +289,27 @@
             margin-right: 5px;
         }
         
-        .provider-list {
-            margin-bottom: 20px;
-        }
-        
-        .provider-list-item {
-            display: flex;
+        .validation-status {
+            display: none;
             align-items: center;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .provider-list-item:hover {
-            border-color: #4a6de5;
-            background: #f8f9ff;
-        }
-        
-        .provider-list-item.selected {
-            border-color: #4a6de5;
-            background: #f0f3ff;
-        }
-        
-        .provider-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #f0f3ff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            color: #4a6de5;
-        }
-        
-        .provider-info h3 {
-            font-size: 18px;
-            margin-bottom: 3px;
-            color: #2c3e50;
-        }
-        
-        .provider-info p {
-            color: #777;
+            margin-top: 10px;
             font-size: 14px;
         }
         
-        .plans-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
+        .validation-status i {
+            margin-right: 5px;
         }
         
-        .plan-option {
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .validation-status.success {
+            color: #2ed573;
         }
         
-        .plan-option:hover {
-            border-color: #4a6de5;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        .validation-status.error {
+            color: #ff4757;
         }
         
-        .plan-option.selected {
-            border-color: #4a6de5;
-            background: #f0f3ff;
-        }
-        
-        .plan-option input[type="radio"] {
-            display: none;
-        }
-        
-        .plan-name {
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-        
-        .plan-price {
+        .validation-status.loading {
             color: #4a6de5;
-            font-weight: 700;
-            font-size: 18px;
         }
         
         .customer-details {
@@ -420,29 +355,6 @@
             font-size: 16px;
         }
         
-        .validation-status {
-            display: none;
-            align-items: center;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-        
-        .validation-status i {
-            margin-right: 5px;
-        }
-        
-        .validation-status.success {
-            color: #2ed573;
-        }
-        
-        .validation-status.error {
-            color: #ff4757;
-        }
-        
-        .validation-status.loading {
-            color: #4a6de5;
-        }
-        
         .btn {
             display: inline-block;
             padding: 12px 25px;
@@ -485,16 +397,6 @@
         .btn-block {
             display: block;
             width: 100%;
-        }
-        
-        .btn-group {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
-        }
-        
-        .btn-group .btn {
-            flex: 1;
         }
         
         .form-actions {
@@ -636,16 +538,9 @@
                 margin-left: 0;
             }
             
-            .provider-options {
+            .form-actions {
                 flex-direction: column;
-            }
-            
-            .plans-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .btn-group {
-                flex-direction: column;
+                gap: 10px;
             }
         }
     </style>
@@ -718,38 +613,15 @@
                     </div>
                     <form id="tvForm">
                         <div class="form-group">
-                            <label>Select TV Provider</label>
-                            <div class="provider-list">
-                                <div class="provider-list-item" data-provider="dstv">
-                                    <div class="provider-icon">
-                                        <i class="fas fa-satellite-dish"></i>
-                                    </div>
-                                    <div class="provider-info">
-                                        <h3>DStv</h3>
-                                        <p>Premium Entertainment</p>
-                                    </div>
-                                </div>
-                                <div class="provider-list-item" data-provider="gotv">
-                                    <div class="provider-icon">
-                                        <i class="fas fa-broadcast-tower"></i>
-                                    </div>
-                                    <div class="provider-info">
-                                        <h3>GOtv</h3>
-                                        <p>Affordable Entertainment</p>
-                                    </div>
-                                </div>
-                                <div class="provider-list-item" data-provider="startimes">
-                                    <div class="provider-icon">
-                                        <i class="fas fa-satellite"></i>
-                                    </div>
-                                    <div class="provider-info">
-                                        <h3>StarTimes</h3>
-                                        <p>Digital Entertainment</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <input type="hidden" id="tv" name="tv" required>
+                            <label for="tv">Select TV Provider</label>
+                            <select id="tv" name="tv" class="form-control" required>
+                                <option value="">-- Select Provider --</option>
+                                <option value="dstv">DStv</option>
+                                <option value="gotv">GOtv</option>
+                                <option value="startimes">StarTimes</option>
+                            </select>
                         </div>
+                        
                         <div class="form-group">
                             <label for="smartcard">Smartcard/IUC Number</label>
                             <input type="text" id="smartcard" class="form-control" placeholder="Enter your smartcard number" required>
@@ -762,34 +634,31 @@
                                 <span>Validating smartcard...</span>
                             </div>
                         </div>
-                        <div id="dstv-plans" class="plans-container" style="display: none;">
-                            <!-- DStv plans will be loaded here -->
+                        
+                        <div class="form-group">
+                            <label for="plan">Select Subscription Plan</label>
+                            <select id="plan" name="plan" class="form-control" required disabled>
+                                <option value="">-- Select Plan --</option>
+                            </select>
                         </div>
-                        <div id="gotv-plans" class="plans-container" style="display: none;">
-                            <!-- GOtv plans will be loaded here -->
-                        </div>
-                        <div id="startimes-plans" class="plans-container" style="display: none;">
-                            <!-- StarTimes plans will be loaded here -->
-                        </div>
+                        
                         <div class="form-group">
                             <label for="phone">Phone Number</label>
                             <input type="tel" id="phone" class="form-control" placeholder="Enter your phone number" required>
                         </div>
+                        
                         <div class="form-group">
                             <label for="email">Email Address</label>
                             <input type="email" id="email" class="form-control" placeholder="Enter your email address" required>
                         </div>
+                        
                         <div class="form-group">
                             <label>Payment Method</label>
-                            <div class="provider-options">
-                                <div class="provider-option selected" data-payment="wallet">
-                                    <i class="fas fa-wallet"></i>
-                                    <h3>Wallet Balance</h3>
-                                    <p>Pay from your wallet</p>
-                                </div>
-                            </div>
-                            <input type="hidden" id="payment" name="payment" value="wallet" required>
+                            <select id="payment" name="payment" class="form-control" required>
+                                <option value="wallet" selected>Wallet Balance</option>
+                            </select>
                         </div>
+                        
                         <div id="customerDetails" class="customer-details">
                             <h3><i class="fas fa-user-check"></i> Customer Details</h3>
                             <div class="customer-info">
@@ -803,6 +672,7 @@
                                 </div>
                             </div>
                         </div>
+                        
                         <div class="form-actions">
                             <button type="button" id="validateBtn" class="btn btn-secondary">Validate Smartcard</button>
                             <button type="submit" id="proceedBtn" class="btn btn-success" disabled>Proceed to Confirmation</button>
@@ -826,70 +696,92 @@
             // Initialize app functionality from main.js
             initializeApp();
             
-            // Provider selection - Fixed implementation
-            const providerItems = document.querySelectorAll('.provider-list-item');
-            const tvProviderInput = document.getElementById('tv');
+            // Get DOM elements
+            const tvProviderSelect = document.getElementById('tv');
+            const planSelect = document.getElementById('plan');
+            const validateBtn = document.getElementById('validateBtn');
+            const proceedBtn = document.getElementById('proceedBtn');
+            const smartcardInput = document.getElementById('smartcard');
+            const phoneInput = document.getElementById('phone');
+            const emailInput = document.getElementById('email');
+            const tvForm = document.getElementById('tvForm');
             
-            // Function to handle provider selection
-            function selectProvider(provider) {
-                // Remove selected class from all items
-                providerItems.forEach(item => {
-                    item.classList.remove('selected');
-                });
+            // Store TV variations data
+            let tvVariations = {
+                dstv: [],
+                gotv: [],
+                startimes: []
+            };
+            
+            // Provider selection event
+            tvProviderSelect.addEventListener('change', function() {
+                const provider = this.value;
                 
-                // Add selected class to clicked item
-                const selectedItem = document.querySelector(`.provider-list-item[data-provider="${provider}"]`);
-                if (selectedItem) {
-                    selectedItem.classList.add('selected');
+                // Clear plan dropdown
+                planSelect.innerHTML = '<option value="">-- Select Plan --</option>';
+                planSelect.disabled = true;
+                
+                // Reset customer details
+                document.getElementById('customerDetails').style.display = 'none';
+                proceedBtn.disabled = true;
+                
+                if (provider) {
+                    // Load TV variations for the selected provider
+                    loadTvVariationsForDropdown(provider);
+                    
+                    // Validate smartcard if there's a value
+                    if (smartcardInput.value.trim() !== '') {
+                        validateSmartcardOnInput();
+                    }
                 }
-                
-                // Update hidden input
-                tvProviderInput.value = provider;
-                
-                // Show/hide plan containers based on selected provider
-                const dstvPlans = document.getElementById('dstv-plans');
-                const gotvPlans = document.getElementById('gotv-plans');
-                const startimesPlans = document.getElementById('startimes-plans');
-                
-                // Hide all plan containers first
-                if (dstvPlans) dstvPlans.style.display = 'none';
-                if (gotvPlans) gotvPlans.style.display = 'none';
-                if (startimesPlans) startimesPlans.style.display = 'none';
-                
-                // Show the selected provider's plan container
-                switch (provider) {
-                    case 'dstv':
-                        if (dstvPlans) dstvPlans.style.display = 'grid';
-                        break;
-                    case 'gotv':
-                        if (gotvPlans) gotvPlans.style.display = 'grid';
-                        break;
-                    case 'startimes':
-                        if (startimesPlans) startimesPlans.style.display = 'grid';
-                        break;
-                }
-                
-                // Load TV variations for the selected provider
-                loadTvVariations();
-                
-                // Validate smartcard if there's a value
-                if (document.getElementById('smartcard').value.trim() !== '') {
-                    validateSmartcardOnInput();
+            });
+            
+            // Function to load TV variations into dropdown
+            async function loadTvVariationsForDropdown(provider) {
+                try {
+                    showLoading('Loading plans...');
+                    
+                    const response = await fetch(`${API_BASE}/api/services/tv-variations?provider=${provider}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.data.length > 0) {
+                        // Store variations for later use
+                        tvVariations[provider] = data.data;
+                        
+                        // Populate plan dropdown
+                        planSelect.innerHTML = '<option value="">-- Select Plan --</option>';
+                        data.data.forEach(plan => {
+                            const option = document.createElement('option');
+                            option.value = plan.variation_id;
+                            option.textContent = `${plan.package_bouquet} - ₦${Number(plan.price).toLocaleString()}`;
+                            planSelect.appendChild(option);
+                        });
+                        
+                        planSelect.disabled = false;
+                    } else {
+                        planSelect.innerHTML = '<option value="">No plans available</option>';
+                        planSelect.disabled = true;
+                    }
+                } catch (error) {
+                    console.error('Error loading TV variations:', error);
+                    planSelect.innerHTML = '<option value="">Failed to load plans</option>';
+                    planSelect.disabled = true;
+                } finally {
+                    hideLoading();
                 }
             }
             
-            // Add click event listeners to provider items
-            providerItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    const provider = this.dataset.provider;
-                    selectProvider(provider);
-                });
+            // Plan selection event
+            planSelect.addEventListener('change', function() {
+                // Check if a plan is selected and smartcard is validated
+                if (this.value && document.getElementById('customerDetails').style.display === 'block') {
+                    proceedBtn.disabled = false;
+                } else {
+                    proceedBtn.disabled = true;
+                }
             });
             
-            // Smartcard validation button
-            const validateBtn = document.getElementById('validateBtn');
-            const smartcardInput = document.getElementById('smartcard');
-            
+            // Validate button event
             validateBtn.addEventListener('click', function() {
                 if (smartcardInput.value.trim() === '') {
                     const smartcardError = document.getElementById('smartcard-error');
@@ -898,7 +790,7 @@
                     return;
                 }
                 
-                if (tvProviderInput.value === '') {
+                if (tvProviderSelect.value === '') {
                     const smartcardError = document.getElementById('smartcard-error');
                     smartcardError.style.display = 'flex';
                     smartcardError.querySelector('span').textContent = 'Please select a TV provider first';
@@ -910,25 +802,12 @@
                 loadCustomerDetails();
             });
             
-            // Plan selection enables proceed button when customer details are validated
-            document.addEventListener('change', function(e) {
-                if (e.target.name === 'plan') {
-                    // Check if a plan is selected and smartcard is validated
-                    if (e.target.checked && document.getElementById('customerDetails').style.display === 'block') {
-                        document.getElementById('proceedBtn').disabled = false;
-                    } else {
-                        document.getElementById('proceedBtn').disabled = true;
-                    }
-                }
-            });
-            
-            // Form submission
-            const tvForm = document.getElementById('tvForm');
+            // Form submission event
             tvForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
                 // Check if all required fields are filled
-                if (!tvProviderInput.value) {
+                if (!tvProviderSelect.value) {
                     showAlert('Please select a TV provider', 'error');
                     return;
                 }
@@ -938,23 +817,32 @@
                     return;
                 }
                 
-                if (!document.querySelector('input[name="plan"]:checked')) {
+                if (!planSelect.value) {
                     showAlert('Please select a subscription plan', 'error');
                     return;
                 }
                 
-                if (!document.getElementById('phone').value.trim()) {
+                if (!phoneInput.value.trim()) {
                     showAlert('Please enter your phone number', 'error');
                     return;
                 }
                 
-                if (!document.getElementById('email').value.trim()) {
+                if (!emailInput.value.trim()) {
                     showAlert('Please enter your email address', 'error');
                     return;
                 }
                 
                 // If all validations pass, proceed with form submission
                 handleServiceForm(e, 'tv');
+            });
+            
+            // Smartcard input events for real-time validation
+            smartcardInput.addEventListener('input', function() {
+                validateSmartcardOnInput();
+            });
+            
+            smartcardInput.addEventListener('blur', function() {
+                validateSmartcardOnBlur();
             });
         });
     </script>

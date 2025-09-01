@@ -30,6 +30,7 @@
             color: white;
             padding: 20px 0;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
         
         .header-content {
@@ -101,6 +102,15 @@
             margin-right: 10px;
         }
         
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
         .dashboard {
             display: flex;
             margin-top: 30px;
@@ -113,6 +123,7 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             padding: 20px;
             height: fit-content;
+            transition: transform 0.3s ease;
         }
         
         .sidebar-menu {
@@ -142,6 +153,23 @@
             margin-right: 10px;
             width: 20px;
             text-align: center;
+        }
+        
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            z-index: 1000;
+            background: #4a6de5;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
         
         .main-content {
@@ -253,7 +281,7 @@
             color: #ff4757;
             font-size: 14px;
             margin-top: 5px;
-            display: flex;
+            display: none;
             align-items: center;
         }
         
@@ -393,7 +421,7 @@
         }
         
         .validation-status {
-            display: flex;
+            display: none;
             align-items: center;
             margin-top: 10px;
             font-size: 14px;
@@ -573,6 +601,14 @@
         }
         
         @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .user-info {
+                display: none;
+            }
+            
             .dashboard {
                 flex-direction: column;
             }
@@ -580,6 +616,20 @@
             .sidebar {
                 width: 100%;
                 margin-bottom: 30px;
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                z-index: 999;
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .menu-toggle {
+                display: block;
             }
             
             .main-content {
@@ -603,6 +653,9 @@
 <body>
     <header>
         <div class="header-content">
+            <button class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </button>
             <div class="logo">
                 <i class="fas fa-bolt"></i>
                 <span>EasySubscribe</span>
@@ -622,6 +675,11 @@
             </div>
         </div>
     </header>
+    
+    <button class="menu-toggle">
+        <i class="fas fa-bars"></i>
+    </button>
+    
     <div class="container">
         <div class="dashboard">
             <div class="sidebar">
@@ -699,7 +757,7 @@
                                 <i class="fas fa-exclamation-circle"></i>
                                 <span></span>
                             </div>
-                            <div id="smartcard-validation" class="validation-status" style="display: none;">
+                            <div id="smartcard-validation" class="validation-status">
                                 <i class="fas fa-spinner fa-spin"></i>
                                 <span>Validating smartcard...</span>
                             </div>
@@ -754,15 +812,20 @@
             </div>
         </div>
     </div>
+    
     <div class="loading-indicator">
         <div class="loading-spinner"></div>
         <div class="loading-message">Loading...</div>
     </div>
+    
     <div id="alert-container" class="alert-container"></div>
+    
     <script src="main.js"></script>
     <script>
-        // Additional JavaScript for TV page functionality
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize app functionality from main.js
+            initializeApp();
+            
             // Provider selection
             const providerItems = document.querySelectorAll('.provider-list-item');
             const tvProviderInput = document.getElementById('tv');
@@ -778,7 +841,7 @@
                     // Update hidden input
                     tvProviderInput.value = this.dataset.provider;
                     
-                    // Trigger provider change event
+                    // Trigger provider change event to load plans
                     tvProviderInput.dispatchEvent(new Event('change'));
                 });
             });
@@ -789,14 +852,16 @@
             
             validateBtn.addEventListener('click', function() {
                 if (smartcardInput.value.trim() === '') {
-                    document.getElementById('smartcard-error').style.display = 'flex';
-                    document.getElementById('smartcard-error').querySelector('span').textContent = 'Please enter a smartcard number';
+                    const smartcardError = document.getElementById('smartcard-error');
+                    smartcardError.style.display = 'flex';
+                    smartcardError.querySelector('span').textContent = 'Please enter a smartcard number';
                     return;
                 }
                 
                 if (tvProviderInput.value === '') {
-                    document.getElementById('smartcard-error').style.display = 'flex';
-                    document.getElementById('smartcard-error').querySelector('span').textContent = 'Please select a TV provider first';
+                    const smartcardError = document.getElementById('smartcard-error');
+                    smartcardError.style.display = 'flex';
+                    smartcardError.querySelector('span').textContent = 'Please select a TV provider first';
                     return;
                 }
                 
@@ -805,7 +870,7 @@
                 loadCustomerDetails();
             });
             
-            // Plan selection
+            // Plan selection enables proceed button when customer details are validated
             document.addEventListener('change', function(e) {
                 if (e.target.name === 'plan') {
                     // Check if a plan is selected and smartcard is validated
@@ -815,41 +880,6 @@
                         document.getElementById('proceedBtn').disabled = true;
                     }
                 }
-            });
-            
-            // Form submission
-            const tvForm = document.getElementById('tvForm');
-            tvForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                // Check if all required fields are filled
-                if (!tvProviderInput.value) {
-                    showAlert('Please select a TV provider', 'error');
-                    return;
-                }
-                
-                if (!smartcardInput.value.trim()) {
-                    showAlert('Please enter a smartcard number', 'error');
-                    return;
-                }
-                
-                if (!document.querySelector('input[name="plan"]:checked')) {
-                    showAlert('Please select a subscription plan', 'error');
-                    return;
-                }
-                
-                if (!document.getElementById('phone').value.trim()) {
-                    showAlert('Please enter your phone number', 'error');
-                    return;
-                }
-                
-                if (!document.getElementById('email').value.trim()) {
-                    showAlert('Please enter your email address', 'error');
-                    return;
-                }
-                
-                // If all validations pass, proceed with form submission
-                handleServiceForm(e, 'tv');
             });
         });
     </script>

@@ -115,6 +115,8 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             padding: 20px;
             height: fit-content;
+            position: sticky;
+            top: 20px;
         }
         
         .sidebar-menu {
@@ -122,7 +124,7 @@
         }
         
         .sidebar-menu li {
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
         
         .sidebar-menu a {
@@ -146,9 +148,28 @@
             text-align: center;
         }
         
+        .sidebar-menu .menu-label {
+            padding: 8px 15px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+        
         .main-content {
             flex: 1;
             margin-left: 30px;
+        }
+        
+        .content-section {
+            display: none;
+        }
+        
+        .content-section.active {
+            display: block;
         }
         
         .welcome-section {
@@ -416,6 +437,205 @@
             margin-bottom: 15px;
         }
         
+        .profile-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+        }
+        
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #f0f3ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4a6de5;
+            font-size: 40px;
+            margin-right: 25px;
+        }
+        
+        .profile-info h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .profile-info p {
+            color: #777;
+            margin-bottom: 3px;
+        }
+        
+        .profile-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: #4a6de5;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 109, 229, 0.2);
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .notifications-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+        }
+        
+        .notification-item {
+            display: flex;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #4a6de5;
+        }
+        
+        .notification-item.unread {
+            background: #f0f3ff;
+            border-left-color: #4a6de5;
+        }
+        
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f0f3ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4a6de5;
+            margin-right: 15px;
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-content h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .notification-content p {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        
+        .notification-date {
+            font-size: 12px;
+            color: #777;
+        }
+        
+        .no-notifications {
+            text-align: center;
+            padding: 40px 0;
+            color: #777;
+        }
+        
+        .no-notifications i {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+        
+        .fund-wallet-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+        }
+        
+        .fund-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .fund-method {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .fund-method:hover, .fund-method.selected {
+            border-color: #4a6de5;
+            background: #f0f3ff;
+        }
+        
+        .fund-method i {
+            font-size: 36px;
+            color: #4a6de5;
+            margin-bottom: 15px;
+        }
+        
+        .fund-method h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .fund-method p {
+            color: #777;
+            font-size: 14px;
+        }
+        
+        .fund-form {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .fund-form.active {
+            display: block;
+        }
+        
         /* Button Styles */
         .btn {
             display: inline-block;
@@ -565,6 +785,7 @@
             .sidebar {
                 width: 100%;
                 margin-bottom: 30px;
+                position: static;
             }
             
             .main-content {
@@ -587,6 +808,10 @@
             
             .services-grid {
                 grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .profile-form {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -614,135 +839,787 @@
             </div>
         </div>
     </header>
-
     <div class="container">
         <div class="dashboard">
             <!-- Sidebar -->
             <div class="sidebar">
                 <ul class="sidebar-menu">
-                    <li><a href="dashboard.html" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
-                    <li><a href="airtime.html"><i class="fas fa-mobile-alt"></i> Airtime</a></li>
-                    <li><a href="data.html"><i class="fas fa-wifi"></i> Data</a></li>
-                    <li><a href="tv.html"><i class="fas fa-tv"></i> TV Subscription</a></li>
-                    <li><a href="electricity.html"><i class="fas fa-bolt"></i> Electricity</a></li>
-                    <li><a href="transactions.html"><i class="fas fa-exchange-alt"></i> Transactions</a></li>
-                    <li><a href="fund-wallet.html"><i class="fas fa-wallet"></i> Fund Wallet</a></li>
-                    <li><a href="profile.html"><i class="fas fa-user-cog"></i> Profile</a></li>
+                    <li><a href="#" data-page="overview" class="active"><i class="fas fa-home"></i> Overview</a></li>
+                    
+                    <div class="menu-label">Services</div>
+                    <li><a href="#" data-page="airtime"><i class="fas fa-mobile-alt"></i> Airtime</a></li>
+                    <li><a href="#" data-page="data"><i class="fas fa-wifi"></i> Data</a></li>
+                    <li><a href="#" data-page="tv"><i class="fas fa-tv"></i> TV Subscription</a></li>
+                    <li><a href="#" data-page="electricity"><i class="fas fa-bolt"></i> Electricity</a></li>
+                    
+                    <div class="menu-label">Account</div>
+                    <li><a href="#" data-page="transactions"><i class="fas fa-exchange-alt"></i> Transactions</a></li>
+                    <li><a href="#" data-page="fund-wallet"><i class="fas fa-wallet"></i> Fund Wallet</a></li>
+                    <li><a href="#" data-page="notifications"><i class="fas fa-bell"></i> Notifications</a></li>
+                    <li><a href="#" data-page="profile"><i class="fas fa-user-cog"></i> Profile</a></li>
+                    
                     <li><a href="#" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </div>
-
             <!-- Main Content -->
             <div class="main-content">
-                <!-- Welcome Section -->
-                <div class="welcome-section">
-                    <div class="welcome-header">
-                        <div>
-                            <h1>Welcome back, <span class="user-name">User</span>!</h1>
-                            <p>Here's what's happening with your account today</p>
+                <!-- Overview Section -->
+                <div id="overview" class="content-section active">
+                    <!-- Welcome Section -->
+                    <div class="welcome-section">
+                        <div class="welcome-header">
+                            <div>
+                                <h1>Welcome back, <span class="user-name">User</span>!</h1>
+                                <p>Here's what's happening with your account today</p>
+                            </div>
+                            <button id="fundWalletBtn" class="fund-wallet-btn">
+                                <i class="fas fa-plus"></i> Fund Wallet
+                            </button>
                         </div>
-                        <button id="fundWalletBtn" class="fund-wallet-btn">
-                            <i class="fas fa-plus"></i> Fund Wallet
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Stats Section -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-wallet"></i>
-                        </div>
-                        <h3>Wallet Balance</h3>
-                        <div class="stat-value wallet-balance">₦0.00</div>
                     </div>
                     
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-exchange-alt"></i>
+                    <!-- Stats Section -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <h3>Wallet Balance</h3>
+                            <div class="stat-value wallet-balance">₦0.00</div>
                         </div>
-                        <h3>Total Transactions</h3>
-                        <div class="stat-value" id="totalTransactions">0</div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                            <h3>Total Transactions</h3>
+                            <div class="stat-value" id="totalTransactions">0</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h3>This Month</h3>
+                            <div class="stat-value" id="monthlySpent">₦0.00</div>
+                        </div>
                     </div>
                     
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-chart-line"></i>
+                    <!-- Services Section -->
+                    <div class="services-section">
+                        <div class="section-header">
+                            <h2>Quick Services</h2>
+                            <a href="#" class="view-all">View All</a>
                         </div>
-                        <h3>This Month</h3>
-                        <div class="stat-value" id="monthlySpent">₦0.00</div>
+                        
+                        <div class="services-grid">
+                            <a href="#" data-page="airtime" class="service-card">
+                                <div class="service-icon">
+                                    <i class="fas fa-mobile-alt"></i>
+                                </div>
+                                <h3>Airtime</h3>
+                                <p>Recharge your phone</p>
+                            </a>
+                            
+                            <a href="#" data-page="data" class="service-card">
+                                <div class="service-icon">
+                                    <i class="fas fa-wifi"></i>
+                                </div>
+                                <h3>Data</h3>
+                                <p>Buy data bundles</p>
+                            </a>
+                            
+                            <a href="#" data-page="tv" class="service-card">
+                                <div class="service-icon">
+                                    <i class="fas fa-tv"></i>
+                                </div>
+                                <h3>TV Subscription</h3>
+                                <p>Pay for TV packages</p>
+                            </a>
+                            
+                            <a href="#" data-page="electricity" class="service-card">
+                                <div class="service-icon">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <h3>Electricity</h3>
+                                <p>Pay electricity bills</p>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Transactions Section -->
+                    <div class="transactions-section">
+                        <div class="section-header">
+                            <h2>Recent Transactions</h2>
+                            <a href="#" data-page="transactions" class="view-all">View All</a>
+                        </div>
+                        
+                        <div class="transactions-list" id="recentTransactions">
+                            <div class="no-transactions">
+                                <i class="fas fa-receipt"></i>
+                                <p>No transactions yet</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Services Section -->
-                <div class="services-section">
+                
+                <!-- Airtime Section -->
+                <div id="airtime" class="content-section">
+                    <div class="service-header">
+                        <div class="service-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <div class="service-title">
+                            <h2>Airtime Purchase</h2>
+                            <p>Recharge your phone instantly</p>
+                        </div>
+                    </div>
+                    
+                    <div class="service-card">
+                        <form id="airtimeForm">
+                            <div class="form-group">
+                                <label for="network">Select Network</label>
+                                <select id="network" class="form-control" required>
+                                    <option value="">-- Select Network --</option>
+                                    <option value="mtn">MTN</option>
+                                    <option value="airtel">Airtel</option>
+                                    <option value="glo">Glo</option>
+                                    <option value="9mobile">9mobile</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="phone">Phone Number</label>
+                                <input type="tel" id="phone" class="form-control" placeholder="Enter phone number" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="amount">Amount (₦)</label>
+                                <input type="number" id="amount" class="form-control" placeholder="Enter amount" min="50" required>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-success">Buy Airtime</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Data Section -->
+                <div id="data" class="content-section">
+                    <div class="service-header">
+                        <div class="service-icon">
+                            <i class="fas fa-wifi"></i>
+                        </div>
+                        <div class="service-title">
+                            <h2>Data Purchase</h2>
+                            <p>Buy data bundles for your device</p>
+                        </div>
+                    </div>
+                    
+                    <div class="service-card">
+                        <form id="dataForm">
+                            <div class="form-group">
+                                <label for="network">Select Network</label>
+                                <select id="network" class="form-control" required>
+                                    <option value="">-- Select Network --</option>
+                                    <option value="mtn">MTN</option>
+                                    <option value="airtel">Airtel</option>
+                                    <option value="glo">Glo</option>
+                                    <option value="9mobile">9mobile</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="phone">Phone Number</label>
+                                <input type="tel" id="phone" class="form-control" placeholder="Enter phone number" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Select Data Plan</label>
+                                <div class="plans-container">
+                                    <div class="plan-option">
+                                        <input type="radio" id="plan1" name="plan" value="1gb" required>
+                                        <label for="plan1">
+                                            <div class="plan-name">1GB</div>
+                                            <div class="plan-price">₦300</div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="plan-option">
+                                        <input type="radio" id="plan2" name="plan" value="2gb" required>
+                                        <label for="plan2">
+                                            <div class="plan-name">2GB</div>
+                                            <div class="plan-price">₦500</div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="plan-option">
+                                        <input type="radio" id="plan3" name="plan" value="5gb" required>
+                                        <label for="plan3">
+                                            <div class="plan-name">5GB</div>
+                                            <div class="plan-price">₦1,200</div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="plan-option">
+                                        <input type="radio" id="plan4" name="plan" value="10gb" required>
+                                        <label for="plan4">
+                                            <div class="plan-name">10GB</div>
+                                            <div class="plan-price">₦2,000</div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-success">Buy Data</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- TV Subscription Section -->
+                <div id="tv" class="content-section">
+                    <div class="service-header">
+                        <div class="service-icon">
+                            <i class="fas fa-tv"></i>
+                        </div>
+                        <div class="service-title">
+                            <h2>TV Subscription</h2>
+                            <p>Subscribe to your favorite TV packages</p>
+                        </div>
+                    </div>
+                    
+                    <div class="service-card">
+                        <form id="tvForm">
+                            <div class="form-group">
+                                <label>Select TV Provider</label>
+                                <div class="provider-list">
+                                    <div class="provider-list-item" data-provider="dstv">
+                                        <div class="provider-icon">
+                                            <i class="fas fa-satellite-dish"></i>
+                                        </div>
+                                        <div class="provider-info">
+                                            <h3>DStv</h3>
+                                            <p>Premium Entertainment</p>
+                                        </div>
+                                    </div>
+                                    <div class="provider-list-item" data-provider="gotv">
+                                        <div class="provider-icon">
+                                            <i class="fas fa-broadcast-tower"></i>
+                                        </div>
+                                        <div class="provider-info">
+                                            <h3>GOtv</h3>
+                                            <p>Affordable Entertainment</p>
+                                        </div>
+                                    </div>
+                                    <div class="provider-list-item" data-provider="startimes">
+                                        <div class="provider-icon">
+                                            <i class="fas fa-satellite"></i>
+                                        </div>
+                                        <div class="provider-info">
+                                            <h3>StarTimes</h3>
+                                            <p>Digital Entertainment</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="tv" name="tv" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="smartcard">Smartcard/IUC Number</label>
+                                <input type="text" id="smartcard" class="form-control" placeholder="Enter your smartcard number" required>
+                                <div id="smartcard-error" class="error-message">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span></span>
+                                </div>
+                                <div id="smartcard-validation" class="validation-status" style="display: none;">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <span>Validating smartcard...</span>
+                                </div>
+                            </div>
+                            
+                            <div id="dstv-plans" class="plans-container" style="display: none;">
+                                <!-- DStv plans will be loaded here -->
+                            </div>
+                            <div id="gotv-plans" class="plans-container" style="display: none;">
+                                <!-- GOtv plans will be loaded here -->
+                            </div>
+                            <div id="startimes-plans" class="plans-container" style="display: none;">
+                                <!-- StarTimes plans will be loaded here -->
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="phone">Phone Number</label>
+                                <input type="tel" id="phone" class="form-control" placeholder="Enter your phone number" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" class="form-control" placeholder="Enter your email address" required>
+                            </div>
+                            
+                            <div id="customerDetails" class="customer-details">
+                                <h3><i class="fas fa-user-check"></i> Customer Details</h3>
+                                <div class="customer-info">
+                                    <div class="info-item">
+                                        <div class="info-label">Customer Name</div>
+                                        <div id="customerName" class="info-value">-</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Current Plan</div>
+                                        <div id="customerPlan" class="info-value">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" id="validateBtn" class="btn btn-secondary">Validate Smartcard</button>
+                                <button type="submit" id="proceedBtn" class="btn btn-success" disabled>Proceed to Confirmation</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Electricity Section -->
+                <div id="electricity" class="content-section">
+                    <div class="service-header">
+                        <div class="service-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div class="service-title">
+                            <h2>Electricity Payment</h2>
+                            <p>Pay your electricity bills instantly</p>
+                        </div>
+                    </div>
+                    
+                    <div class="service-card">
+                        <form id="electricityForm">
+                            <div class="form-group">
+                                <label for="disco">Select Electricity Provider</label>
+                                <select id="disco" class="form-control" required>
+                                    <option value="">-- Select Provider --</option>
+                                    <option value="ikedc">Ikeja Electric</option>
+                                    <option value="ekedc">Eko Electric</option>
+                                    <option value="aedc">Abuja Electric</option>
+                                    <option value="kedco">Kano Electric</option>
+                                    <option value="phed">Port Harcourt Electric</option>
+                                    <option value="eedc">Enugu Electric</option>
+                                    <option value="ibedc">Ibadan Electric</option>
+                                    <option value="kaedco">Kaduna Electric</option>
+                                    <option value="bedc">Benin Electric</option>
+                                    <option value="jedc">Jos Electric</option>
+                                    <option value="yedc">Yola Electric</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="meter">Meter Number</label>
+                                <input type="text" id="meter" class="form-control" placeholder="Enter your meter number" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Meter Type</label>
+                                <div class="provider-options">
+                                    <div class="provider-option">
+                                        <input type="radio" id="prepaid" name="meterType" value="prepaid" required>
+                                        <label for="prepaid">
+                                            <div>Prepaid</div>
+                                        </label>
+                                    </div>
+                                    <div class="provider-option">
+                                        <input type="radio" id="postpaid" name="meterType" value="postpaid" required>
+                                        <label for="postpaid">
+                                            <div>Postpaid</div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="amount">Amount (₦)</label>
+                                <input type="number" id="amount" class="form-control" placeholder="Enter amount" min="1000" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="phone">Phone Number</label>
+                                <input type="tel" id="phone" class="form-control" placeholder="Enter phone number" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" class="form-control" placeholder="Enter email address" required>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-success">Pay Electricity</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Transactions Section -->
+                <div id="transactions" class="content-section">
                     <div class="section-header">
-                        <h2>Quick Services</h2>
-                        <a href="services.html" class="view-all">View All</a>
+                        <h2>Transaction History</h2>
                     </div>
                     
-                    <div class="services-grid">
-                        <a href="airtime.html" class="service-card">
-                            <div class="service-icon">
+                    <div class="transactions-section">
+                        <div class="transactions-list" id="allTransactions">
+                            <div class="no-transactions">
+                                <i class="fas fa-receipt"></i>
+                                <p>No transactions yet</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Fund Wallet Section -->
+                <div id="fund-wallet" class="content-section">
+                    <div class="section-header">
+                        <h2>Fund Your Wallet</h2>
+                    </div>
+                    
+                    <div class="fund-wallet-section">
+                        <div class="fund-methods">
+                            <div class="fund-method" data-method="bank">
+                                <i class="fas fa-university"></i>
+                                <h3>Bank Transfer</h3>
+                                <p>Transfer from your bank account</p>
+                            </div>
+                            
+                            <div class="fund-method" data-method="card">
+                                <i class="fas fa-credit-card"></i>
+                                <h3>Debit/Credit Card</h3>
+                                <p>Pay with your card</p>
+                            </div>
+                            
+                            <div class="fund-method" data-method="ussd">
                                 <i class="fas fa-mobile-alt"></i>
+                                <h3>USSD Code</h3>
+                                <p>Dial USSD code to pay</p>
                             </div>
-                            <h3>Airtime</h3>
-                            <p>Recharge your phone</p>
-                        </a>
+                        </div>
                         
-                        <a href="data.html" class="service-card">
-                            <div class="service-icon">
-                                <i class="fas fa-wifi"></i>
+                        <div id="bank-form" class="fund-form">
+                            <h3>Bank Transfer</h3>
+                            <p>Transfer to the account below and your wallet will be credited automatically:</p>
+                            
+                            <div class="bank-details">
+                                <div class="form-group">
+                                    <label>Account Name</label>
+                                    <div class="form-control">EasySubscribe Wallet</div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Account Number</label>
+                                    <div class="form-control">0123456789</div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Bank</label>
+                                    <div class="form-control">Test Bank</div>
+                                </div>
                             </div>
-                            <h3>Data</h3>
-                            <p>Buy data bundles</p>
-                        </a>
+                            
+                            <div class="form-group">
+                                <label for="amount">Amount (₦)</label>
+                                <input type="number" id="amount" class="form-control" placeholder="Enter amount" min="100" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="reference">Payment Reference (Optional)</label>
+                                <input type="text" id="reference" class="form-control" placeholder="Enter payment reference">
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-success">Submit Request</button>
+                            </div>
+                        </div>
                         
-                        <a href="tv.html" class="service-card">
-                            <div class="service-icon">
-                                <i class="fas fa-tv"></i>
+                        <div id="card-form" class="fund-form">
+                            <h3>Card Payment</h3>
+                            
+                            <div class="form-group">
+                                <label for="amount">Amount (₦)</label>
+                                <input type="number" id="amount" class="form-control" placeholder="Enter amount" min="100" required>
                             </div>
-                            <h3>TV Subscription</h3>
-                            <p>Pay for TV packages</p>
-                        </a>
+                            
+                            <div class="form-group">
+                                <label for="cardNumber">Card Number</label>
+                                <input type="text" id="cardNumber" class="form-control" placeholder="1234 5678 9012 3456" required>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="expiry">Expiry Date</label>
+                                    <input type="text" id="expiry" class="form-control" placeholder="MM/YY" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="cvv">CVV</label>
+                                    <input type="text" id="cvv" class="form-control" placeholder="123" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-success">Pay Now</button>
+                            </div>
+                        </div>
                         
-                        <a href="electricity.html" class="service-card">
-                            <div class="service-icon">
-                                <i class="fas fa-bolt"></i>
+                        <div id="ussd-form" class="fund-form">
+                            <h3>USSD Payment</h3>
+                            
+                            <div class="form-group">
+                                <label for="amount">Amount (₦)</label>
+                                <input type="number" id="amount" class="form-control" placeholder="Enter amount" min="100" required>
                             </div>
-                            <h3>Electricity</h3>
-                            <p>Pay electricity bills</p>
-                        </a>
+                            
+                            <div class="form-group">
+                                <label>Select Your Network</label>
+                                <select id="network" class="form-control" required>
+                                    <option value="">-- Select Network --</option>
+                                    <option value="mtn">MTN</option>
+                                    <option value="airtel">Airtel</option>
+                                    <option value="glo">Glo</option>
+                                    <option value="9mobile">9mobile</option>
+                                </select>
+                            </div>
+                            
+                            <div class="ussd-code">
+                                <p>Dial the USSD code below to complete your payment:</p>
+                                <div class="form-control" style="text-align: center; font-weight: bold;">*123*Amount#</div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-success">I've Made Payment</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Recent Transactions Section -->
-                <div class="transactions-section">
+                
+                <!-- Notifications Section -->
+                <div id="notifications" class="content-section">
                     <div class="section-header">
-                        <h2>Recent Transactions</h2>
-                        <a href="transactions.html" class="view-all">View All</a>
+                        <h2>Notifications</h2>
+                        <button id="markAllRead" class="btn btn-secondary">Mark All as Read</button>
                     </div>
                     
-                    <div class="transactions-list" id="recentTransactions">
-                        <div class="no-transactions">
-                            <i class="fas fa-receipt"></i>
-                            <p>No transactions yet</p>
+                    <div class="notifications-section">
+                        <div id="notificationsList">
+                            <div class="no-notifications">
+                                <i class="fas fa-bell-slash"></i>
+                                <p>No notifications</p>
+                            </div>
                         </div>
+                    </div>
+                </div>
+                
+                <!-- Profile Section -->
+                <div id="profile" class="content-section">
+                    <div class="section-header">
+                        <h2>Profile Settings</h2>
+                    </div>
+                    
+                    <div class="profile-section">
+                        <div class="profile-header">
+                            <div class="profile-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="profile-info">
+                                <h2 class="user-name">User</h2>
+                                <p class="user-email">user@example.com</p>
+                                <p class="user-phone">08012345678</p>
+                            </div>
+                        </div>
+                        
+                        <form id="updateProfileForm">
+                            <div class="profile-form">
+                                <div class="form-group">
+                                    <label for="name">Full Name</label>
+                                    <input type="text" id="name" class="form-control" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="email">Email Address</label>
+                                    <input type="email" id="email" class="form-control" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="phone">Phone Number</label>
+                                    <input type="tel" id="phone" class="form-control" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-success">Update Profile</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
     <!-- Loading Indicator -->
     <div class="loading-indicator">
         <div class="loading-spinner"></div>
         <div class="loading-message">Loading...</div>
     </div>
-
     <!-- Alert Container -->
     <div id="alert-container" class="alert-container"></div>
-
     <script src="main.js"></script>
+    <script>
+        // Dashboard navigation functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get all menu links and content sections
+            const menuLinks = document.querySelectorAll('.sidebar-menu a[data-page]');
+            const contentSections = document.querySelectorAll('.content-section');
+            
+            // Add click event to menu links
+            menuLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Get the target page
+                    const targetPage = this.getAttribute('data-page');
+                    
+                    // Remove active class from all links and sections
+                    menuLinks.forEach(l => l.classList.remove('active'));
+                    contentSections.forEach(s => s.classList.remove('active'));
+                    
+                    // Add active class to clicked link
+                    this.classList.add('active');
+                    
+                    // Show the target section
+                    const targetSection = document.getElementById(targetPage);
+                    if (targetSection) {
+                        targetSection.classList.add('active');
+                    }
+                    
+                    // Load page-specific content
+                    loadPageContent(targetPage);
+                });
+            });
+            
+            // Fund wallet method selection
+            const fundMethods = document.querySelectorAll('.fund-method');
+            const fundForms = document.querySelectorAll('.fund-form');
+            
+            fundMethods.forEach(method => {
+                method.addEventListener('click', function() {
+                    // Remove selected class from all methods
+                    fundMethods.forEach(m => m.classList.remove('selected'));
+                    
+                    // Hide all forms
+                    fundForms.forEach(f => f.classList.remove('active'));
+                    
+                    // Add selected class to clicked method
+                    this.classList.add('selected');
+                    
+                    // Show the corresponding form
+                    const methodType = this.getAttribute('data-method');
+                    const targetForm = document.getElementById(`${methodType}-form`);
+                    if (targetForm) {
+                        targetForm.classList.add('active');
+                    }
+                });
+            });
+            
+            // Set first fund method as selected by default
+            if (fundMethods.length > 0) {
+                fundMethods[0].click();
+            }
+            
+            // Service card navigation
+            const serviceCards = document.querySelectorAll('.services-grid .service-card');
+            serviceCards.forEach(card => {
+                card.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetPage = this.getAttribute('data-page');
+                    if (targetPage) {
+                        // Find and click the corresponding menu link
+                        const menuLink = document.querySelector(`.sidebar-menu a[data-page="${targetPage}"]`);
+                        if (menuLink) {
+                            menuLink.click();
+                        }
+                    }
+                });
+            });
+            
+            // Initialize with overview content
+            loadPageContent('overview');
+        });
+        
+        // Load content for specific pages
+        function loadPageContent(page) {
+            switch(page) {
+                case 'overview':
+                    loadDashboardStats();
+                    loadRecentTransactions();
+                    break;
+                    
+                case 'transactions':
+                    loadAllTransactions();
+                    break;
+                    
+                case 'notifications':
+                    loadNotificationsList();
+                    break;
+                    
+                case 'airtime':
+                case 'data':
+                case 'tv':
+                case 'electricity':
+                    setupServiceForm(page);
+                    break;
+                    
+                case 'fund-wallet':
+                    setupFundWalletForm();
+                    break;
+                    
+                case 'profile':
+                    loadUserProfile();
+                    break;
+            }
+        }
+        
+        // Setup service form based on page type
+        function setupServiceForm(serviceType) {
+            // This function would set up the specific service form
+            // For now, it's a placeholder for the functionality that would be in main.js
+            console.log(`Setting up ${serviceType} form`);
+        }
+        
+        // Setup fund wallet form
+        function setupFundWalletForm() {
+            // This function would set up the fund wallet form
+            console.log('Setting up fund wallet form');
+        }
+        
+        // Load user profile
+        function loadUserProfile() {
+            // This function would load user profile data
+            console.log('Loading user profile');
+        }
+        
+        // These functions would be implemented in main.js
+        function loadDashboardStats() {
+            console.log('Loading dashboard stats');
+        }
+        
+        function loadRecentTransactions() {
+            console.log('Loading recent transactions');
+        }
+        
+        function loadAllTransactions() {
+            console.log('Loading all transactions');
+        }
+        
+        function loadNotificationsList() {
+            console.log('Loading notifications list');
+        }
+    </script>
 </body>
 </html>

@@ -261,43 +261,50 @@
             margin-right: 5px;
         }
         
-        .provider-options {
-            display: flex;
-            gap: 15px;
+        .provider-list {
             margin-bottom: 20px;
         }
         
-        .provider-option {
-            flex: 1;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
+        .provider-list-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
         }
         
-        .provider-option:hover {
+        .provider-list-item:hover {
             border-color: #4a6de5;
+            background: #f8f9ff;
         }
         
-        .provider-option.selected {
+        .provider-list-item.selected {
             border-color: #4a6de5;
             background: #f0f3ff;
         }
         
-        .provider-option i {
-            font-size: 36px;
-            margin-bottom: 10px;
+        .provider-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f0f3ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
             color: #4a6de5;
         }
         
-        .provider-option h3 {
+        .provider-info h3 {
             font-size: 18px;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
+            color: #2c3e50;
         }
         
-        .provider-option p {
+        .provider-info p {
             color: #777;
             font-size: 14px;
         }
@@ -348,11 +355,19 @@
             padding: 20px;
             margin-top: 20px;
             display: none;
+            border-left: 4px solid #4a6de5;
         }
         
         .customer-details h3 {
             margin-bottom: 15px;
             color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+        
+        .customer-details h3 i {
+            margin-right: 10px;
+            color: #4a6de5;
         }
         
         .customer-info {
@@ -374,6 +389,30 @@
         
         .info-value {
             font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .validation-status {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .validation-status i {
+            margin-right: 5px;
+        }
+        
+        .validation-status.success {
+            color: #2ed573;
+        }
+        
+        .validation-status.error {
+            color: #ff4757;
+        }
+        
+        .validation-status.loading {
+            color: #4a6de5;
         }
         
         .btn {
@@ -408,6 +447,11 @@
         
         .btn-success:hover {
             background: #26d065;
+        }
+        
+        .btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
         }
         
         .btn-block {
@@ -578,7 +622,6 @@
             </div>
         </div>
     </header>
-
     <div class="container">
         <div class="dashboard">
             <div class="sidebar">
@@ -594,7 +637,6 @@
                     <li><a href="#" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </div>
-
             <div class="main-content">
                 <div class="page-header">
                     <div>
@@ -606,7 +648,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="service-card">
                     <div class="service-header">
                         <div class="service-icon">
@@ -617,61 +658,69 @@
                             <p>Subscribe to your favorite TV packages</p>
                         </div>
                     </div>
-
                     <form id="tvForm">
                         <div class="form-group">
                             <label>Select TV Provider</label>
-                            <div class="provider-options">
-                                <div class="provider-option" data-provider="dstv">
-                                    <i class="fas fa-satellite-dish"></i>
-                                    <h3>DStv</h3>
-                                    <p>Premium Entertainment</p>
+                            <div class="provider-list">
+                                <div class="provider-list-item" data-provider="dstv">
+                                    <div class="provider-icon">
+                                        <i class="fas fa-satellite-dish"></i>
+                                    </div>
+                                    <div class="provider-info">
+                                        <h3>DStv</h3>
+                                        <p>Premium Entertainment</p>
+                                    </div>
                                 </div>
-                                <div class="provider-option" data-provider="gotv">
-                                    <i class="fas fa-broadcast-tower"></i>
-                                    <h3>GOtv</h3>
-                                    <p>Affordable Entertainment</p>
+                                <div class="provider-list-item" data-provider="gotv">
+                                    <div class="provider-icon">
+                                        <i class="fas fa-broadcast-tower"></i>
+                                    </div>
+                                    <div class="provider-info">
+                                        <h3>GOtv</h3>
+                                        <p>Affordable Entertainment</p>
+                                    </div>
                                 </div>
-                                <div class="provider-option" data-provider="startimes">
-                                    <i class="fas fa-satellite"></i>
-                                    <h3>StarTimes</h3>
-                                    <p>Digital Entertainment</p>
+                                <div class="provider-list-item" data-provider="startimes">
+                                    <div class="provider-icon">
+                                        <i class="fas fa-satellite"></i>
+                                    </div>
+                                    <div class="provider-info">
+                                        <h3>StarTimes</h3>
+                                        <p>Digital Entertainment</p>
+                                    </div>
                                 </div>
                             </div>
                             <input type="hidden" id="tv" name="tv" required>
                         </div>
-
                         <div class="form-group">
                             <label for="smartcard">Smartcard/IUC Number</label>
                             <input type="text" id="smartcard" class="form-control" placeholder="Enter your smartcard number" required>
-                            <div id="smartcard-error" class="error-message" style="display: none;">
+                            <div id="smartcard-error" class="error-message">
                                 <i class="fas fa-exclamation-circle"></i>
                                 <span></span>
                             </div>
+                            <div id="smartcard-validation" class="validation-status" style="display: none;">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <span>Validating smartcard...</span>
+                            </div>
                         </div>
-
                         <div id="dstv-plans" class="plans-container" style="display: none;">
                             <!-- DStv plans will be loaded here -->
                         </div>
-
                         <div id="gotv-plans" class="plans-container" style="display: none;">
                             <!-- GOtv plans will be loaded here -->
                         </div>
-
                         <div id="startimes-plans" class="plans-container" style="display: none;">
                             <!-- StarTimes plans will be loaded here -->
                         </div>
-
                         <div class="form-group">
                             <label for="phone">Phone Number</label>
                             <input type="tel" id="phone" class="form-control" placeholder="Enter your phone number" required>
                         </div>
-
                         <div class="form-group">
                             <label for="email">Email Address</label>
                             <input type="email" id="email" class="form-control" placeholder="Enter your email address" required>
                         </div>
-
                         <div class="form-group">
                             <label>Payment Method</label>
                             <div class="provider-options">
@@ -683,9 +732,8 @@
                             </div>
                             <input type="hidden" id="payment" name="payment" value="wallet" required>
                         </div>
-
                         <div id="customerDetails" class="customer-details">
-                            <h3>Customer Details</h3>
+                            <h3><i class="fas fa-user-check"></i> Customer Details</h3>
                             <div class="customer-info">
                                 <div class="info-item">
                                     <div class="info-label">Customer Name</div>
@@ -697,7 +745,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="form-actions">
                             <button type="button" id="validateBtn" class="btn btn-secondary">Validate Smartcard</button>
                             <button type="submit" id="proceedBtn" class="btn btn-success" disabled>Proceed to Confirmation</button>
@@ -707,14 +754,104 @@
             </div>
         </div>
     </div>
-
     <div class="loading-indicator">
         <div class="loading-spinner"></div>
         <div class="loading-message">Loading...</div>
     </div>
-
     <div id="alert-container" class="alert-container"></div>
-
     <script src="main.js"></script>
+    <script>
+        // Additional JavaScript for TV page functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Provider selection
+            const providerItems = document.querySelectorAll('.provider-list-item');
+            const tvProviderInput = document.getElementById('tv');
+            
+            providerItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // Remove selected class from all items
+                    providerItems.forEach(i => i.classList.remove('selected'));
+                    
+                    // Add selected class to clicked item
+                    this.classList.add('selected');
+                    
+                    // Update hidden input
+                    tvProviderInput.value = this.dataset.provider;
+                    
+                    // Trigger provider change event
+                    tvProviderInput.dispatchEvent(new Event('change'));
+                });
+            });
+            
+            // Smartcard validation button
+            const validateBtn = document.getElementById('validateBtn');
+            const smartcardInput = document.getElementById('smartcard');
+            
+            validateBtn.addEventListener('click', function() {
+                if (smartcardInput.value.trim() === '') {
+                    document.getElementById('smartcard-error').style.display = 'flex';
+                    document.getElementById('smartcard-error').querySelector('span').textContent = 'Please enter a smartcard number';
+                    return;
+                }
+                
+                if (tvProviderInput.value === '') {
+                    document.getElementById('smartcard-error').style.display = 'flex';
+                    document.getElementById('smartcard-error').querySelector('span').textContent = 'Please select a TV provider first';
+                    return;
+                }
+                
+                // Trigger validation
+                validateSmartcardOnBlur();
+                loadCustomerDetails();
+            });
+            
+            // Plan selection
+            document.addEventListener('change', function(e) {
+                if (e.target.name === 'plan') {
+                    // Check if a plan is selected and smartcard is validated
+                    if (e.target.checked && document.getElementById('customerDetails').style.display === 'block') {
+                        document.getElementById('proceedBtn').disabled = false;
+                    } else {
+                        document.getElementById('proceedBtn').disabled = true;
+                    }
+                }
+            });
+            
+            // Form submission
+            const tvForm = document.getElementById('tvForm');
+            tvForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Check if all required fields are filled
+                if (!tvProviderInput.value) {
+                    showAlert('Please select a TV provider', 'error');
+                    return;
+                }
+                
+                if (!smartcardInput.value.trim()) {
+                    showAlert('Please enter a smartcard number', 'error');
+                    return;
+                }
+                
+                if (!document.querySelector('input[name="plan"]:checked')) {
+                    showAlert('Please select a subscription plan', 'error');
+                    return;
+                }
+                
+                if (!document.getElementById('phone').value.trim()) {
+                    showAlert('Please enter your phone number', 'error');
+                    return;
+                }
+                
+                if (!document.getElementById('email').value.trim()) {
+                    showAlert('Please enter your email address', 'error');
+                    return;
+                }
+                
+                // If all validations pass, proceed with form submission
+                handleServiceForm(e, 'tv');
+            });
+        });
+    </script>
 </body>
 </html>
